@@ -1,0 +1,599 @@
+<template>
+    <div class="page-background">
+        <div class="user-page">
+            <!-- 上部分：用户基本信息 -->
+            <div class="user-info-section">
+                <div class="user-info-container">
+                    <div class="user-avatar-container">
+                        <img :src="userInfo.avatar" alt="用户头像" class="user-avatar">
+                    </div>
+                    <div class="user-details">
+                        <!-- 添加标题行容器，将昵称和编辑按钮放在同一行 -->
+                        <div class="user-header">
+                            <h1>{{ userInfo.nickName }}</h1>
+                            <!-- 将编辑按钮放在右侧 -->
+                            <button v-if="isCurrentUser" class="edit-profile-button" @click="openEditModal">
+                                <span class="edit-icon">✏️</span> 编辑个人资料
+                            </button>
+                        </div>
+                        <div class="user-meta">
+                            <span class="user-id">ID: {{ userInfo.userId }}</span>
+                            <span class="user-join-date">加入于: {{ userInfo.joinTime }}</span>
+                            <span class="user-birthday">生日: {{ userInfo.birthday }}</span>
+                        </div>
+                        <div class="user-bio">
+                            <p>{{ userInfo.personIntroduction || '这个人很懒，什么都没有留下...' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 下部分：导航和内容区域 -->
+            <div class="content-section">
+                <!-- 左侧导航 -->
+                <div class="sidebar">
+                    <div class="nav-title">用户中心</div>
+                    <button 
+                        class="nav-button" 
+                        :class="{ active: currentContent === 'quote' }" 
+                        @click="switchContent('quote')"
+                    >
+                        <i class="nav-icon">📝</i> 语录
+                    </button>
+                    <button 
+                        class="nav-button" 
+                        :class="{ active: currentContent === 'video' }" 
+                        @click="switchContent('video')"
+                    >
+                        <i class="nav-icon">🎬</i> 视频
+                    </button>
+                    <button 
+                        class="nav-button" 
+                        :class="{ active: currentContent === 'post' }" 
+                        v-if="isCurrentUser" 
+                        @click="switchContent('post')"
+                    >
+                        <i class="nav-icon">✏️</i> 投稿
+                    </button>
+                </div>
+                
+                <!-- 右侧内容区域 -->
+                <div class="content-area">
+                    <!-- 投稿模块 - 只有当用户登录且是当前用户时显示 -->
+                    <div v-if="isCurrentUser && currentContent === 'post'" class="post-section">
+                        <h2 class="content-title">发布新内容</h2>
+                        <div class="upload-container">
+                            <UploadModal />
+                        </div>
+                    </div>
+                    
+                    <!-- 语录内容 -->
+                    <div v-if="currentContent === 'quote'" class="quote-content">
+                        <h2 class="content-title">语录</h2>
+                        <div class="empty-content" v-if="true">
+                            <div class="empty-icon">📝</div>
+                            <p>暂无语录内容</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 视频内容 -->
+                    <div v-if="currentContent === 'video'" class="video-content">
+                        <h2 class="content-title">视频</h2>
+                        <div class="empty-content" v-if="true">
+                            <div class="empty-icon">🎬</div>
+                            <p>暂无视频内容</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 引入编辑个人信息模态框 -->
+    <EditProfileModal 
+        :is-visible="showEditModal" 
+        :user-info="userInfo" 
+        @close="closeEditModal" 
+        @updated="handleProfileUpdated"
+    />
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import apiClient from '@/utils/api';
+import { useUserStore } from '@/stores/user';
+import UploadModal from '@/components/upload/UploadModal.vue';
+import EditProfileModal from '@/components/user/EditProfileModal.vue'; // 导入编辑个人信息组件
+
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
+const userInfo = ref({});
+const isCurrentUser = ref(false);
+const currentContent = ref('quote'); // 默认显示语录内容
+const showEditModal = ref(false); // 控制编辑模态框显示
+
+// 打开编辑模态框
+const openEditModal = () => {
+    showEditModal.value = true;
+};
+
+// 关闭编辑模态框
+const closeEditModal = () => {
+    showEditModal.value = false;
+};
+
+// 个人信息更新后的处理函数
+const handleProfileUpdated = () => {
+    // 重新加载用户信息
+    loadUserInfo(route.query.id);
+};
+
+// 加载用户信息的函数
+const loadUserInfo = (userId) => {
+    if (userId) {
+        apiClient.get(`/user/getUserInfo`, {
+            params: { userId }
+        }).then(res => {
+            userInfo.value = res.data.data;
+            // 判断当前登录用户是否是该用户
+            isCurrentUser.value = userStore.userId === userId;
+            // 获取用户头像
+            apiClient.get(`/image/getImageByPath`, {
+                params: { path: userInfo.value.avatar },
+                responseType: 'blob'
+            }).then(res => {
+                userInfo.value.avatar = URL.createObjectURL(res.data)
+            });
+        });
+    }
+};
+
+// 监听路由参数变化
+watch(
+    () => route.query.id,
+    (newUserId) => {
+        if (newUserId) {
+            loadUserInfo(newUserId);
+        }
+    },
+    { immediate: true } // 立即执行一次
+);
+
+// 切换内容区域
+const switchContent = (contentType) => {
+    currentContent.value = contentType;
+};
+</script>
+
+<style scoped>
+/* 新增加的背景容器 */
+.page-background {
+    padding: 1rem;
+    width: 100vw;
+    background: linear-gradient(135deg, #f8f9fa, #e2e6ea);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%); 
+    width: 100vw; /* 使用视口宽度 */
+    min-height: 40vh;
+    background-color: #f5f5f5;
+    font-family: 'Arial', sans-serif;
+    overflow-x: hidden; /* 防止水平滚动 */
+}
+
+.user-page {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    /* max-width: 1400px; */
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+/* 上部分：用户基本信息 */
+.user-info-section {
+    display: flex;
+    width: 100%;
+    background: linear-gradient(135deg, #eb07ee, #a505de);
+    color: white;
+    padding: 2.5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 添加装饰元素 */
+.user-info-section::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.user-info-section::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.user-info-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 0 3rem;
+    position: relative;
+    z-index: 1;
+}
+
+.user-avatar-container {
+    margin-right: 3rem;
+    position: relative;
+}
+
+.user-avatar {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 5px solid white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+/* 添加头像悬停效果 */
+.user-avatar-container:hover .user-avatar {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.user-details {
+    flex: 1;
+}
+
+.user-details h1 {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+}
+
+.user-meta {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 1.8rem;
+}
+
+.user-meta span {
+    margin-right: 2rem;
+    font-size: 1.1rem;
+    opacity: 0.9;
+    padding: 0.3rem 0.8rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.user-bio {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 1.5rem;
+    border-radius: 10px;
+    max-width: 800px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.user-bio p {
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.6;
+}
+
+/* 下部分：导航和内容区域 */
+.content-section {
+    display: flex;
+    width: 100%;
+    padding: 2rem;
+    gap: 2rem;
+    box-sizing: border-box;
+}
+
+/* 左侧导航 */
+.sidebar {
+    width: 250px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    padding: 1.5rem 0;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.sidebar:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.nav-title {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    color: #444;
+    padding: 0 1rem;
+    position: relative;
+}
+
+.nav-title::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(to right, #eb07ee, #a505de);
+    margin: 0.8rem auto 0;
+    border-radius: 2px;
+}
+
+.nav-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.9rem 1.5rem;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    text-align: left;
+    color: #555;
+    transition: all 0.2s ease;
+    margin-bottom: 0.2rem;
+}
+
+.nav-button:hover {
+    background-color: #f8f8f8;
+    color: #eb07ee;
+    padding-left: 1.8rem;
+}
+
+.nav-button.active {
+    background-color: #f0f0f0;
+    color: #eb07ee;
+    font-weight: bold;
+    border-left: 4px solid #eb07ee;
+}
+
+.nav-icon {
+    margin-right: 0.8rem;
+    font-size: 1.3rem;
+}
+
+/* 右侧内容区域 */
+.content-area {
+    flex: 1;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    min-height: 600px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.content-area:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.content-title {
+    font-size: 1.8rem;
+    color: #333;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.content-title::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(to right, #eb07ee, #a505de);
+    border-radius: 2px;
+}
+
+/* 空内容提示 */
+.empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: #999;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.empty-content:hover {
+    background-color: #f5f5f5;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
+}
+
+.empty-content p {
+    font-size: 1.3rem;
+    font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .user-page {
+        width: 95%;
+    }
+    
+    .user-avatar {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .user-details h1 {
+        font-size: 2.4rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .user-avatar {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .sidebar {
+        width: 220px;
+    }
+    
+    .user-details h1 {
+        font-size: 2.2rem;
+    }
+    
+    .content-section {
+        padding: 1.5rem;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-background {
+        padding: 1rem 0;
+    }
+    
+    .user-page {
+        width: 100%;
+        border-radius: 0;
+    }
+    
+    .user-info-container {
+        flex-direction: column;
+        text-align: center;
+        padding: 0 1.5rem;
+    }
+    
+    .user-avatar-container {
+        margin-right: 0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .user-meta {
+        justify-content: center;
+    }
+    
+    .user-bio {
+        max-width: 100%;
+    }
+    
+    .content-section {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    .sidebar {
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
+    
+    .content-area {
+        padding: 1.5rem;
+    }
+    
+    .user-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .user-header h1 {
+        margin-bottom: 1rem;
+    }
+    
+    .edit-profile-button {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* 添加上传容器样式 */
+.upload-container {
+    width: 100%;
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 添加编辑按钮样式 */
+.edit-profile-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    color: white;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+}
+
+.edit-profile-button:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.edit-icon {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+/* 添加用户标题行样式 */
+.user-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.user-header h1 {
+    margin: 0;
+    font-size: 2.8rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+}
+</style>
