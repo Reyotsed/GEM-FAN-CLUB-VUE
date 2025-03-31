@@ -1,18 +1,28 @@
 <template>
     <div class="page-container">
-        <nav class="top-nav" :class=" 'nav-hidden' ">
+        <nav class="top-nav" :class="{ 'nav-hidden': false }">
             <div class="logo">G E M</div>
-            <ul class="nav-links">
-                <router-link to="/">首页</router-link>
-                <router-link to="/song">歌曲</router-link>
-                <router-link to="/quote">语录</router-link>
-                <router-link to="/video">视频</router-link>
-                <router-link to="/picture">照片</router-link>
-                <router-link to="/ai">AI-GEM</router-link>
-                <router-link to="/shop">商店</router-link>
-                <router-link to="/info">资讯</router-link>
-                <!-- 更多导航项 -->
+            
+            <!-- 汉堡菜单按钮 -->
+            <div class="menu-toggle" @click="toggleMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <!-- 导航链接，添加mobile-nav类 -->
+            <ul class="nav-links" :class="{ 'mobile-nav': isMobileMenuOpen }">
+                <router-link to="/" @click="closeMenu">首页</router-link>
+                <router-link to="/song" @click="closeMenu">歌曲</router-link>
+                <router-link to="/quote" @click="closeMenu">语录</router-link>
+                <router-link to="/video" @click="closeMenu">视频</router-link>
+                <router-link to="/picture" @click="closeMenu">照片</router-link>
+                <router-link to="/ai" @click="closeMenu">AI-GEM</router-link>
+                <router-link to="/shop" @click="closeMenu">商店</router-link>
+                <router-link to="/info" @click="closeMenu">资讯</router-link>
             </ul>
+
+            <!-- 用户部分保持不变 -->
             <div class="user-section">
                 <img 
                     v-if="userStore.isLoggedIn" 
@@ -55,6 +65,8 @@ const pageStore = usePageStore();
 
 const userStore = useUserStore();
 
+const isMobileMenuOpen = ref(false);
+
 const openLoginModal  = () => {
     // 把登录窗口设置为可视的
     loginModal.value.openModal();
@@ -81,6 +93,14 @@ const navigateToUserPage = () => {
     } else {
         console.error('Cannot navigate: User not logged in or missing ID');
     }
+};
+
+const toggleMenu = () => {
+    isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+const closeMenu = () => {
+    isMobileMenuOpen.value = false;
 };
 </script>
   
@@ -179,4 +199,96 @@ const navigateToUserPage = () => {
     background-color: #0a2cee;
 }
 
+/* 汉堡菜单按钮样式 */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 21px;
+    cursor: pointer;
+    margin-left: 1rem;
+    z-index: 1001;
+}
+
+.menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+    .menu-toggle {
+        display: flex;
+    }
+
+    .nav-links {
+        display: none;
+        position: fixed;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        background-color: #eb07ee;
+        flex-direction: column;
+        padding: 1rem 0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-links.mobile-nav {
+        display: flex;
+    }
+
+    .nav-links a {
+        padding: 1rem 2rem;
+        width: 100%;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-links a:last-child {
+        border-bottom: none;
+    }
+
+    .user-section {
+        margin-left: auto;
+        margin-right: 1rem;
+    }
+
+    .top-nav {
+        justify-content: flex-start;
+    }
+
+    /* 当菜单打开时的汉堡按钮动画 */
+    .menu-toggle.active span:first-child {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.active span:last-child {
+        transform: rotate(-45deg) translate(5px, -5px);
+    }
+}
+
+/* 优化用户部分在移动端的显示 */
+@media screen and (max-width: 480px) {
+    .user-nickname {
+        display: none;
+    }
+
+    .user-section {
+        gap: 0.5rem;
+    }
+
+    .logo {
+        margin-left: 1rem;
+        font-size: 1.2rem;
+    }
+}
 </style>
