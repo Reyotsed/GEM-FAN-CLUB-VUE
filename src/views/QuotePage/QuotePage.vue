@@ -1,7 +1,7 @@
 <template>
     <div class="quote-page">
         <div class="quote-list">
-            <div class="quote-item" v-for="(quote, index) in quoteList" :key="index">
+            <div class="quote-item" v-for="(quote, index) in quoteList" :key="index" @click="goToQuoteDetail(quote.quoteInfo.quoteId)">
                 <div class="quote-item-content-picture">
                     <div class="quote-item-content-picture-item" v-for="(picture, pictureIndex) in quote.pictureList" :key="pictureIndex">
                         <img :src="picture" alt="quote-picture">
@@ -33,6 +33,12 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Quote 详情弹窗 -->
+        <QuoteInfoPage
+            v-model:visible="showQuoteModal"
+            :quote-id="selectedQuoteId"
+        />
     </div>
 </template>
 
@@ -41,6 +47,7 @@ import { ref,onMounted } from 'vue';
 import apiClient from '@/utils/api';
 import { useUserStore } from '@/stores/user';
 import { useRouter } from 'vue-router';
+import QuoteInfoPage from './QuoteInfoPage.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -64,6 +71,8 @@ interface Quote {
 }
 
 const quoteList = ref<Quote[]>([]);
+const showQuoteModal = ref(false);
+const selectedQuoteId = ref('');
 
 onMounted(() => {
     // 先获取quoteList
@@ -173,32 +182,34 @@ const goToUserPage = (userId) => {
     router.push({ path: `/user`, query: { id: userId } });
 };
 
-
-
+// 添加跳转到详情页的方法
+const goToQuoteDetail = (quoteId) => {
+    selectedQuoteId.value = quoteId;
+    showQuoteModal.value = true;
+};
 
 </script>
 
 <style scoped>
 .quote-page {
     background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
-    padding: 2rem;
+    padding: 2rem 1rem;
     min-height: 40vh;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    position: relative;
-    width: 90vw;
-    left: 50%;
-    transform: translateX(-50%); 
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .quote-list {
-    width: 80%;
-    /* max-width: 80vw;  */
+    width: 100%;
+    max-width: 1400px;
     margin: 0 auto;
-    display: grid; /* 使用网格布局 */
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 瀑布流效果 */
-    gap: 1.5rem; /* 增加间距 */
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    box-sizing: border-box;
 }
 
 .quote-item {
@@ -207,6 +218,9 @@ const goToUserPage = (userId) => {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 1rem;
     transition: transform 0.2s;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .quote-item:hover {
@@ -309,5 +323,29 @@ const goToUserPage = (userId) => {
 
 .quote-item-content-user:hover .quote-item-content-user-nickname {
     color: #FF3366; /* 悬停时改变昵称颜色 */
+}
+
+/* 修改响应式布局 */
+@media (max-width: 768px) {
+    .quote-page {
+        padding: 1rem 0.5rem;
+    }
+
+    .quote-list {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+    .quote-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1201px) {
+    .quote-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 </style>

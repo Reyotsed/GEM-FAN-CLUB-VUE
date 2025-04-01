@@ -10,8 +10,7 @@ const VideoPage = () => import('@/views/VideoPage/VideoPage.vue')
 const HomePage = () => import('@/views/HomePage/HomePage.vue')
 const UserPage = () => import('@/views/UserPage/UserPage.vue')
 const UploadModal = () => import('@/components/upload/UploadModal.vue')
-
-
+const QuoteInfoPage = () => import('@/views/QuotePage/QuoteInfoPage.vue')
 
 const routes = [
     { path: '/', redirect: '' },
@@ -25,6 +24,7 @@ const routes = [
           { path: 'video', name: "video", component: VideoPage },
           { path: 'song', name: "song", component: SongPage },
           { path: 'quote', name: "quote", component: QuotePage},
+          { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage},
           { path: 'picture', name: "picture", component: PicturePage},
           { path: 'shop', name: "shop", component: ShopPage},
           { path: 'AI', name: "AI", component: AIPage},
@@ -39,6 +39,5 @@ const router = createRouter({
     history: createWebHistory(),
     routes
 });
-
 
 export default router;
