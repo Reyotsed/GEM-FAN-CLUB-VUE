@@ -58,13 +58,8 @@ export const useUserStore = defineStore('user', {
             this.setUserId(response.data.data.userId);
             this.setNickName(response.data.data.nickName);
             // 根据avatarUrl获取头像
-            apiClient.get("/image/getImageByPath", {
-                params: {
-                    path: response.data.data.avatar
-                },
-                responseType: 'blob'
-            }).then(response => {   
-                this.setAvatar(URL.createObjectURL(response.data));
+            apiClient.getImageUrl(response.data.data.avatar).then(avatarUrl => {
+                this.setAvatar(avatarUrl);
             });
           }
         }).catch(error => {

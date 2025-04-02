@@ -96,13 +96,8 @@ onMounted(() => {
                 // 这里拿到的是一个数组，数组中是对象，对象中是filePath
                 for (let j = 0; j < 1; j++) {
                     // 根据filePath获取图片
-                    apiClient.get("/image/getImageByPath", {
-                        params: {
-                            path: res.data.data[j].filePath
-                        },
-                        responseType: 'blob'
-                    }).then(response => {   
-                        quoteList.value[i].pictureList.push(URL.createObjectURL(response.data));
+                    apiClient.getImageUrl(res.data.data[j].filePath).then(imageUrl => {
+                        quoteList.value[i].pictureList.push(imageUrl);
                     });
                 }
             });
@@ -115,13 +110,8 @@ onMounted(() => {
             }).then(res => {
                 quoteList.value[i].userNickName = res.data.data.nickName;
                 // 再获取userAvatar
-                apiClient.get("/image/getImageByPath", {
-                    params: {
-                        path: res.data.data.avatar
-                    },
-                    responseType: 'blob'
-                }).then(response => {
-                    quoteList.value[i].userAvatar = URL.createObjectURL(response.data);
+                apiClient.getImageUrl(res.data.data.avatar).then(avatarUrl => {
+                    quoteList.value[i].userAvatar = avatarUrl;
                 });
             });
 

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getCachedImage, cacheImage } from './imageCache';
 
 // 创建axios实例，使用环境变量中的配置
 const apiClient = axios.create({
@@ -30,5 +31,34 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * 获取图片URL，优先从缓存中获取
+ * @param {string} path - 图片路径
+ * @returns {Promise<string>} - 图片URL
+ */
+apiClient.getImageUrl = async function(path) {
+  // 检查缓存中是否已有该图片
+  const cachedUrl = getCachedImage(path);
+  if (cachedUrl) {
+    return cachedUrl;
+  }
+  
+  // 缓存中没有，则请求图片
+  try {
+    const response = await this.get("/image/getImageByPath", {
+      params: { path },
+      responseType: 'blob'
+    });
+    console.log(path);
+    // 创建URL并缓存
+    const imageUrl = URL.createObjectURL(response.data);
+    cacheImage(path, imageUrl);
+    return imageUrl;
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    throw error;
+  }
+};
 
 export default apiClient; 

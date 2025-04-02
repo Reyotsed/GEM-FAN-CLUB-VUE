@@ -183,13 +183,10 @@ const saveChanges = async () => {
         const avatarPath = avatarResponse.data.data;
         
         // 获取新头像
-        const avatarBlob = await apiClient.get("/image/getImageByPath", {
-          params: { path: avatarPath },
-          responseType: 'blob'
-        });
+        const avatarUrl = await apiClient.getImageUrl(avatarPath);
         
         // 更新全局用户信息
-        userStore.setAvatar(URL.createObjectURL(avatarBlob.data));
+        userStore.setAvatar(avatarUrl);
       }
     }
     

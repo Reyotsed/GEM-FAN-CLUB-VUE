@@ -140,11 +140,8 @@ const loadUserInfo = (userId) => {
             // 判断当前登录用户是否是该用户
             isCurrentUser.value = userStore.userId === userId;
             // 获取用户头像
-            apiClient.get(`/image/getImageByPath`, {
-                params: { path: userInfo.value.avatar },
-                responseType: 'blob'
-            }).then(res => {
-                userInfo.value.avatar = URL.createObjectURL(res.data)
+            apiClient.getImageUrl(userInfo.value.avatar).then(avatarUrl => {
+                userInfo.value.avatar = avatarUrl;
             });
         });
     }

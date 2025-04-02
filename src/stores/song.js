@@ -103,12 +103,7 @@ export const useSongStore = defineStore('song', {
       if (!this.cachedSongs[songId] || this.cachedSongs[songId].coverUrl) return;
       
       try {
-        const response = await apiClient.get("/image/getImageByPath", {
-          params: { path: coverPath },
-          responseType: 'blob'
-        });
-        
-        const imageUrl = URL.createObjectURL(response.data);
+        const imageUrl = await apiClient.getImageUrl(coverPath);
         this.cachedSongs[songId].coverUrl = imageUrl;
       } catch (error) {
         console.error('获取封面图片失败:', error);

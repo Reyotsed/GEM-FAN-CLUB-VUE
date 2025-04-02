@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, defineEmits, watch, onUnmounted } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import apiClient from '@/utils/api';
@@ -161,11 +161,9 @@ const loadQuoteData = async () => {
         
         // 获取每张图片
         for (const pic of picturesRes.data.data) {
-            const imageRes = await apiClient.get("/image/getImageByPath", {
-                params: { path: pic.filePath },
-                responseType: 'blob'
-            });
-            quoteData.value.pictureList.push(URL.createObjectURL(imageRes.data));
+            // 使用缓存获取图片URL
+            const imageUrl = await apiClient.getImageUrl(pic.filePath);
+            quoteData.value.pictureList.push(imageUrl);
         }
 
         // 获取作者信息
@@ -175,11 +173,8 @@ const loadQuoteData = async () => {
         quoteData.value.userNickName = userRes.data.data.nickName;
         
         // 获取作者头像
-        const avatarRes = await apiClient.get("/image/getImageByPath", {
-            params: { path: userRes.data.data.avatar },
-            responseType: 'blob'
-        });
-        quoteData.value.userAvatar = URL.createObjectURL(avatarRes.data);
+        const avatarUrl = await apiClient.getImageUrl(userRes.data.data.avatar);
+        quoteData.value.userAvatar = avatarUrl;
 
         // 如果用户已登录，检查是否已点赞
         if (userStore.isLoggedIn) {
@@ -223,14 +218,11 @@ const loadComments = async () => {
             const userRes = await apiClient.get('/user/getUserInfo', {
                 params: { userId: comment.userId }
             });
-            const avatarRes = await apiClient.get("/image/getImageByPath", {
-                params: { path: userRes.data.data.avatar },
-                responseType: 'blob'
-            });
+            const avatarUrl = await apiClient.getImageUrl(userRes.data.data.avatar);
             return {
                 ...comment,
                 userNickName: userRes.data.data.nickName,
-                userAvatar: URL.createObjectURL(avatarRes.data)
+                userAvatar: avatarUrl
             };
         }));
     } catch (error) {
