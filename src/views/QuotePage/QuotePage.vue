@@ -174,7 +174,7 @@ const goToUserPage = (userId) => {
 
 // 添加跳转到详情页的方法
 const goToQuoteDetail = (quoteId) => {
-    selectedQuoteId.value = quoteId;
+    selectedQuoteId.value = String(quoteId);
     showQuoteModal.value = true;
 };
 
