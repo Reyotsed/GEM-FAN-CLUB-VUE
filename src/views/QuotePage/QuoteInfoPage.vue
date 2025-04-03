@@ -147,7 +147,7 @@ const props = defineProps({
     },
     quoteId: {
         type: String,
-        default: ''
+        required: true
     }
 });
 
@@ -243,14 +243,13 @@ const loadQuoteData = async () => {
     }
 };
 
+// 监听 visible 变化，控制页面滚动
 watch(() => props.visible, (newVal) => {
     if (newVal) {
         loadQuoteData();
         currentImageIndex.value = 0;
-        // 禁用背景页面滚动，但允许弹窗内部滚动
         document.body.classList.add('modal-open');
     } else {
-        // 恢复页面滚动
         document.body.classList.remove('modal-open');
     }
 });
@@ -509,14 +508,13 @@ const loadMoreReplies = (comment) => {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    overflow: hidden;
 }
 
 .quote-info-modal {
@@ -528,6 +526,7 @@ const loadMoreReplies = (comment) => {
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     animation: modalFadeIn 0.3s ease;
+    display: flex;
 }
 
 @keyframes modalFadeIn {
@@ -543,6 +542,7 @@ const loadMoreReplies = (comment) => {
 
 .modal-content {
     display: flex;
+    width: 100%;
     height: 100%;
 }
 
@@ -875,11 +875,9 @@ const loadMoreReplies = (comment) => {
 }
 
 /* 添加全局样式 */
-:global(.modal-open) {
+:global(body.modal-open) {
     overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
+    padding-right: 15px; /* 防止滚动条消失导致页面抖动 */
 }
 
 .comment-actions {

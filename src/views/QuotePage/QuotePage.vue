@@ -1,13 +1,13 @@
 <template>
     <div class="quote-page">
         <div class="quote-list">
-            <div class="quote-item" v-for="(quote, index) in quoteList" :key="index" @click="goToQuoteDetail(quote.quoteInfo.quoteId)">
-                <div class="quote-item-content-picture">
+            <div class="quote-item" v-for="(quote, index) in quoteList" :key="index">
+                <div class="quote-item-content-picture" @click="goToQuoteDetail(quote.quoteInfo.quoteId)">
                     <div class="quote-item-content-picture-item" v-for="(picture, pictureIndex) in quote.pictureList" :key="pictureIndex">
                         <img :src="picture" alt="quote-picture">
                     </div>
                 </div>  
-                <div class="quote-item-content">
+                <div class="quote-item-content" @click="goToQuoteDetail(quote.quoteInfo.quoteId)">
                     <div class="quote-item-content-text">
                         <div class="quote-item-content-text-content">   
                             {{ quote.quoteInfo.content }}
@@ -21,7 +21,7 @@
                     <div class="quote-item-content-user-nickname">
                         {{ quote.userNickName }}
                     </div>
-                    <div class="quote-item-content-like" @click="addlike(quote)">
+                    <div class="quote-item-content-like" @click.stop="addlike(quote)">
                         <span :class="['like-icon', { 'liked': quote.isliked }]">
                             <span v-if="quote.isliked">❤️</span>
                             <span v-else>🤍</span>
@@ -182,9 +182,11 @@ const goToQuoteDetail = (quoteId) => {
 
 <style scoped>
 .quote-page {
-    background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+    min-height: 100vh;
     padding: 2rem 1rem;
-    min-height: 40vh;
+    background: linear-gradient(135deg, #f6f8ff 0%, #f1f5fe 100%);
+    position: relative;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -192,7 +194,34 @@ const goToQuoteDetail = (quoteId) => {
     box-sizing: border-box;
 }
 
+/* 添加装饰性背景元素 */
+.quote-page::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 60%);
+    transform: rotate(30deg);
+    z-index: 0;
+}
+
+.quote-page::after {
+    content: '';
+    position: fixed;
+    bottom: -50%;
+    left: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(238,174,202,0.1) 0%, rgba(148,187,233,0.1) 100%);
+    transform: rotate(-30deg);
+    z-index: 0;
+}
+
 .quote-list {
+    position: relative;
+    z-index: 1;
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
@@ -203,18 +232,22 @@ const goToQuoteDetail = (quoteId) => {
 }
 
 .quote-item {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05),
+                0 2px 8px rgba(0, 0, 0, 0.02);
     padding: 1rem;
-    transition: transform 0.2s;
+    transition: all 0.3s ease;
     cursor: pointer;
-    width: 100%;
-    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .quote-item:hover {
-    transform: translateY(-5px); /* 悬停效果 */
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08),
+                0 4px 12px rgba(0, 0, 0, 0.03);
+    border-color: rgba(255, 255, 255, 1);
 }
 
 .quote-item-content {
@@ -223,12 +256,19 @@ const goToQuoteDetail = (quoteId) => {
 }
 
 .quote-item-content-text {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin: 1rem 0;
+    line-height: 1.6;
+}
+
+.quote-item-content-text-content {   
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 1.2rem;
     color: #333;
-    margin-bottom: 1rem; /* 增加文本与图片之间的间距 */
-    white-space: nowrap; /* 不换行 */
-    overflow: hidden; /* 隐藏溢出部分 */
-    text-overflow: ellipsis; /* 溢出时显示省略号 */
+    margin-bottom: 1rem;
 }
 
 .quote-item-content-picture {
@@ -243,7 +283,9 @@ const goToQuoteDetail = (quoteId) => {
     max-width: 300px; /* 限制最大宽度 */
     height: 350px; /* 设置固定高度 */
     overflow: hidden; /* 隐藏溢出部分 */
-    border-radius: 8px; /* 圆角效果 */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .quote-item-content-picture-item img {
@@ -259,9 +301,12 @@ const goToQuoteDetail = (quoteId) => {
 
 /* 用户信息部分样式 */
 .quote-item-content-user {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 12px;
+    padding: 0.8rem;
+    margin-top: 1rem;
     display: flex;
     align-items: center; /* 垂直居中 */
-    margin-top: 1rem; /* 增加顶部间距 */
     justify-content: space-between; /* 使内容分布在两边 */
 }
 
@@ -278,22 +323,26 @@ const goToQuoteDetail = (quoteId) => {
     width: 100%;
     height: 100%;
     object-fit: cover; /* 保持图片比例 */
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .quote-item-content-user-nickname {
-    font-size: 1rem;
-    color: #555;
-    transition: color 0.2s; /* 添加过渡效果 */
-    margin-right: 0.5rem; /* 昵称与点赞数量之间的间距 */
+    font-weight: 500;
+    color: #34495e;
 }
 
 /* 点赞量样式 */
 .quote-item-content-like {
-    font-size: 1rem;
-    color: #FF3366; /* 点赞量颜色 */
-    font-weight: bold;
-    display: flex;
-    align-items: center; /* 垂直居中 */
+    background: rgba(255, 255, 255, 0.8);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+.quote-item-content-like:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .like-icon {

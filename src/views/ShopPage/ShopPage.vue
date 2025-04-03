@@ -55,7 +55,41 @@ const showPaymentQR = ref(false);
 .shop-page {
   width: 100%;
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background: linear-gradient(135deg, #fff6fe 0%, #f8f0ff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.shop-page::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(235,7,238,0.05) 0%, rgba(165,5,222,0.02) 60%);
+  transform: rotate(30deg);
+  z-index: 0;
+  animation: floatBg 15s ease-in-out infinite;
+}
+
+.shop-page::after {
+  content: '';
+  position: fixed;
+  bottom: -50%;
+  left: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(235,7,238,0.03) 0%, rgba(165,5,222,0.05) 100%);
+  transform: rotate(-30deg);
+  z-index: 0;
+  animation: floatBg 20s ease-in-out infinite reverse;
+}
+
+@keyframes floatBg {
+  0% { transform: rotate(30deg) translate(0, 0); }
+  50% { transform: rotate(30deg) translate(2%, 2%); }
+  100% { transform: rotate(30deg) translate(0, 0); }
 }
 
 .page-header {
@@ -64,23 +98,32 @@ const showPaymentQR = ref(false);
   padding: 3rem 0;
   text-align: center;
   position: relative;
+  overflow: hidden;
 }
 
-.header-content h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+              radial-gradient(circle at 70% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+  z-index: 1;
 }
 
-.subtitle {
-  font-size: 1.2rem;
-  opacity: 0.9;
+.header-content {
+  position: relative;
+  z-index: 2;
 }
 
 .shop-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 /* 赞助部分样式 */
@@ -88,28 +131,53 @@ const showPaymentQR = ref(false);
   margin-bottom: 3rem;
   display: flex;
   justify-content: center;
+  position: relative;
 }
 
 .sponsor-card {
   display: flex;
-  background: linear-gradient(to right, #fff1fd, #f9f0ff);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.1);
+  box-shadow: 0 8px 25px rgba(235, 7, 238, 0.15);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   max-width: 800px;
   width: 100%;
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+.sponsor-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 0% 100%, rgba(235,7,238,0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .sponsor-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(235, 7, 238, 0.15);
+  box-shadow: 0 12px 30px rgba(235, 7, 238, 0.2);
 }
 
 .sponsor-image {
   width: 30%;
   position: relative;
   overflow: hidden;
+}
+
+.sponsor-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(235,7,238,0.1), transparent);
+  z-index: 1;
 }
 
 .sponsor-image img {
@@ -127,7 +195,7 @@ const showPaymentQR = ref(false);
   position: absolute;
   top: 15px;
   right: 15px;
-  background-color: rgba(235, 7, 238, 0.9);
+  background: linear-gradient(135deg, rgba(235,7,238,0.95), rgba(165,5,222,0.95));
   color: white;
   border-radius: 50%;
   width: 50px;
@@ -137,6 +205,14 @@ const showPaymentQR = ref(false);
   justify-content: center;
   font-weight: bold;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 .sponsor-info {
@@ -180,7 +256,8 @@ const showPaymentQR = ref(false);
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,7 +265,7 @@ const showPaymentQR = ref(false);
 }
 
 .modal-content {
-  background-color: white;
+  background: rgba(255, 255, 255, 0.95);
   padding: 2rem;
   border-radius: 12px;
   width: 90%;
@@ -196,6 +273,12 @@ const showPaymentQR = ref(false);
   text-align: center;
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: modalShow 0.3s ease-out;
+}
+
+@keyframes modalShow {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .close-button {

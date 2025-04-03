@@ -70,7 +70,35 @@
                     <!-- 语录内容 -->
                     <div v-if="currentContent === 'quote'" class="quote-content">
                         <h2 class="content-title">语录</h2>
-                        <div class="empty-content" v-if="true">
+                        <div class="quote-list" v-if="userQuotes.length > 0">
+                            <div v-for="quote in userQuotes" 
+                                 :key="quote.quoteId" 
+                                 class="quote-item"
+                                 @click="goToQuoteDetail(quote.quoteId)">
+                                <div class="quote-item-content-picture">
+                                    <div class="quote-item-content-picture-item" v-if="quote.pictureList && quote.pictureList[0]">
+                                        <img :src="quote.pictureList[0]" alt="quote-picture">
+                                    </div>
+                                </div>
+                                <div class="quote-item-content">
+                                    <div class="quote-item-content-text">
+                                        {{ quote.content }}
+                                    </div>
+                                </div>
+                                <div class="quote-item-footer">
+                                    <div class="quote-meta">
+                                        <span class="quote-time">{{ formatTime(quote.createdAt) }}</span>
+                                        <span class="quote-likes">❤️ {{ quote.likesCount }}</span>
+                                    </div>
+                                    <button class="delete-btn" 
+                                            @click.stop="deleteQuote(quote)" 
+                                            v-if="isCurrentUser">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="empty-content" v-else>
                             <div class="empty-icon">📝</div>
                             <p>暂无语录内容</p>
                         </div>
@@ -96,6 +124,12 @@
         @close="closeEditModal" 
         @updated="handleProfileUpdated"
     />
+
+    <!-- 语录详情弹窗 -->
+    <QuoteInfoPage
+        v-model:visible="showQuoteDetail"
+        :quote-id="selectedQuoteId"
+    />
 </template>
 
 <script setup lang="ts">
@@ -104,15 +138,48 @@ import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
 import { useUserStore } from '@/stores/user';
 import UploadModal from '@/components/upload/UploadModal.vue';
-import EditProfileModal from '@/components/user/EditProfileModal.vue'; // 导入编辑个人信息组件
+import EditProfileModal from '@/components/user/EditProfileModal.vue';
+import QuoteInfoPage from '@/views/QuotePage/QuoteInfoPage.vue';
+
+interface UserInfo {
+    userId: string;
+    nickName: string;
+    avatar: string;
+    joinTime: string;
+    birthday: string;
+    personIntroduction: string;
+}
+
+interface Quote {
+    quoteId: string;
+    content: string;
+    createdAt: string;
+    likesCount: number;
+    pictureList: string[];
+}
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
-const userInfo = ref({});
+const userInfo = ref<UserInfo>({
+    userId: '',
+    nickName: '',
+    avatar: '',
+    joinTime: '',
+    birthday: '',
+    personIntroduction: ''
+});
 const isCurrentUser = ref(false);
-const currentContent = ref('quote'); // 默认显示语录内容
-const showEditModal = ref(false); // 控制编辑模态框显示
+const currentContent = ref('quote');
+const showEditModal = ref(false);
+const userQuotes = ref<Quote[]>([]);
+const showQuoteDetail = ref(false);
+const selectedQuoteId = ref('');
+
+// 格式化时间的函数
+const formatTime = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+};
 
 // 打开编辑模态框
 const openEditModal = () => {
@@ -131,19 +198,75 @@ const handleProfileUpdated = () => {
 };
 
 // 加载用户信息的函数
-const loadUserInfo = (userId) => {
+const loadUserInfo = async (userId) => {
     if (userId) {
-        apiClient.get(`/user/getUserInfo`, {
-            params: { userId }
-        }).then(res => {
+        try {
+            const res = await apiClient.get(`/user/getUserInfo`, {
+                params: { userId }
+            });
             userInfo.value = res.data.data;
             // 判断当前登录用户是否是该用户
             isCurrentUser.value = userStore.userId === userId;
             // 获取用户头像
-            apiClient.getImageUrl(userInfo.value.avatar).then(avatarUrl => {
-                userInfo.value.avatar = avatarUrl;
-            });
+            const avatarUrl = await apiClient.getImageUrl(userInfo.value.avatar);
+            userInfo.value.avatar = avatarUrl;
+            
+            // 加载用户语录
+            await loadUserQuotes();
+            
+            // 默认显示语录标签
+            currentContent.value = 'quote';
+        } catch (error) {
+            console.error('Error loading user info:', error);
+        }
+    }
+};
+
+// 加载用户语录的函数
+const loadUserQuotes = async () => {
+    try {
+        const res = await apiClient.get('/quote/userQuotes', {
+            params: { userId: route.query.id }
         });
+        const quotesData = res.data.data;
+        
+        // 为每个语录加载图片
+        const enrichedQuotes = await Promise.all(quotesData.map(async (quote) => {
+            const picturesRes = await apiClient.get('/quote/quotePicture', {
+                params: { quoteId: quote.quoteId }
+            });
+            
+            const pictureUrls = await Promise.all(
+                picturesRes.data.data.map(pic => apiClient.getImageUrl(pic.filePath))
+            );
+            
+            return {
+                ...quote,
+                pictureList: pictureUrls
+            };
+        }));
+        
+        userQuotes.value = enrichedQuotes;
+    } catch (error) {
+        console.error('Error loading user quotes:', error);
+    }
+};
+
+// 编辑语录的函数
+const editQuote = (quote) => {
+    // TODO: 实现编辑功能
+    console.log('Edit quote:', quote);
+};
+
+// 删除语录的函数
+const deleteQuote = async (quote) => {
+    if (!confirm('确定要删除这条语录吗？')) return;
+    
+    try {
+        await apiClient.delete(`/quote/delete/${quote.quoteId}`);
+        userQuotes.value = userQuotes.value.filter(q => q.quoteId !== quote.quoteId);
+    } catch (error) {
+        console.error('Error deleting quote:', error);
     }
 };
 
@@ -158,9 +281,22 @@ watch(
     { immediate: true } // 立即执行一次
 );
 
+// 监听内容切换
+watch(() => currentContent.value, (newVal) => {
+    if (newVal === 'quote') {
+        loadUserQuotes();
+    }
+});
+
 // 切换内容区域
 const switchContent = (contentType) => {
     currentContent.value = contentType;
+};
+
+// 添加跳转到详情页的方法
+const goToQuoteDetail = (quoteId: string) => {
+    selectedQuoteId.value = String(quoteId);
+    showQuoteDetail.value = true;
 };
 </script>
 
@@ -541,6 +677,10 @@ const switchContent = (contentType) => {
         font-size: 0.9rem;
         padding: 0.5rem 1rem;
     }
+    
+    .quote-list {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* 添加上传容器样式 */
@@ -592,5 +732,91 @@ const switchContent = (contentType) => {
     font-size: 2.8rem;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     font-weight: 700;
+}
+
+.quote-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.quote-item {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.quote-item:hover {
+    transform: translateY(-5px);
+}
+
+.quote-item-content-picture {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}
+
+.quote-item-content-picture-item {
+    width: 100%;
+    height: 100%;
+}
+
+.quote-item-content-picture-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s;
+}
+
+.quote-item:hover .quote-item-content-picture-item img {
+    transform: scale(1.1);
+}
+
+.quote-item-content {
+    padding: 15px;
+}
+
+.quote-item-content-text {
+    font-size: 1rem;
+    color: #333;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.quote-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-top: 1px solid #eee;
+}
+
+.quote-meta {
+    display: flex;
+    gap: 15px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 1.2rem;
+}
+
+.delete-btn:hover {
+    background: #ffebee;
 }
 </style>

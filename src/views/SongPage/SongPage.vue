@@ -85,7 +85,7 @@
             </div>
         </div>
         <div class="song-list">
-            你好
+            <SongListModal />
         </div>
     </div>
 </template>
@@ -94,6 +94,7 @@
 import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue'; 
 import apiClient from '@/utils/api';
 import { useSongStore } from '@/stores/song';
+import SongListModal from '@/components/song/SongListModal.vue';
 
 const songStore = useSongStore(); // 使用歌曲存储
 const audio = ref(null);
@@ -982,5 +983,12 @@ const handleCanPlay = () => {
     .lyrics-line.highlight {
         font-size: 1.3rem;
     }
+}
+
+.song-list {
+    width: 90%;
+    margin: 2rem auto;
+    position: relative;
+    z-index: 1;
 }
 </style>

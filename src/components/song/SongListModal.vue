@@ -1,0 +1,452 @@
+<template>
+  <div class="song-list-modal">
+    <div class="modal-content">
+      <!-- 热门歌曲榜单 -->
+      <section class="song-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="icon hot"></i>
+            热门歌曲榜单
+          </h2>
+          <div class="update-time" v-if="lastUpdated">
+            更新时间：{{ lastUpdated }}
+          </div>
+        </div>
+        <div class="song-list">
+          <a 
+            v-for="(song, index) in hotSongs" 
+            :key="song.songId" 
+            class="song-item"
+            :href="'https://music.163.com/#/song?id=' + song.songId"
+            target="_blank"
+          >
+            <div class="song-rank">{{ index + 1 }}</div>
+            <div class="song-cover">
+              <img :src="song.coverUrl" :alt="song.title">
+            </div>
+            <div class="song-title">{{ song.title }}</div>
+          </a>
+        </div>
+      </section>
+
+      <!-- 冷门歌曲推荐 -->
+      <section class="song-section">
+        <h2 class="section-title">
+          <i class="icon hidden"></i>
+          冷门歌曲推荐
+        </h2>
+        姐姐怎么会有冷门歌曲，开玩笑！！！（开发中）
+      </section>
+
+      <!-- 专辑列表 -->
+      <section class="album-section">
+        <h2 class="section-title">
+          <i class="icon album"></i>
+          专辑列表
+        </h2>
+        <div class="album-list">
+          <div 
+            v-for="album in albums" 
+            :key="album.albumId" 
+            class="album-item"
+            @click="viewAlbum(album)"
+          >
+            <div class="album-cover">
+              <img :src="album.coverUrl" :alt="album.title">
+              <div class="album-overlay">
+                <i class="icon view"></i>
+              </div>
+            </div>
+            <div class="album-info">
+              <div class="album-title">{{ album.title }}</div>
+              <div class="album-date">{{ formatDate(album.releaseDate) }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useSongStore } from '@/stores/song';
+import apiClient from '@/utils/api';
+
+const songStore = useSongStore();
+
+// 数据定义
+const hotSongs = ref([]);
+const hiddenGems = ref([]);
+const lastUpdated = ref('');
+
+// 邓紫棋专辑数据
+const albums = ref([
+  {
+    albumId: '8',
+    title: '启示录',
+    coverUrl: '/img/albumCover/8.jpg',
+    releaseDate: '2022-09-23',
+    neteaseUrl: 'https://music.163.com/#/album?id=149367827'
+  },
+  {
+    albumId: '7',
+    title: '摩天动物园',
+    coverUrl: '/img/albumCover/7.jpg',
+    releaseDate: '2019-12-27',
+    neteaseUrl: 'https://music.163.com/#/album?id=84391762'
+  },
+  {
+    albumId: '6',
+    title: '童话三部曲',
+    coverUrl: '/img/albumCover/6.jpg',
+    releaseDate: '2018-08-16',
+    neteaseUrl: 'https://music.163.com/#/album?id=72709830'
+  },
+  {
+    albumId: '5',
+    title: '新的心跳',
+    coverUrl: '/img/albumCover/5.jpg',
+    releaseDate: '2015-11-06',
+    neteaseUrl: 'https://music.163.com/#/album?id=3189002'
+  },
+  {
+    albumId: '4',
+    title: 'Xposed',
+    coverUrl: '/img/albumCover/4.jpg',
+    releaseDate: '2012-07-05',
+    neteaseUrl: 'https://music.163.com/#/album?id=23497'
+  },
+  {
+    albumId: '3',
+    title: 'My Secret',
+    coverUrl: '/img/albumCover/3.jpg',
+    releaseDate: '2010-10-29',
+    neteaseUrl: 'https://music.163.com/#/album?id=2391062'
+  },
+  {
+    albumId: '2',
+    title: '18',
+    coverUrl: '/img/albumCover/2.jpg',
+    releaseDate: '2009-10-27',
+    neteaseUrl: 'https://music.163.com/#/album?id=2400479'
+  },
+  {
+    albumId: '1',
+    title: 'G.E.M.',
+    coverUrl: '/img/albumCover/1.jpg',
+    releaseDate: '2008-10-15',
+    neteaseUrl: 'https://music.163.com/#/album?id=23509'
+  },
+]);
+
+// 加载热门歌曲数据
+const loadHotSongs = async () => {
+  try {
+    const response = await fetch('/data/gem_hot_songs.json');
+    const data = await response.json();
+    hotSongs.value = data.songs;
+    lastUpdated.value = data.lastUpdated;
+  } catch (error) {
+    console.error('加载热门歌曲失败:', error);
+  }
+};
+
+// 格式化播放次数
+const formatPlayCount = (count) => {
+  if (count >= 10000) {
+    return (count / 10000).toFixed(1) + '万';
+  }
+  return count;
+};
+
+// 格式化日期
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
+// 播放歌曲
+const playSong = async (song) => {
+  try {
+    await songStore.setCurrentSong(song);
+  } catch (error) {
+    console.error('播放歌曲失败:', error);
+  }
+};
+
+// 查看专辑
+const viewAlbum = (album) => {
+  window.open(album.neteaseUrl, '_blank');
+};
+
+// 加载数据
+const loadData = async () => {
+  try {
+    await loadHotSongs();
+    // 加载冷门歌曲
+    const hiddenResponse = await apiClient.get('/songs/hidden');
+    hiddenGems.value = hiddenResponse.data;
+  } catch (error) {
+    console.error('加载数据失败:', error);
+  }
+};
+
+onMounted(() => {
+  loadData();
+});
+</script>
+
+<style scoped>
+.song-list-modal {
+  width: 100%;
+  padding: 2rem;
+  background: rgba(15, 15, 30, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.section-title .icon {
+  width: 24px;
+  height: 24px;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.section-title .icon.hot {
+  background-image: url('/icons/hot.svg');
+}
+
+.section-title .icon.hidden {
+  background-image: url('/icons/hidden.svg');
+}
+
+.section-title .icon.album {
+  background-image: url('/icons/album.svg');
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.update-time {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.song-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.song-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+.song-rank {
+  width: 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ff69b4;
+  text-align: center;
+}
+
+.song-cover {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 1rem;
+}
+
+.song-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.song-title {
+  flex: 1;
+  font-size: 1.1rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-artist {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.song-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.play-count {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+}
+
+.icon.play {
+  width: 20px;
+  height: 20px;
+  background-image: url('/icons/play.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.song-item:hover .icon.play {
+  opacity: 1;
+}
+
+.album-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+.album-item {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  width: 100%;
+  max-width: 180px;
+  margin: 0 auto;
+}
+
+.album-item:hover {
+  transform: translateY(-5px);
+}
+
+.album-cover {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.8rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.album-item:hover .album-overlay {
+  opacity: 1;
+}
+
+.icon.view {
+  width: 30px;
+  height: 30px;
+  background-image: url('/icons/view.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.album-info {
+  text-align: center;
+}
+
+.album-title {
+  font-size: 1.1rem;
+  color: #fff;
+  margin-bottom: 0.3rem;
+}
+
+.album-date {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 768px) {
+  .song-list {
+    grid-template-columns: 1fr;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .album-list {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .album-item {
+    max-width: 150px;
+  }
+
+  .song-item {
+    padding: 0.8rem;
+  }
+
+  .song-cover {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.song-title a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.song-title a:hover {
+  color: #ff69b4;
+  text-decoration: underline;
+}
+</style>
