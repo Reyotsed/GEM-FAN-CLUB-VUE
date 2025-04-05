@@ -225,6 +225,9 @@ onMounted(() => {
       audio.value.load();
     }
   }
+
+  // 确保页面滚动到顶部
+  window.scrollTo(0, 0);
 });
 
 // 修改播放/暂停函数以包含更多错误处理

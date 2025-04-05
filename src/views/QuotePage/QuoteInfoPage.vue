@@ -510,11 +510,12 @@ const loadMoreReplies = (comment) => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(3px);
 }
 
 .quote-info-modal {
@@ -522,10 +523,10 @@ const loadMoreReplies = (comment) => {
     width: 60%;
     height: 80vh;
     background: white;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    animation: modalFadeIn 0.3s ease;
+    box-shadow: 0 15px 40px rgba(111, 134, 214, 0.25);
+    animation: modalFadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     display: flex;
 }
 
@@ -547,17 +548,18 @@ const loadMoreReplies = (comment) => {
 }
 
 .left-section {
-    width: 50%;
+    width: 60%;
     height: 100%;
-    background: #fff;
+    background: #fafafa;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .right-section {
-    width: 50%;
+    width: 40%;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -572,7 +574,7 @@ const loadMoreReplies = (comment) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fff;
+    background-color: #fafafa;
 }
 
 .image-container {
@@ -591,44 +593,23 @@ const loadMoreReplies = (comment) => {
     object-fit: contain;
     min-width: 70%;
     min-height: 70%;
-    transition: transform 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 8px 25px rgba(111, 134, 214, 0.2);
+    border-radius: 4px;
 }
 
 .image-container:hover img {
-    transform: scale(1.03);
+    transform: scale(1.05);
 }
 
 .close-button {
     position: absolute;
     top: 16px;
     left: 16px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.9);
     border: none;
     color: #333;
     font-size: 20px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 1001;
-    transition: background-color 0.3s;
-}
-
-.close-button:hover {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.carousel-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.2);
-    color: #333;
-    border: none;
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -636,36 +617,68 @@ const loadMoreReplies = (comment) => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 0.3s;
+    z-index: 1001;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.close-button:hover {
+    background: #fff;
+    transform: rotate(90deg);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
     z-index: 2;
     font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .carousel-button:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: #fff;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .carousel-button.prev {
-    left: 1rem;
+    left: 1.2rem;
 }
 
 .carousel-button.next {
-    right: 1rem;
+    right: 1.2rem;
 }
 
 .carousel-indicators {
     position: absolute;
-    bottom: 1rem;
+    bottom: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     gap: 0.5rem;
     z-index: 2;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 0.8rem;
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
 }
 
 .indicator {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.2);
     cursor: pointer;
@@ -678,8 +691,9 @@ const loadMoreReplies = (comment) => {
 }
 
 .user-section {
-    padding: 16px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 20px;
+    border-bottom: 1px solid #eaefff;
+    background: linear-gradient(to bottom, #ffffff, #f8f9ff);
 }
 
 .author-info {
@@ -687,15 +701,26 @@ const loadMoreReplies = (comment) => {
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    transition: transform 0.2s ease;
+}
+
+.author-info:hover {
+    transform: translateY(-2px);
 }
 
 .author-avatar {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid #f0f0f0;
+    border: 2px solid #fff;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.author-info:hover .author-avatar {
+    transform: scale(1.05);
 }
 
 .user-details {
@@ -704,17 +729,24 @@ const loadMoreReplies = (comment) => {
 
 .author-name {
     font-weight: 600;
-    color: #333;
+    color: #5b6f9d;
     display: block;
-    font-size: 15px;
+    font-size: 16px;
+    transition: color 0.2s ease;
+}
+
+.author-info:hover .author-name {
+    color: #9567b1;
 }
 
 .quote-content {
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: 16px;
+    line-height: 1.6;
     color: #333;
-    margin: 10px 0;
+    margin: 14px 0;
     word-break: break-word;
+    padding: 0 4px;
+    letter-spacing: 0.01em;
 }
 
 .quote-content p {
@@ -724,83 +756,135 @@ const loadMoreReplies = (comment) => {
 .interaction {
     display: flex;
     justify-content: flex-end;
-    margin-top: 8px;
+    margin-top: 12px;
 }
 
 .like-button {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.5rem;
     cursor: pointer;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(111, 134, 214, 0.08);
+    transition: all 0.3s ease;
+}
+
+.like-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(111, 134, 214, 0.12);
 }
 
 .like-icon {
-    font-size: 18px;
-    transition: transform 0.2s;
+    font-size: 20px;
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 .like-count {
-    font-size: 14px;
-    color: #666;
+    font-size: 15px;
+    color: #555;
+    font-weight: 600;
 }
 
 .like-icon.liked {
     transform: scale(1.2);
+    animation: heartBeat 0.4s ease-in-out;
+}
+
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1.2); }
 }
 
 .comments-section {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
+    padding: 20px;
     -webkit-overflow-scrolling: touch;
-    background-color: #fafafa;
+    background-color: #f6f8ff;
 }
 
 .comments-section h3 {
-    font-size: 15px;
-    color: #333;
+    font-size: 16px;
+    color: #5b6f9d;
     margin: 0 0 16px 0;
     font-weight: 600;
+    position: relative;
+    display: inline-block;
+}
+
+.comments-section h3:after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: #9567b1;
+    border-radius: 2px;
 }
 
 .login-prompt {
     color: #999;
     text-align: center;
-    padding: 16px 0;
+    padding: 20px 0;
     font-size: 14px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    margin: 10px 0;
+    border: 1px dashed #ddd;
 }
 
 .comments-list {
-    margin-top: 8px;
+    margin-top: 16px;
 }
 
 .comment-item {
-    padding: 12px;
-    margin-bottom: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.comment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .comment-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .commenter-avatar {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid #f0f0f0;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.comment-header:hover .commenter-avatar {
+    transform: scale(1.05);
 }
 
 .commenter-name {
-    font-weight: 500;
-    color: #333;
+    font-weight: 600;
+    color: #5b6f9d;
     font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.comment-header:hover .commenter-name {
+    color: #9567b1;
 }
 
 .comment-time {
@@ -811,23 +895,25 @@ const loadMoreReplies = (comment) => {
 
 .comment-content {
     color: #333;
-    line-height: 1.4;
-    margin-left: 42px;
+    line-height: 1.5;
+    margin-left: 46px;
     font-size: 14px;
+    padding: 4px 0;
 }
 
 /* 自定义评论区滚动条 */
 .comments-section::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
 }
 
 .comments-section::-webkit-scrollbar-track {
     background: #f1f1f1;
+    border-radius: 3px;
 }
 
 .comments-section::-webkit-scrollbar-thumb {
     background: #ddd;
-    border-radius: 2px;
+    border-radius: 3px;
 }
 
 .comments-section::-webkit-scrollbar-thumb:hover {
@@ -863,7 +949,7 @@ const loadMoreReplies = (comment) => {
     }
 
     .comments-section {
-        padding: 12px;
+        padding: 16px;
     }
 }
 
@@ -884,36 +970,38 @@ const loadMoreReplies = (comment) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 8px;
-    padding-left: 42px;
+    margin-top: 10px;
+    padding-left: 46px;
 }
 
 .reply-btn {
     background: none;
     border: none;
-    color: #666;
-    font-size: 12px;
+    color: #6f86d6;
+    font-size: 13px;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    background: rgba(111, 134, 214, 0.05);
 }
 
 .reply-btn:hover {
-    background-color: #f0f0f0;
+    background-color: rgba(111, 134, 214, 0.1);
+    color: #5b6f9d;
 }
 
 .like-count {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 12px;
+    gap: 6px;
+    font-size: 13px;
     color: #666;
 }
 
 .like-icon {
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s ease;
 }
 
 .like-icon:hover {
@@ -921,41 +1009,49 @@ const loadMoreReplies = (comment) => {
 }
 
 .reply-input {
-    margin-left: 42px;
-    margin-top: 8px;
+    margin-left: 46px;
+    margin-top: 12px;
 }
 
 .replies-list {
-    margin-left: 42px;
-    margin-top: 8px;
+    margin-left: 46px;
+    margin-top: 12px;
 }
 
 .reply-item {
     background: #f9f9f9;
-    border-radius: 8px;
-    padding: 8px;
-    margin-top: 8px;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.reply-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
 }
 
 .load-more-replies {
-    margin-top: 8px;
-    margin-left: 42px;
+    margin-top: 12px;
+    margin-left: 46px;
     text-align: left;
 }
 
 .load-more-btn {
     background: none;
     border: none;
-    color: #666;
-    font-size: 12px;
+    color: #6f86d6;
+    font-size: 13px;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all 0.2s;
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    background: rgba(111, 134, 214, 0.05);
 }
 
 .load-more-btn:hover {
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: rgba(111, 134, 214, 0.1);
+    color: #5b6f9d;
 }
 </style>

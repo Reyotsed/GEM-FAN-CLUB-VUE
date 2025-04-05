@@ -298,6 +298,11 @@ const goToQuoteDetail = (quoteId: string) => {
     selectedQuoteId.value = String(quoteId);
     showQuoteDetail.value = true;
 };
+
+onMounted(() => {
+  // 确保页面滚动到顶部
+  window.scrollTo(0, 0);
+});
 </script>
 
 <style scoped>

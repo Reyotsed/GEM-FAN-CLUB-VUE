@@ -113,8 +113,8 @@
               <img src="/img/shop/002.png" alt="站长买过">
             </div>
             <div class="product-info">
-              <h3 class="product-title">站长买过</h3>
-              <p class="product-desc">站长买过姐姐的启示录专辑庆功版，本来想挂个链接，结果现在要么售罄要么涨价到1k了(站长380入手的)，那就放一张照片好了</p>
+              <h3 class="product-title">启示录专辑庆功版</h3>
+              <p class="product-desc">站长买过姐姐的启示录专辑庆功版，本来想挂个链接，结果现在要么售罄要么涨价到1k了(站长380入手的)，那就放一张照片好了，想买的宝子可以去咸鱼看看，站长要收藏的，不出！</p>
             </div>
           </div>
         </div>
@@ -138,10 +138,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
 // 控制支付二维码弹窗
 const showPaymentQR = ref(false);
+
+onMounted(() => {
+  // 确保页面滚动到顶部
+  window.scrollTo(0, 0);
+});
 </script>
 
 <style scoped>

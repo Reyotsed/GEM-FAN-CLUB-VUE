@@ -641,6 +641,10 @@ const totalConcertCount = computed(() => {
 });
 
 onMounted(() => {
+  // 确保页面滚动到顶部
+  window.scrollTo(0, 0);
+  
+  // 调用fetchConcerts获取数据
   fetchConcerts();
 });
 </script>
