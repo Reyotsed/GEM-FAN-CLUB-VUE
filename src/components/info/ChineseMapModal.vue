@@ -582,21 +582,6 @@ const initChart = async () => {
     // 创建ECharts实例
     chartInstance = echarts.init(chartDom.value);
     
-    // 修复移动设备上的触摸问题
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      // 在移动设备上，确保地图容器能够正确接收触摸事件
-      const container = chartDom.value;
-      
-      // 防止默认行为干扰地图交互
-      container.addEventListener('touchstart', (e) => {
-        // 允许事件继续传播，但防止可能的默认行为
-        e.stopPropagation();
-      }, { passive: true });
-      
-      // 确保地图容器的z-index足够高
-      container.style.zIndex = '10';
-    }
-    
     // 显示加载中状态
     chartInstance.showLoading({
       text: '地图数据加载中...',
@@ -1451,21 +1436,12 @@ const updateMapData = () => {
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(235, 7, 238, 0.15);
   overflow: hidden;
-  backdrop-filter: blur(10px);
   position: relative;
 }
 
-/* 修改伪元素，确保不会阻碍触摸事件 */
+/* 移除可能阻挡触摸的背景效果 */
 .map-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 0% 100%, rgba(235,7,238,0.05) 0%, transparent 50%);
-  pointer-events: none !important; /* 强制不拦截任何事件 */
-  z-index: 0; /* 确保在最底层 */
+  display: none;
 }
 
 .section-title {
@@ -1476,9 +1452,9 @@ const updateMapData = () => {
   align-items: center;
   font-size: 1.5rem;
   color: #333;
-  background: linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
+  background: rgba(255,255,255,0.95);
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .icon {
@@ -1488,8 +1464,8 @@ const updateMapData = () => {
 
 .map-content {
   padding: 1rem;
-  position: relative; /* 确保内容区域有正确的定位上下文 */
-  z-index: 1; /* 确保内容在伪元素之上 */
+  position: relative;
+  z-index: 1;
 }
 
 .map-instructions {
@@ -1504,6 +1480,8 @@ const updateMapData = () => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  position: relative;
+  z-index: 2;
 }
 
 .map-instructions p {
@@ -1532,7 +1510,7 @@ const updateMapData = () => {
   background-color: white;
   padding: 0;
   position: relative;
-  z-index: 2; /* 确保地图有最高的层级，能够接收所有交互 */
+  z-index: 1;
 }
 
 .map-footer {
@@ -1542,6 +1520,8 @@ const updateMapData = () => {
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   text-align: center;
+  position: relative;
+  z-index: 2;
 }
 
 .data-note {
@@ -1563,30 +1543,6 @@ const updateMapData = () => {
   .echarts-container {
     height: 400px;
     padding: 0;
-    /* 移动设备触摸优化 */
-    touch-action: manipulation; /* 更好的触摸事件处理 */
-    isolation: isolate; /* 创建新的堆叠上下文，避免其他元素干扰 */
-  }
-  
-  /* 确保移动设备上所有装饰元素不会干扰交互 */
-  .map-container::before,
-  .map-container::after,
-  .map-content::before,
-  .map-content::after {
-    pointer-events: none !important;
-  }
-  
-  /* 提高移动设备上地图容器的z-index，确保在所有背景元素之上 */
-  .map-container {
-    z-index: 1;
-  }
-  
-  .map-content {
-    z-index: 2;
-  }
-  
-  .echarts-container {
-    z-index: 3;
   }
 }
 
