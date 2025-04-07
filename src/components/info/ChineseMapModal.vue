@@ -256,6 +256,7 @@ const chartDom = ref(null);
 let chartInstance = null;
 const selectedProvince = ref(null);
 const localConcerts = ref([]);
+const isLoading = ref(false); // 添加加载状态变量
 
 // 保存全局数据，避免重复请求
 let chinaGeoJson = null; // 中国地图数据
@@ -581,6 +582,21 @@ const initChart = async () => {
     // 创建ECharts实例
     chartInstance = echarts.init(chartDom.value);
     
+    // 修复移动设备上的触摸问题
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      // 在移动设备上，确保地图容器能够正确接收触摸事件
+      const container = chartDom.value;
+      
+      // 防止默认行为干扰地图交互
+      container.addEventListener('touchstart', (e) => {
+        // 允许事件继续传播，但防止可能的默认行为
+        e.stopPropagation();
+      }, { passive: true });
+      
+      // 确保地图容器的z-index足够高
+      container.style.zIndex = '10';
+    }
+    
     // 显示加载中状态
     chartInstance.showLoading({
       text: '地图数据加载中...',
@@ -897,6 +913,14 @@ const backToChina = () => {
         saveAsImage: {
           show: true,
           title: '保存'
+        },
+        myBack: {
+          show: true,
+          title: '返回全国',
+          icon: 'path://M44.1,6c-19.8,0-36,16.2-36,36c0,19.8,16.2,36,36,36c19.8,0,36-16.2,36-36C80.1,22.2,64,6,44.1,6z M44.1,71.1c-16.1,0-29.1-13-29.1-29.1c0-16.1,13-29.1,29.1-29.1c16.1,0,29.1,13,29.1,29.1C73.2,58.1,60.2,71.1,44.1,71.1z M59.5,47.8c0,0.9-0.9,1.7-2,1.7H30.7c-1.1,0-2-0.8-2-1.7v-9.6c0-0.9,0.9-1.7,2-1.7h26.8c1.1,0,2,0.8,2,1.7V47.8z',
+          onclick: function() {
+            backToChina();
+          }
         }
       }
     },
@@ -1431,6 +1455,7 @@ const updateMapData = () => {
   position: relative;
 }
 
+/* 修改伪元素，确保不会阻碍触摸事件 */
 .map-container::before {
   content: '';
   position: absolute;
@@ -1439,7 +1464,8 @@ const updateMapData = () => {
   right: 0;
   bottom: 0;
   background: radial-gradient(circle at 0% 100%, rgba(235,7,238,0.05) 0%, transparent 50%);
-  pointer-events: none;
+  pointer-events: none !important; /* 强制不拦截任何事件 */
+  z-index: 0; /* 确保在最底层 */
 }
 
 .section-title {
@@ -1462,6 +1488,8 @@ const updateMapData = () => {
 
 .map-content {
   padding: 1rem;
+  position: relative; /* 确保内容区域有正确的定位上下文 */
+  z-index: 1; /* 确保内容在伪元素之上 */
 }
 
 .map-instructions {
@@ -1504,6 +1532,7 @@ const updateMapData = () => {
   background-color: white;
   padding: 0;
   position: relative;
+  z-index: 2; /* 确保地图有最高的层级，能够接收所有交互 */
 }
 
 .map-footer {
@@ -1534,6 +1563,30 @@ const updateMapData = () => {
   .echarts-container {
     height: 400px;
     padding: 0;
+    /* 移动设备触摸优化 */
+    touch-action: manipulation; /* 更好的触摸事件处理 */
+    isolation: isolate; /* 创建新的堆叠上下文，避免其他元素干扰 */
+  }
+  
+  /* 确保移动设备上所有装饰元素不会干扰交互 */
+  .map-container::before,
+  .map-container::after,
+  .map-content::before,
+  .map-content::after {
+    pointer-events: none !important;
+  }
+  
+  /* 提高移动设备上地图容器的z-index，确保在所有背景元素之上 */
+  .map-container {
+    z-index: 1;
+  }
+  
+  .map-content {
+    z-index: 2;
+  }
+  
+  .echarts-container {
+    z-index: 3;
   }
 }
 
