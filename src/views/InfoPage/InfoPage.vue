@@ -34,9 +34,23 @@
                   :key="index"
                   class="performance-item"
                 >
-                  <div class="performance-date">{{ item.formattedDates }}</div>
+                  <div class="performance-date">
+                    <div class="date-segments">
+                      <span v-for="(segment, idx) in item.formattedDates.split('，')" 
+                            :key="idx" 
+                            class="date-segment">
+                        {{ segment }}
+                      </span>
+                    </div>
+                  </div>
                   <div class="performance-info">
-                    <span class="city">{{ item.city }}站</span>
+                    <div class="venue-info">
+                      <span class="city">{{ item.city }}站</span>
+                      <span v-if="item.consecutiveShows > 1" 
+                            class="consecutive-shows">
+                        {{ item.consecutiveShows }}连开
+                      </span>
+                    </div>
                     <span class="venue">{{ item.venue }}</span>
                   </div>
                 </div>
@@ -96,8 +110,8 @@
                         group.stationNumber === 3 ? '三' :
                         group.stationNumber === 4 ? '四' : ''
                       }}轮</td>
-                      <td>{{ concert.sequenceRange }}</td>
-                      <td>{{ concert.concertDate }}</td>
+                      <td>{{ concert.sequence_range }}</td>
+                      <td>{{ concert.concert_date }}</td>
                       <td>{{ concert.country || '中国大陆' }}</td>
                       <td>{{ concert.city || '未知' }}</td>
                       <td>{{ concert.venue || '未知' }}</td>
@@ -144,6 +158,7 @@ const fetchConcerts = async () => {
     if (response.data.code === 200) {
       concerts.value = response.data.data || [];
       console.log('成功获取演唱会数据:', concerts.value.length, '条记录');
+      console.log(response.data.data);
     } else {
       console.error('获取演唱会数据失败:', response.data.message);
     }
@@ -335,8 +350,8 @@ const groupedConcerts = computed(() => {
     // 创建简化的演唱会对象
     const simplifiedConcert = {
       id: concert.id,
-      sequenceRange: concert.sequence_range,
-      concertDate: concert.concert_date,
+      sequence_range: concert.sequence_range,
+      concert_date: concert.concert_date,
       country: concert.country,
       city: concert.city,
       venue: concert.venue,
@@ -462,47 +477,33 @@ const extractDatesFromRange = (dateRange) => {
   
   try {
     const dates = [];
+    const year = dateRange.match(/(\d{4})年/)?.[1];
     
-    // 处理日期范围格式：2023年12月7-9日
-    if (dateRange.includes('-') && dateRange.includes('年') && dateRange.includes('月')) {
-      const yearMatch = dateRange.match(/(\d{4})年/);
-      const monthMatch = dateRange.match(/(\d{1,2})月/);
+    // 分割多个日期段
+    const segments = dateRange.split(/[,，]/);
+    
+    segments.forEach(segment => {
+      // 提取月份
+      const month = segment.match(/(\d{1,2})月/)?.[1];
+      if (!month) return;
       
-      if (yearMatch && monthMatch) {
-        const year = parseInt(yearMatch[1]);
-        const month = parseInt(monthMatch[1]);
+      // 提取日期范围
+      const dayRanges = segment.match(/(\d{1,2})-(\d{1,2})日?/);
+      if (dayRanges) {
+        const startDay = parseInt(dayRanges[1]);
+        const endDay = parseInt(dayRanges[2]);
         
-        // 提取日期范围
-        const dayRangeMatch = dateRange.match(/(\d{1,2})-(\d{1,2})日/);
-        if (dayRangeMatch) {
-          const startDay = parseInt(dayRangeMatch[1]);
-          const endDay = parseInt(dayRangeMatch[2]);
-          
-          for (let day = startDay; day <= endDay; day++) {
-            dates.push(`${month}/${day}`);
-          }
-          return dates;
+        for (let day = startDay; day <= endDay; day++) {
+          dates.push(`${month}/${day}`);
+        }
+      } else {
+        // 处理单个日期
+        const singleDay = segment.match(/月(\d{1,2})日?/)?.[1];
+        if (singleDay) {
+          dates.push(`${month}/${singleDay}`);
         }
       }
-    }
-    
-    // 处理跨月格式：2024年5月31、6月1日
-    if (dateRange.includes('、') && dateRange.includes('月')) {
-      const parts = dateRange.split('、');
-      parts.forEach(part => {
-        const mdInfo = extractMonthDay(part);
-        if (mdInfo) {
-          dates.push(`${mdInfo.month}/${mdInfo.day}`);
-        }
-      });
-      return dates;
-    }
-    
-    // 处理单日期
-    const mdInfo = extractMonthDay(dateRange);
-    if (mdInfo) {
-      dates.push(`${mdInfo.month}/${mdInfo.day}`);
-    }
+    });
     
     return dates;
   } catch (e) {
@@ -516,30 +517,35 @@ const mergeConcertDates = computed(() => {
   const merged = {};
   
   futureConcerts.value
-    .filter(concert => concert.status !== '未官宣') // 排除未官宣场次
+    .filter(concert => concert.status !== '未官宣')
     .forEach(concert => {
       const key = `${concert.city}-${concert.venue}`;
       if (!merged[key]) {
         merged[key] = {
           city: concert.city,
           venue: concert.venue,
-          dates: []
+          dates: [],
+          id: concert.sequence_range
         };
       }
       
-      // 提取所有日期并添加到数组中
       const extractedDates = extractDatesFromRange(concert.concert_date);
       if (extractedDates.length > 0) {
         merged[key].dates.push(...extractedDates);
       }
     });
   
-  // 转为数组
   return Object.values(merged).map(item => {
-    // 去重
     item.dates = [...new Set(item.dates)];
     
-    // 排序日期
+    // 计算连场场次
+    let consecutiveShows = 1;
+    if (item.id && item.id.includes('-')) {
+      const [start, end] = item.id.split('-').map(Number);
+      consecutiveShows = end - start + 1;
+    }
+    
+    // 按月份和日期排序
     item.dates.sort((a, b) => {
       const [aMonth, aDay] = a.split('/').map(Number);
       const [bMonth, bDay] = b.split('/').map(Number);
@@ -551,50 +557,51 @@ const mergeConcertDates = computed(() => {
     });
     
     // 合并连续日期
-    let formattedDates = '';
+    const ranges = [];
+    let currentRange = [item.dates[0]];
     
-    if (item.dates.length <= 1) {
-      formattedDates = item.dates[0] || '';
-    } else {
-      // 检查是否有连续日期可以合并
-      const ranges = [];
-      let currentRange = [item.dates[0]];
+    for (let i = 1; i < item.dates.length; i++) {
+      const [prevMonth, prevDay] = item.dates[i-1].split('/').map(Number);
+      const [currMonth, currDay] = item.dates[i].split('/').map(Number);
       
-      for (let i = 1; i < item.dates.length; i++) {
-        const prevDate = item.dates[i-1].split('/').map(Number);
-        const currDate = item.dates[i].split('/').map(Number);
+      // 检查是否连续（同月连续或跨月连续）
+      const isConsecutive = (
+        (prevMonth === currMonth && currDay - prevDay === 1) ||
+        (currMonth - prevMonth === 1 && prevDay === getDaysInMonth(prevMonth) && currDay === 1)
+      );
+      
+      if (isConsecutive) {
+        currentRange.push(item.dates[i]);
+      } else {
+        ranges.push([...currentRange]);
+        currentRange = [item.dates[i]];
+      }
+    }
+    ranges.push(currentRange);
+    
+    // 格式化日期范围
+    const formattedRanges = ranges.map(range => {
+      if (range.length === 1) {
+        const [month, day] = range[0].split('/');
+        return `${month}月${day}日`;
+      } else {
+        const [startMonth, startDay] = range[0].split('/');
+        const [endMonth, endDay] = range[range.length - 1].split('/');
         
-        // 简单检查是否连续（月份相同且日期相差1，或月份相差1但是月底和月初）
-        const isConsecutive = (
-          (prevDate[0] === currDate[0] && currDate[1] - prevDate[1] === 1) ||
-          (currDate[0] - prevDate[0] === 1 && prevDate[1] === getDaysInMonth(prevDate[0]) && currDate[1] === 1)
-        );
-        
-        if (isConsecutive) {
-          currentRange.push(item.dates[i]);
+        if (startMonth === endMonth) {
+          return `${startMonth}月${startDay}-${endDay}日`;
         } else {
-          ranges.push([...currentRange]);
-          currentRange = [item.dates[i]];
+          return `${startMonth}月${startDay}日-${endMonth}月${endDay}日`;
         }
       }
-      
-      ranges.push(currentRange);
-      
-      // 格式化范围
-      formattedDates = ranges.map(range => {
-        if (range.length === 1) {
-          return range[0];
-        } else {
-          return `${range[0]}-${range[range.length - 1]}`;
-        }
-      }).join('、');
-    }
+    });
     
     return {
       ...item,
-      formattedDates
+      formattedDates: formattedRanges.join('，'),
+      consecutiveShows
     };
-  }).slice(0, 10); // 只取前10个
+  });
 });
 
 // 提取待定城市
@@ -823,52 +830,77 @@ onMounted(() => {
 
 .performance-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
+  padding: 0.5rem;
 }
 
 .performance-item {
   display: flex;
-  align-items: center;
-  padding: 1.2rem;
-  border-radius: 10px;
-  background: rgba(248, 249, 250, 0.8);
+  flex-direction: column;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .performance-item:hover {
   transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(235, 7, 238, 0.15);
-  background: linear-gradient(to right, rgba(255,241,253,0.9), rgba(249,240,255,0.9));
+  box-shadow: 0 8px 25px rgba(235, 7, 238, 0.15);
 }
 
 .performance-date {
-  font-size: 1.1rem;
-  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed rgba(235, 7, 238, 0.2);
+}
+
+.date-segments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.date-segment {
+  background: linear-gradient(135deg, #fff1fd, #f9f0ff);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.95rem;
   color: #eb07ee;
-  min-width: 90px;
-  text-align: center;
-  padding-right: 1rem;
-  border-right: 1px solid #eee;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(235, 7, 238, 0.1);
 }
 
 .performance-info {
-  padding-left: 1rem;
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.performance-info .city {
-  display: block;
-  font-size: 1.1rem;
+.venue-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.city {
+  font-size: 1.2rem;
   font-weight: 600;
   color: #333;
-  margin-bottom: 0.3rem;
 }
 
-.performance-info .venue {
-  display: block;
-  font-size: 0.9rem;
+.consecutive-shows {
+  background: linear-gradient(135deg, #eb07ee, #a505de);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.venue {
+  font-size: 0.95rem;
   color: #666;
 }
 
@@ -921,7 +953,7 @@ onMounted(() => {
   }
   
   .performance-item {
-    padding: 1rem;
+    padding: 1.2rem;
   }
   
   .pending-row {
