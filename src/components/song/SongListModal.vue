@@ -35,7 +35,27 @@
           <i class="icon hidden"></i>
           冷门歌曲推荐
         </h2>
-        姐姐怎么会有冷门歌曲，开玩笑！！！（开发中）
+        <div class="song-list">
+          <a 
+            v-for="song in coldSongs" 
+            :key="song.songId"
+            class="song-item"
+            :href="'https://music.163.com/#/song?id=' + song.songId"
+            target="_blank"
+          >
+            <div class="song-rank" v-html="song.rank"></div>
+            <div class="song-cover">
+              <img :src="song.coverUrl" :alt="song.title">
+            </div>
+            <div class="song-info">
+              <div class="song-title">{{ song.title }}</div>
+              <div class="song-desc">{{ song.comment }}</div>
+            </div>
+          </a>
+        </div>
+        <a>
+          本来想分个一二三星的，但是我发现每首我都很喜欢
+        </a>
       </section>
 
       <!-- 专辑列表 -->
@@ -77,7 +97,7 @@ const songStore = useSongStore();
 
 // 数据定义
 const hotSongs = ref([]);
-const hiddenGems = ref([]);
+const coldSongs = ref([]);
 const lastUpdated = ref('');
 
 // 邓紫棋专辑数据
@@ -152,6 +172,17 @@ const loadHotSongs = async () => {
   }
 };
 
+// 加载冷门歌曲数据
+const loadColdSongs = async () => {
+  try {
+    const response = await fetch('/data/gem_cold_songs.json');
+    const data = await response.json();
+    coldSongs.value = data.songs;
+  } catch (error) {
+    console.error('加载冷门歌曲失败:', error);
+  }
+};
+
 // 格式化播放次数
 const formatPlayCount = (count) => {
   if (count >= 10000) {
@@ -186,10 +217,10 @@ const viewAlbum = (album) => {
 // 加载数据
 const loadData = async () => {
   try {
-    await loadHotSongs();
-    // 加载冷门歌曲
-    const hiddenResponse = await apiClient.get('/songs/hidden');
-    hiddenGems.value = hiddenResponse.data;
+    await Promise.all([
+      loadHotSongs(),
+      loadColdSongs()
+    ]);
   } catch (error) {
     console.error('加载数据失败:', error);
   }
@@ -276,11 +307,34 @@ onMounted(() => {
 }
 
 .song-rank {
-  width: 30px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #ff69b4;
-  text-align: center;
+  min-width: 80px;
+  font-size: 0.9rem;
+  color: #B980FF;
+  text-shadow: 0 0 5px rgba(185, 128, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: rgba(185, 128, 255, 0.1);
+  border-radius: 12px;
+  margin-right: 12px;
+  letter-spacing: 1px;
+  animation: starShine 2s ease-in-out infinite;
+}
+
+@keyframes starShine {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(185, 128, 255, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(185, 128, 255, 0.8);
+  }
+}
+
+.song-item:hover .song-rank {
+  background: rgba(185, 128, 255, 0.2);
+  transform: scale(1.05);
+  transition: all 0.3s ease;
 }
 
 .song-cover {
@@ -448,5 +502,16 @@ onMounted(() => {
 .song-title a:hover {
   color: #ff69b4;
   text-decoration: underline;
+}
+
+.song-desc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.3rem;
+}
+
+.song-info {
+  flex: 1;
+  padding-right: 1rem;
 }
 </style>

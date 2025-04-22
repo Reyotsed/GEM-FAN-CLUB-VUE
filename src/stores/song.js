@@ -34,7 +34,7 @@ export const useSongStore = defineStore('song', {
             
             // 一次性获取所有资源
             await Promise.all([
-              this._loadAudio(songId, songData.filePath),
+              // this._loadAudio(songId, songData.filePath),
               this._loadCover(songId, songData.coverPath)
             ]);
             

@@ -1,0 +1,52 @@
+{
+    "songs": [
+      {
+        "songId": "1391453675",
+        "title": "我说了算",
+        "coverUrl": "http://p2.music.126.net/7H3R_hFWpcqsYHqKpjIKGg==/109951164371661836.jpg?param=130y130",
+        "rank": "★★★",
+        "comment": "虽然是广告曲，但是真的很好听！！！"
+      },
+
+      {
+        "songId": "1429363572",
+        "title": "平凡天使",
+        "coverUrl": "http://p1.music.126.net/8JkfznEa_qqASaJvUIicyw==/109951164784376724.jpg?param=130y130",
+        "rank": "★★★",
+        "comment": "解解在疫情时期写的歌，这惊人的共情力和创作力！"
+      },
+
+      {
+        "songId": "1318284264",
+        "title": "那一夜",
+        "coverUrl": "http://p1.music.126.net/X7f92tSJ-b0_sC1u9tgAyQ==/109951163654227442.jpg?param=130y130",
+        "rank": "★★★",
+        "comment": "毒苹果专辑，里面的三首都是精品，个人最喜欢这一首，都去听啊！！！"
+      },
+
+      {
+        "songId": "1833633769",
+        "title": "超能力",
+        "coverUrl": "http://p1.music.126.net/CaQIm9X9xy9CMhc86e3qaA==/109951165847509270.jpg?param=130y130",
+        "rank": "★★★",
+        "comment": "超能力居然不在热门榜中，我不能接受，一定要听到最后！"
+      },
+
+      {
+        "songId": "1305364667",
+        "title": "错过不错",
+        "coverUrl": "http://p1.music.126.net/tXCIFsVDK6IKcQ9YWxwOEg==/109951163523944497.jpg?param=130y130",
+        "rank": "★★★",
+        "comment": "童话三部曲里唯一没有爆火的，为什么还不火，给我火啊啊啊啊！"
+      },
+
+      {
+        "songId": "233936",
+        "title": "奇迹",
+        "coverUrl": "http://p2.music.126.net/3XEICRFzQPrHPUMD0xm1Jw==/109951163069323980.jpg?param=130y130",
+        "rank": "★★★",
+        "comment": "直到我终于遇见了你，你让我生命有了意义，落叶或雪迹也都美丽，你是我的奇迹。"
+      }
+      
+    ]
+  }

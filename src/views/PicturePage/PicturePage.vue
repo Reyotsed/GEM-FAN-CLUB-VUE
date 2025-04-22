@@ -70,12 +70,12 @@ const loading = ref(false);
 
 // 初始化图片数据
 const initImages = () => {
-  const imageCount = 9; // 当前图片数量
+  const imageCount = 13; // 当前图片数量
   const imageData = [];
   
   for (let i = 1; i <= imageCount; i++) {
     imageData.push({
-      url: `/img/picturePage/ (${i}).jpg`,
+      url: `/img/picturePage/(${i}).jpg`,
       title: `G.E.M. 粉丝创作 ${i}`,
       author: `粉丝${String.fromCharCode(64 + i)}`,
       description: `这是粉丝${String.fromCharCode(64 + i)}创作的G.E.M.主题作品`
@@ -146,7 +146,11 @@ const saveImage = async () => {
 // 处理图片加载错误
 const handleImageError = (event) => {
   console.error('图片加载失败:', event.target.src);
-  event.target.src = '/img/placeholder.jpg'; // 可以设置一个默认图片
+  // 使用一个简单的内置占位图片
+  event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMEYwRjAiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OSIgZm9udC1zaXplPSIxNiI+5Zu+54mH5Yqg6L295aSx6LSlPC90ZXh0Pjwvc3ZnPg==';
+  // 移除加载失败的图片的点击事件
+  event.target.parentElement.style.cursor = 'not-allowed';
+  event.target.parentElement.onclick = null;
 };
 
 // 处理图片加载

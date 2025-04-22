@@ -200,9 +200,9 @@ watch(() => songStore.currentSong?.songId, (newSongId, oldSongId) => {
     
     // 添加空行，使用简单赋值而非多次修改
     parsedLyrics.value = [
-      { time: -1, text: '1' },
-      { time: -1, text: '2' },
-      { time: -1, text: '3' },
+      { time: -1, text: '版权问题' },
+      { time: -1, text: '不支持在线播放' },
+      { time: -1, text: '' },
       ...lyrics,
       { time: 10000, text: '4' },
       { time: 10000, text: '5' }

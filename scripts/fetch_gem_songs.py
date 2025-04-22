@@ -1,6 +1,8 @@
 import requests
 import json
 import os
+import time
+import schedule
 from datetime import datetime
 from pathlib import Path
 
@@ -35,7 +37,7 @@ def fetch_hot_songs():
             data = response.json()
             songs = []
             
-            for song in data['songs'][:50]:  # 只取前20首
+            for song in data['songs'][:50]:  # 只取前50首
                 songs.append({
                     'songId': str(song['id']),
                     'title': song['name'],
@@ -66,5 +68,21 @@ def fetch_hot_songs():
     except Exception as e:
         print(f"抓取失败: {str(e)}")
 
+def run_scheduler():
+    print("启动定时任务...")
+    print(f"当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("脚本将每三天运行一次")
+    
+    # 立即运行一次
+    fetch_hot_songs()
+    
+    # 设置每一天运行一次
+    schedule.every(1).days.do(fetch_hot_songs)
+    
+    # 保持程序运行
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 if __name__ == '__main__':
-    fetch_hot_songs() 
+    run_scheduler() 

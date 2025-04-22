@@ -1,3 +1,3 @@
 <template>
-    video
+  video
 </template>
