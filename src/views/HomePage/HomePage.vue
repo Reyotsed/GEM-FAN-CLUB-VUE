@@ -249,26 +249,27 @@ const handleKeydown = (event) => {
 
 <style scoped>
 .home-container {
-    width: 100vw; /* 使用视口宽度 */
+    width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    margin: 0; /* 移除所有外边距 */
-    padding: 0; /* 移除所有内边距 */
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    position: absolute; /* 使用绝对定位填满整个视口 */
-    top: 50px; /* 导航栏高度 */
+    position: absolute;
+    top: 50px;
     left: 0;
     right: 0;
+    box-sizing: border-box;
 }
 
 .slider-container {
     position: relative;
-    width: 100vw; /* 使用视口宽度 */
-    height: calc(100vh - 50px); /* 减去导航栏高度 */
+    width: 100%;
+    height: calc(100vh - 50px);
     overflow: hidden;
-    margin: 0 -10px; /* 负边距，确保拉伸到边缘 */
+    margin: 0;
 }
 
 .slider-track {
@@ -388,6 +389,7 @@ const handleKeydown = (event) => {
     text-align: center;
     z-index: 5;
     background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.3));
+    box-sizing: border-box;
 }
 
 .content-item {
@@ -476,41 +478,177 @@ const handleKeydown = (event) => {
 
 /* 添加响应式设计 */
 @media (max-width: 768px) {
-    .home-container,
-    .slider-container {
-        width: 100vw;
-        margin: 0;
+    .home-container {
+        width: 100%;
         padding: 0;
+        overflow-x: hidden;
     }
 
-    .nav-button {
+    .content-container {
+        padding: 20px 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .content-item,
+    .achievements-section,
+    .social-media-section {
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
+    }
+
+    .social-links {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .social-link {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    .footer-container {
+        width: 100%;
+        padding: 20px 10px;
+        box-sizing: border-box;
+    }
+
+    .footer-content {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .contact-info {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0 10px;
+    }
+
+    .contact-item {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .slider-container {
+        width: 100%;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .image-container {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .slide-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .content-item h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .content-item p {
+        font-size: 15px;
+        line-height: 1.6;
+        padding: 0;
+        text-align: left;
+    }
+
+    .achievements-section {
+        padding: 20px 15px;
+        margin: 30px auto;
+    }
+
+    .achievements-section h2 {
+        font-size: 24px;
+    }
+
+    .achievements-grid {
+        grid-template-columns: repeat(1, 1fr);
+        gap: 15px;
+    }
+
+    .achievement-card {
+        padding: 15px;
+    }
+
+    .social-media-section {
+        padding: 20px 15px;
+        margin: 30px auto;
+    }
+
+    .social-media-section h2 {
+        font-size: 24px;
+    }
+
+    .social-icon {
         width: 40px;
         height: 40px;
+    }
+
+    .social-icon i {
         font-size: 20px;
     }
 
+    .social-link span {
+        font-size: 14px;
+    }
+
+    .social-link small {
+        font-size: 11px;
+    }
+
+    .nav-button {
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+    }
+
+    .prev {
+        left: 10px;
+    }
+
+    .next {
+        right: 10px;
+    }
+
+    .slider-indicators {
+        bottom: 20px;
+        padding: 8px 15px;
+    }
+
     .indicator {
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
     }
-    
+}
+
+/* 平板端样式优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .slider-container {
+        height: 50vh;
+    }
+
     .content-container {
-        padding: 30px 15px;
+        padding: 30px 20px;
     }
-    
-    .content-item {
-        padding: 25px;
+
+    .achievements-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    
-    .content-item h2 {
-        font-size: 28px;
-        margin-bottom: 20px;
-    }
-    
-    .content-item p {
-        font-size: 16px;
-        line-height: 1.6;
-        padding: 0 5px;
+
+    .social-links {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
@@ -940,5 +1078,16 @@ const handleKeydown = (event) => {
         width: 100%;
         justify-content: center;
     }
+}
+
+/* 确保所有主要容器都有正确的盒模型设置 */
+.achievements-section,
+.social-media-section,
+.footer-container,
+.slider-container,
+.content-item {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 </style>

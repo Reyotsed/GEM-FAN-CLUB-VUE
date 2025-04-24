@@ -270,7 +270,7 @@ const goToQuoteDetail = (quoteId) => {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.5rem;
     box-sizing: border-box;
-    padding-bottom: 5rem;
+    padding: 1rem;
 }
 
 .quote-item {
@@ -326,10 +326,10 @@ const goToQuoteDetail = (quoteId) => {
 }
 
 .quote-item-content-picture-item {
-    flex: 1 1 150px; /* 设置图片的基础宽度 */
-    max-width: 300px; /* 限制最大宽度 */
-    height: 350px; /* 设置固定高度 */
-    overflow: hidden; /* 隐藏溢出部分 */
+    flex: 1 1 150px;
+    max-width: 100%;
+    height: 300px;
+    overflow: hidden;
     border-radius: 12px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
     position: relative;
@@ -436,24 +436,83 @@ const goToQuoteDetail = (quoteId) => {
 /* 修改响应式布局 */
 @media (max-width: 768px) {
     .quote-page {
-        padding: 1rem 0.5rem;
+        padding: 0.5rem 0.3rem;
     }
 
     .quote-list {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        padding: 0.3rem;
+    }
+
+    .quote-item {
+        padding: 0.5rem;
+    }
+
+    .quote-item-content-picture-item {
+        height: 180px;
+    }
+
+    .quote-item-content-text-content {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .quote-item-content-user {
+        padding: 0.4rem 0.5rem;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .quote-item-content-user-avatar {
+        width: 28px;
+        height: 28px;
+        margin-right: 0.4rem;
+    }
+
+    .quote-item-content-user-nickname {
+        font-size: 0.75rem;
+        max-width: calc(100% - 80px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .quote-item-content-like {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .like-icon {
+        font-size: 0.9rem;
+    }
+
+    .quote-item-content-like-count {
+        font-size: 0.75rem;
+    }
+}
+
+/* 小屏幕手机优化 */
+@media (max-width: 360px) {
+    .quote-list {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .quote-item-content-picture-item {
+        height: 200px;
+    }
+}
+
+/* 平板端样式优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .quote-list {
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
+        padding: 0.8rem;
     }
-}
 
-@media (min-width: 769px) and (max-width: 1200px) {
-    .quote-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 1201px) {
-    .quote-list {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .quote-item-content-picture-item {
+        height: 250px;
     }
 }
 

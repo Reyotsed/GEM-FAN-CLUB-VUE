@@ -1,13 +1,33 @@
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path';
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // 加载env文件
   const env = loadEnv(mode, process.cwd());
   
   return {
-    plugins: [vue()],
+    plugins: [
+      vue(),
+      ViteImageOptimizer({
+        test: /\.(jpe?g|png|gif|tiff|webp|svg|avif)$/i,
+        includePublic: true,
+        logStats: true,
+        jpeg: {
+          quality: 80,
+        },
+        png: {
+          quality: 80,
+        },
+        webp: {
+          quality: 80,
+        },
+        avif: {
+          quality: 80,
+        },
+      }),
+    ],
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src') // 设置 '@' 指向 'src' 目录

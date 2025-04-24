@@ -34,7 +34,12 @@
                     <div class="images-container">
                         <!-- 已上传的图片预览 -->
                         <div v-for="(image, index) in quoteForm.images" :key="index" class="image-item">
-                            <img :src="image.preview" alt="预览图">
+                            <img 
+                                :src="image.preview" 
+                                alt="预览图"
+                                loading="lazy"
+                                class="preview-image"
+                            >
                             <div class="image-overlay">
                                 <button class="remove-btn" @click="removeImage(index)">
                                     <i class="fas fa-times"></i>
@@ -188,15 +193,69 @@ const handleImageUpload = (event: Event) => {
         }
         
         const file = input.files[0];
-        const preview = URL.createObjectURL(file);
-        quoteForm.images.push({
-            file,
-            preview
+        // 压缩图片
+        compressImage(file).then(compressedFile => {
+            const preview = URL.createObjectURL(compressedFile);
+            quoteForm.images.push({
+                file: compressedFile,
+                preview
+            });
         });
         
         // 清空input，以便可以重复选择同一文件
         input.value = '';
     }
+};
+
+// 图片压缩函数
+const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 设置最大尺寸
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx?.drawImage(img, 0, 0, width, height);
+                
+                // 转换为WebP格式
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webp'), {
+                            type: 'image/webp',
+                            lastModified: Date.now()
+                        });
+                        resolve(compressedFile);
+                    } else {
+                        resolve(file);
+                    }
+                }, 'image/webp', 0.8);
+            };
+        };
+    });
 };
 
 // 处理视频上传
@@ -626,5 +685,12 @@ const triggerVideoUpload = () => {
     .form-card {
         padding: 20px;
     }
+}
+
+.preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
 }
 </style>

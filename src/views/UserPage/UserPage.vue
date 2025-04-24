@@ -309,32 +309,30 @@ onMounted(() => {
 /* 新增加的背景容器 */
 .page-background {
     padding: 1rem;
-    width: 100vw;
+    width: 100%;
     background: linear-gradient(135deg, #f8f9fa, #e2e6ea);
     display: flex;
     justify-content: center;
     align-items: flex-start;
     position: relative;
-    left: 50%;
-    transform: translateX(-50%); 
-    width: 100vw; /* 使用视口宽度 */
     min-height: 40vh;
-    background-color: #f5f5f5;
     font-family: 'Arial', sans-serif;
-    overflow-x: hidden; /* 防止水平滚动 */
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .user-page {
     display: flex;
     flex-direction: column;
-    width: 90%;
-    /* max-width: 1400px; */
+    width: 1200px;
+    flex-shrink: 0;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 /* 上部分：用户基本信息 */
@@ -454,6 +452,8 @@ onMounted(() => {
     padding: 2rem;
     gap: 2rem;
     box-sizing: border-box;
+    flex-shrink: 0;
+    flex-grow: 0;
 }
 
 /* 左侧导航 */
@@ -533,6 +533,7 @@ onMounted(() => {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     padding: 2rem;
     min-height: 600px;
+    min-width: 800px;
     overflow: hidden;
     transition: all 0.3s ease;
 }
@@ -567,11 +568,13 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 400px;
+    min-height: 500px;
+    width: 100%;
     color: #999;
     background-color: #f9f9f9;
     border-radius: 10px;
     transition: all 0.3s ease;
+    margin-top: 1rem;
 }
 
 .empty-content:hover {
@@ -590,101 +593,105 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
-@media (max-width: 1200px) {
+@media (max-width: 1300px) {
     .user-page {
-        width: 95%;
-    }
-    
-    .user-avatar {
-        width: 140px;
-        height: 140px;
-    }
-    
-    .user-details h1 {
-        font-size: 2.4rem;
+        width: 1000px;
     }
 }
 
-@media (max-width: 992px) {
-    .user-avatar {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .sidebar {
-        width: 220px;
-    }
-    
-    .user-details h1 {
-        font-size: 2.2rem;
-    }
-    
-    .content-section {
-        padding: 1.5rem;
-        gap: 1.5rem;
+@media (max-width: 1100px) {
+    .user-page {
+        width: 900px;
     }
 }
 
 @media (max-width: 768px) {
     .page-background {
-        padding: 1rem 0;
+        padding: 0;
+        min-height: 100vh;
     }
     
     .user-page {
         width: 100%;
+        min-height: 100vh;
         border-radius: 0;
     }
-    
-    .user-info-container {
-        flex-direction: column;
-        text-align: center;
-        padding: 0 1.5rem;
-    }
-    
-    .user-avatar-container {
-        margin-right: 0;
-        margin-bottom: 1.5rem;
-    }
-    
-    .user-meta {
-        justify-content: center;
-    }
-    
-    .user-bio {
-        max-width: 100%;
-    }
-    
+
     .content-section {
         flex-direction: column;
         padding: 1rem;
     }
-    
+
     .sidebar {
         width: 100%;
-        margin-bottom: 1.5rem;
-    }
-    
-    .content-area {
-        padding: 1.5rem;
-    }
-    
-    .user-header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .user-header h1 {
         margin-bottom: 1rem;
+        border-radius: 8px;
     }
-    
-    .edit-profile-button {
-        font-size: 0.9rem;
-        padding: 0.5rem 1rem;
+
+    .content-area {
+        width: 100%;
+        padding: 1rem;
+        min-width: unset;
     }
-    
+
     .quote-list {
         grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 10px;
+    }
+
+    .quote-item {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .user-info-container {
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem;
+    }
+
+    .user-avatar-container {
+        margin: 0 0 1rem 0;
+    }
+
+    .user-details {
+        width: 100%;
+        text-align: center;
+    }
+
+    .user-meta {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .user-meta span {
+        margin: 0.25rem;
+    }
+
+    .user-bio {
+        width: 100%;
+    }
+
+    .nav-button {
+        padding: 0.8rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+/* 平板端样式优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .user-page {
+        width: 95%;
+    }
+
+    .quote-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .user-avatar {
+        width: 140px;
+        height: 140px;
     }
 }
 
@@ -744,6 +751,8 @@ onMounted(() => {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
     padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .quote-item {
@@ -752,7 +761,9 @@ onMounted(() => {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .quote-item:hover {
@@ -761,8 +772,9 @@ onMounted(() => {
 
 .quote-item-content-picture {
     width: 100%;
-    height: 200px;
+    aspect-ratio: 16/9;
     overflow: hidden;
+    background-color: #f5f5f5;
 }
 
 .quote-item-content-picture-item {
@@ -774,11 +786,7 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.2s;
-}
-
-.quote-item:hover .quote-item-content-picture-item img {
-    transform: scale(1.1);
+    transition: transform 0.3s ease;
 }
 
 .quote-item-content {
@@ -790,7 +798,9 @@ onMounted(() => {
     color: #333;
     line-height: 1.5;
     margin-bottom: 10px;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -801,6 +811,7 @@ onMounted(() => {
     align-items: center;
     padding: 10px 15px;
     border-top: 1px solid #eee;
+    background-color: #f9f9f9;
 }
 
 .quote-meta {
@@ -823,5 +834,10 @@ onMounted(() => {
 
 .delete-btn:hover {
     background: #ffebee;
+}
+
+.quote-content {
+    width: 100%;
+    min-height: 500px;
 }
 </style>

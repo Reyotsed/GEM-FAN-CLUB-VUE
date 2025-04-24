@@ -72,7 +72,13 @@
             @click="viewAlbum(album)"
           >
             <div class="album-cover">
-              <img :src="album.coverUrl" :alt="album.title">
+              <img 
+                :src="album.coverUrl" 
+                :alt="album.title"
+                loading="lazy"
+                :data-src="album.coverUrl"
+                class="lazy-image"
+              >
               <div class="album-overlay">
                 <i class="icon view"></i>
               </div>
@@ -226,8 +232,48 @@ const loadData = async () => {
   }
 };
 
+// 优化图片懒加载逻辑
+const initLazyLoading = () => {
+  const lazyImages = document.querySelectorAll('.lazy-image');
+  const imageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        // 添加加载状态类
+        img.classList.add('loading');
+        
+        // 创建新的 Image 对象预加载
+        const preloadImg = new Image();
+        preloadImg.src = img.dataset.src;
+        
+        preloadImg.onload = () => {
+          img.src = img.dataset.src;
+          img.classList.remove('lazy-image', 'loading');
+          img.classList.add('loaded');
+          observer.unobserve(img);
+        };
+        
+        preloadImg.onerror = () => {
+          console.error('图片加载失败:', img.dataset.src);
+          img.classList.remove('loading');
+          img.classList.add('error');
+        };
+      }
+    });
+  }, {
+    rootMargin: '50px 0px', // 提前 50px 开始加载
+    threshold: 0.1 // 当 10% 的图片可见时开始加载
+  });
+
+  lazyImages.forEach(img => {
+    imageObserver.observe(img);
+  });
+};
+
+// 添加图片懒加载逻辑
 onMounted(() => {
   loadData();
+  initLazyLoading();
 });
 </script>
 
@@ -513,5 +559,35 @@ onMounted(() => {
 .song-info {
   flex: 1;
   padding-right: 1rem;
+}
+
+.lazy-image {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: #f0f0f0;
+}
+
+.lazy-image.loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
+}
+
+.lazy-image.error {
+  opacity: 1;
+  background: #ffebee;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 </style>

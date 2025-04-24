@@ -11,7 +11,12 @@
         <!-- 头像上传部分 -->
         <div class="avatar-section">
           <div class="current-avatar-container">
-            <img :src="previewAvatar || userInfo.avatar" alt="当前头像" class="current-avatar">
+            <img 
+              :src="previewAvatar || userInfo.avatar" 
+              alt="当前头像" 
+              class="current-avatar"
+              loading="lazy"
+            >
           </div>
           <button class="avatar-upload-btn" @click="triggerFileInput">
             选择新头像
@@ -78,25 +83,31 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, watch } from 'vue';
 import apiClient from '@/utils/api';
 import { useUserStore } from '@/stores/user';
 
-const props = defineProps({
-  isVisible: {
-    type: Boolean,
-    default: false
-  },
-  userInfo: {
-    type: Object,
-    required: true
-  }
-});
+interface UserInfo {
+  userId: string;
+  nickName: string;
+  avatar: string;
+  birthday: string;
+  personIntroduction: string;
+}
 
-const emit = defineEmits(['close', 'updated']);
+const props = defineProps<{
+  isVisible: boolean;
+  userInfo: UserInfo;
+}>();
+
+const emit = defineEmits<{
+  (e: 'close'): void;
+  (e: 'updated'): void;
+}>();
+
 const userStore = useUserStore();
-const fileInput = ref(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 // 表单数据
 const formData = reactive({
@@ -106,21 +117,9 @@ const formData = reactive({
 });
 
 // 头像相关
-const avatarFile = ref(null);
-const previewAvatar = ref(null);
+const avatarFile = ref<File | null>(null);
+const previewAvatar = ref<string | null>(null);
 const isSaving = ref(false);
-
-// 触发文件选择
-const triggerFileInput = () => {
-  fileInput.value.click();
-};
-
-// 监听模态框显示状态
-watch(() => props.isVisible, (newValue) => {
-  if (newValue && props.userInfo) {
-    initFormData();
-  }
-}, { immediate: true });
 
 // 初始化表单数据
 const initFormData = () => {
@@ -132,13 +131,73 @@ const initFormData = () => {
   previewAvatar.value = null;
 };
 
-// 处理头像选择
-const handleAvatarChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    avatarFile.value = file;
-    previewAvatar.value = URL.createObjectURL(file);
+// 监听模态框显示状态
+watch(() => props.isVisible, (newValue) => {
+  if (newValue && props.userInfo) {
+    initFormData();
   }
+}, { immediate: true });
+
+// 触发文件选择
+const triggerFileInput = () => {
+  fileInput.value.click();
+};
+
+// 处理头像选择
+const handleAvatarChange = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    // 压缩头像图片
+    compressAvatar(target.files[0]).then(compressedFile => {
+      avatarFile.value = compressedFile;
+      previewAvatar.value = URL.createObjectURL(compressedFile);
+    });
+  }
+};
+
+// 头像压缩函数
+const compressAvatar = (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 头像尺寸固定为200x200
+        const SIZE = 200;
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+        
+        if (ctx) {
+          // 绘制圆形头像
+          ctx.beginPath();
+          ctx.arc(SIZE/2, SIZE/2, SIZE/2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(img, 0, 0, SIZE, SIZE);
+          
+          // 转换为WebP格式
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webp'), {
+                type: 'image/webp',
+                lastModified: Date.now()
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          }, 'image/webp', 0.8);
+        } else {
+          resolve(file);
+        }
+      };
+    };
+  });
 };
 
 // 关闭模态框
@@ -435,5 +494,14 @@ const saveChanges = async () => {
     width: 100%;
     margin-right: 0;
   }
+}
+
+.lazy-image {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
 }
 </style> 
