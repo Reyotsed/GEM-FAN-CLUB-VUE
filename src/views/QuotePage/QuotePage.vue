@@ -34,12 +34,31 @@
             </div>
         </div>
         
+        
+
         <!-- Quote 详情弹窗 -->
         <QuoteInfoPage
             v-model:visible="showQuoteModal"
             :quote-id="selectedQuoteId"
         />
     </div>
+    <!-- 添加加载更多按钮 -->
+    <div class="load-more-container" v-if="!noMoreQuotes">
+            <button 
+                class="load-more-btn" 
+                @click="loadMoreQuotes"
+                :disabled="loading"
+            >
+                <span v-if="loading" class="loading-spinner"></span>
+                {{ loading ? '加载中...' : '加载更多' }}
+            </button>
+        </div>
+        <div class="no-more-container" v-else>
+            <div class="no-more">
+                <span class="no-more-icon">✨</span>
+                没有更多内容了~
+            </div>
+        </div>
 </template>
 
 <script setup lang="ts">
@@ -73,75 +92,94 @@ interface Quote {
 const quoteList = ref<Quote[]>([]);
 const showQuoteModal = ref(false);
 const selectedQuoteId = ref('');
+const loading = ref(false);
+const noMoreQuotes = ref(false);
+const batchSize = 6; // 每次加载的数量
 
-onMounted(() => {
-    // 确保页面滚动到顶部
-    window.scrollTo(0, 0);
+// 获取已显示的 Quote IDs
+const getDisplayedQuoteIds = () => {
+    return quoteList.value.map(quote => quote.quoteInfo.quoteId);
+};
+
+// 加载 Quote 数据的通用函数
+const loadQuoteData = async (quote: Quote) => {
+    try {
+        // 获取图片列表
+        const pictureRes = await apiClient.get('/quote/quotePicture', {
+            params: { quoteId: quote.quoteInfo.quoteId }
+        });
+        
+        // 只获取第一张图片
+        if (pictureRes.data.data.length > 0) {
+            const imageUrl = await apiClient.getImageUrl(pictureRes.data.data[0].filePath);
+            quote.pictureList = [imageUrl];
+        }
+
+        // 获取用户信息
+        const userRes = await apiClient.get('/user/getUserInfo', {
+            params: { userId: quote.quoteInfo.userId }
+        });
+        quote.userNickName = userRes.data.data.nickName;
+        quote.userAvatar = await apiClient.getImageUrl(userRes.data.data.avatar);
+
+        // 如果用户已登录，获取点赞状态
+        if (userStore.isLoggedIn) {
+            const likeRes = await apiClient.get('/quote/isLiked', {
+                params: {
+                    quoteId: quote.quoteInfo.quoteId,
+                    userId: userStore.userId
+                }
+            });
+            quote.isliked = likeRes.data.data;
+        }
+    } catch (error) {
+        console.error('加载 Quote 数据失败:', error);
+    }
+};
+
+// 加载更多 Quotes
+const loadMoreQuotes = async () => {
+    if (loading.value || noMoreQuotes.value) return;
     
-    // 先获取quoteList
-    apiClient.get('/quote/quoteList').then(res => {
-        // 循环每个quote
-        for (let i = 0; i < res.data.data.length; i++) {
-            quoteList.value.push({
-                quoteInfo: res.data.data[i],
+    loading.value = true;
+    try {
+        const displayedIds = getDisplayedQuoteIds();
+        const response = await apiClient.post('/quote/getMoreQuotes', {
+            displayedIds: displayedIds,
+            count: batchSize
+        });
+
+        const newQuotes = response.data.data;
+        
+        // 如果返回的数量小于请求的数量，说明没有更多了
+        if (newQuotes.length < batchSize) {
+            noMoreQuotes.value = true;
+        }
+
+        // 处理每个新的 quote
+        for (const quoteInfo of newQuotes) {
+            const quote: Quote = {
+                quoteInfo: quoteInfo,
                 userNickName: '',
                 userAvatar: '',
                 pictureList: [],
                 isliked: false
-            });
+            };
             
-            // 先获取这个quote的pictureList(path)
-            apiClient.get('/quote/quotePicture', {
-                params: {
-                    quoteId: res.data.data[i].quoteId
-                }
-            }).then(res => {
-                // 这里拿到的是一个数组，数组中是对象，对象中是filePath
-                for (let j = 0; j < 1; j++) {
-                    // 根据filePath获取图片
-                    apiClient.getImageUrl(res.data.data[j].filePath).then(imageUrl => {
-                        quoteList.value[i].pictureList.push(imageUrl);
-                    });
-                }
-            });
-            
-            // 再获取userNickName和userAvatar
-            apiClient.get('/user/getUserInfo', {
-                params: {
-                    userId: quoteList.value[i].quoteInfo.userId
-                }
-            }).then(res => {
-                quoteList.value[i].userNickName = res.data.data.nickName;
-                // 再获取userAvatar
-                apiClient.getImageUrl(res.data.data.avatar).then(avatarUrl => {
-                    quoteList.value[i].userAvatar = avatarUrl;
-                });
-            });
+            await loadQuoteData(quote);
+            quoteList.value.push(quote);
+        }
+    } catch (error) {
+        console.error('加载更多 Quotes 失败:', error);
+    } finally {
+        loading.value = false;
+    }
+};
 
-            // 如果用户已经登录，获取是否已经点赞：
-            if (userStore.isLoggedIn){
-                apiClient.get('/quote/isLiked', {
-                    params: {
-                        quoteId: quoteList.value[i].quoteInfo.quoteId,
-                        userId: userStore.userId    
-                    }
-                }).then(res => {
-                    quoteList.value[i].isliked = res.data.data;
-                });
-            }
-        };
-
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-        quoteList.value.push(quoteList.value[0]);
-    });
+// 初始加载
+onMounted(async () => {
+    window.scrollTo(0, 0);
+    await loadMoreQuotes();
 });
 
 // 添加点赞功能
@@ -232,6 +270,7 @@ const goToQuoteDetail = (quoteId) => {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.5rem;
     box-sizing: border-box;
+    padding-bottom: 5rem;
 }
 
 .quote-item {
@@ -416,5 +455,80 @@ const goToQuoteDetail = (quoteId) => {
     .quote-list {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+}
+
+.load-more-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+    padding: 1rem;
+}
+
+.load-more-btn {
+    background: linear-gradient(135deg, #9567b1 0%, #6f86d6 100%);
+    color: white;
+    border: none;
+    padding: 0.8rem 2.5rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(111, 134, 214, 0.2);
+    pointer-events: auto; /* 恢复按钮的点击事件 */
+    position: relative;
+    min-width: 120px;
+}
+
+.load-more-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(111, 134, 214, 0.3);
+}
+
+.load-more-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.no-more-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+    padding: 1rem;
+}
+
+.no-more {
+    text-align: center;
+    color: #666;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.no-more-icon {
+    font-size: 1.2rem;
 }
 </style>
