@@ -638,15 +638,15 @@ const handleKeydown = (event) => {
     .slider-container {
         height: 50vh;
     }
-
+    
     .content-container {
         padding: 30px 20px;
     }
-
+    
     .achievements-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-
+    
     .social-links {
         grid-template-columns: repeat(3, 1fr);
     }

@@ -308,16 +308,17 @@ onMounted(() => {
 <style scoped>
 /* 新增加的背景容器 */
 .page-background {
-    padding: 1rem;
     width: 100%;
-    background: linear-gradient(135deg, #f8f9fa, #e2e6ea);
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fff6fe 0%, #f8f0ff 100%);
+    margin: 0;
+    padding: 0;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    position: relative;
-    min-height: 40vh;
-    font-family: 'Arial', sans-serif;
-    overflow-x: hidden;
+    flex-direction: column;
+    position: absolute;
+    top: 50px;
+    left: 0;
+    right: 0;
     box-sizing: border-box;
 }
 

@@ -918,6 +918,7 @@ const handleCanPlay = () => {
         flex-direction: column;
         height: auto;
         align-items: center;
+        padding: 1.5rem 1rem;
     }
     
     .record-player, .song-info {
@@ -932,6 +933,19 @@ const handleCanPlay = () => {
     
     .lyrics-section {
         height: 350px;
+        padding: 1.5rem;
+    }
+    
+    .song-title h1 {
+        font-size: 2.2rem;
+    }
+    
+    .meta-item {
+        margin-bottom: 1rem;
+    }
+    
+    .label, .value {
+        font-size: 1.1rem;
     }
 }
 
@@ -940,21 +954,34 @@ const handleCanPlay = () => {
         padding: 1rem 0.5rem;
     }
     
+    .song-player {
+        width: 95%;
+    }
+    
     .song-title h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
     
     .player-controls {
-        padding: 0.8rem 2%;
+        padding: 0.8rem 1rem;
         gap: 1rem;
+        flex-wrap: wrap;
     }
     
     .control-buttons {
-        min-width: 150px;
+        min-width: 120px;
+        order: 1;
+    }
+    
+    .progress-container {
+        width: 100%;
+        order: 3;
+        margin-top: 0.5rem;
     }
     
     .volume-control {
         min-width: 100px;
+        order: 2;
     }
     
     .volume-slider {
@@ -962,29 +989,129 @@ const handleCanPlay = () => {
     }
     
     .record-disc {
-        max-width: 350px;
+        max-width: 280px;
+    }
+    
+    .lyrics-line {
+        font-size: 1.1rem;
+        margin: 0.6rem 0;
+    }
+    
+    .lyrics-line.highlight {
+        font-size: 1.3rem;
+    }
+    
+    .lyrics-title {
+        font-size: 1.4rem;
+    }
+    
+    .meta-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .label {
+        margin-bottom: 0.3rem;
+        margin-right: 0;
+    }
+    
+    .label::after {
+        display: none;
     }
 }
 
 @media (max-width: 480px) {
     .song-container {
-        padding: 1.5rem 1rem 1rem 1rem;
+        padding: 1rem 0.8rem;
     }
     
     .record-disc {
-        max-width: 280px;
+        max-width: 250px;
     }
     
     .song-title h1 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
+    }
+    
+    .lyrics-section {
+        padding: 1rem;
+        height: 300px;
     }
     
     .lyrics-line {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
     
     .lyrics-line.highlight {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
+    }
+    
+    .player-controls {
+        padding: 0.6rem 0.8rem;
+    }
+    
+    .control-btn {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .play-pause {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .time {
+        font-size: 0.8rem;
+    }
+    
+    .progress-bar {
+        height: 4px;
+    }
+    
+    .progress-handle {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .volume-handle {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .song-title h1 {
+        font-size: 1.4rem;
+    }
+    
+    .record-disc {
+        max-width: 220px;
+    }
+    
+    .lyrics-section {
+        height: 250px;
+    }
+    
+    .lyrics-line {
+        font-size: 0.9rem;
+    }
+    
+    .lyrics-line.highlight {
+        font-size: 1.1rem;
+    }
+    
+    .control-buttons {
+        min-width: 100px;
+    }
+    
+    .control-btn {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .play-pause {
+        width: 40px;
+        height: 40px;
     }
 }
 

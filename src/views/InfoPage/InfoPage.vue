@@ -68,6 +68,9 @@
             </div>
           </div>
         </section>
+
+        <!-- 演唱会地图 -->
+        <ChineseMapModal :concerts="concerts" />
         
         <!-- 演唱会统计信息 -->
         <section class="info-section concert-statistics">
@@ -135,8 +138,7 @@
           </div>
         </section>
 
-        <!-- 演唱会地图 -->
-        <ChineseMapModal :concerts="concerts" />
+        
       </div>
     </div>
 </template>
@@ -661,93 +663,50 @@ onMounted(() => {
   width: 100%;
   min-height: 100vh;
   background: linear-gradient(135deg, #fff6fe 0%, #f8f0ff 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 添加装饰性背景元素 */
-.info-page::before {
-  content: '';
-  position: fixed;
-  top: -50%;
-  right: -50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(235,7,238,0.05) 0%, rgba(165,5,222,0.02) 60%);
-  transform: rotate(30deg);
-  z-index: 0;
-  animation: floatBg 15s ease-in-out infinite;
-}
-
-.info-page::after {
-  content: '';
-  position: fixed;
-  bottom: -50%;
-  left: -50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(235,7,238,0.03) 0%, rgba(165,5,222,0.05) 100%);
-  transform: rotate(-30deg);
-  z-index: 0;
-  animation: floatBg 20s ease-in-out infinite reverse;
-}
-
-@keyframes floatBg {
-  0% { transform: rotate(30deg) translate(0, 0); }
-  50% { transform: rotate(30deg) translate(2%, 2%); }
-  100% { transform: rotate(30deg) translate(0, 0); }
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
 }
 
 .page-header {
   background: linear-gradient(135deg, #eb07ee, #a505de);
   color: white;
-  padding: 3rem 0;
+  padding: 2rem;
   text-align: center;
   position: relative;
   overflow: hidden;
-}
-
-.page-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
-              radial-gradient(circle at 70% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
-  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .header-content {
-  position: relative;
-  z-index: 2;
-}
-
-.header-content h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.subtitle {
-  font-size: 1.2rem;
-  opacity: 0.9;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .info-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .info-section {
-  margin-bottom: 3rem;
-  background: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(235, 7, 238, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  backdrop-filter: blur(10px);
+  width: 100%;
+  box-sizing: border-box;
   position: relative;
 }
 
@@ -755,24 +714,33 @@ onMounted(() => {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 0% 100%, rgba(235,7,238,0.05) 0%, transparent 50%);
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: skewX(-15deg);
+  transition: 0.5s;
   pointer-events: none;
 }
 
+.info-section:hover::before {
+  left: 100%;
+  transition: 0.8s;
+}
+
 .section-title {
-  padding: 1.5rem;
-  margin: 0;
-  border-bottom: 1px solid rgba(240, 240, 240, 0.5);
-  display: flex;
-  align-items: center;
-  font-size: 1.5rem;
+  padding: 1.2rem;
+  font-size: 1.3rem;
   color: #333;
   background: linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
   position: relative;
-  z-index: 1;
+  display: flex;
+  align-items: center;
 }
 
 .icon {
@@ -830,19 +798,17 @@ onMounted(() => {
 
 .performance-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 1.5rem;
-  padding: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .performance-item {
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
+  padding: 1.2rem;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .performance-item:hover {
@@ -864,9 +830,9 @@ onMounted(() => {
 
 .date-segment {
   background: linear-gradient(135deg, #fff1fd, #f9f0ff);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.95rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.9rem;
   color: #eb07ee;
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(235, 7, 238, 0.1);
@@ -938,32 +904,148 @@ onMounted(() => {
   color: #eb07ee;
 }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .tour-title-box h3 {
-    font-size: 1.5rem;
-  }
-  
-  .performance-section {
-    padding: 1.5rem;
-  }
-  
-  .performance-list {
-    grid-template-columns: 1fr;
-  }
-  
-  .performance-item {
+/* 响应式断点 */
+@media (max-width: 1200px) {
+  .info-content {
     padding: 1.2rem;
   }
-  
-  .pending-row {
-    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 1.5rem;
   }
-  
-  .pending-city {
-    padding: 0.6rem 1.2rem;
+
+  .header-content h1 {
+    font-size: 1.6rem;
+  }
+
+  .subtitle {
     font-size: 1rem;
   }
+
+  .info-content {
+    padding: 1rem;
+  }
+
+  .section-title {
+    padding: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .performance-list {
+    grid-template-columns: 1fr;
+    padding: 0.8rem;
+  }
+
+  .performance-item {
+    padding: 1rem;
+  }
+
+  .date-segment {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .table-container {
+    margin: 0.8rem;
+  }
+
+  .concerts-table {
+    font-size: 0.8rem;
+  }
+
+  .concerts-table th,
+  .concerts-table td {
+    padding: 0.5rem 0.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 1.2rem;
+  }
+
+  .header-content h1 {
+    font-size: 1.4rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .info-content {
+    padding: 0.8rem;
+  }
+
+  .section-title {
+    padding: 0.8rem;
+    font-size: 1.1rem;
+  }
+
+  .performance-item {
+    padding: 0.8rem;
+  }
+
+  .date-segment {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .concerts-table {
+    font-size: 0.75rem;
+  }
+
+  .concerts-table th,
+  .concerts-table td {
+    padding: 0.4rem 0.3rem;
+  }
+}
+
+/* 确保所有主要容器都有正确的盒模型设置 */
+.info-section,
+.table-container,
+.performance-list,
+.performance-item {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* 添加动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.info-section {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* 优化滚动体验 */
+.table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #eb07ee rgba(235, 7, 238, 0.1);
+}
+
+.table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: rgba(235, 7, 238, 0.1);
+  border-radius: 3px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #eb07ee;
+  border-radius: 3px;
 }
 
 /* 演唱会统计信息样式 */
@@ -1263,14 +1345,14 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: 2rem;
   color: #666;
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(235, 7, 238, 0.2);
+  width: 30px;
+  height: 30px;
+  border: 2px solid rgba(235, 7, 238, 0.2);
   border-radius: 50%;
   border-top-color: #eb07ee;
   animation: spin 1s ease-in-out infinite;

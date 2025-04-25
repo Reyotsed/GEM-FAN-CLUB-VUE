@@ -196,9 +196,9 @@ const handleImageUpload = (event: Event) => {
         // 压缩图片
         compressImage(file).then(compressedFile => {
             const preview = URL.createObjectURL(compressedFile);
-            quoteForm.images.push({
+        quoteForm.images.push({
                 file: compressedFile,
-                preview
+            preview
             });
         });
         

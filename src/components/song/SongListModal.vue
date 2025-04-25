@@ -590,4 +590,134 @@ onMounted(() => {
     background-position: -200% 0;
   }
 }
+
+.song-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    table-layout: fixed;
+}
+
+.song-table th,
+.song-table td {
+    padding: 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.song-table th {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    position: sticky;
+    top: 0;
+    background: rgba(15, 15, 30, 0.95);
+    z-index: 1;
+}
+
+.song-table tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.song-table td:first-child {
+    width: 10%;
+    text-align: center;
+}
+
+.song-table td:nth-child(2) {
+    width: 40%;
+}
+
+.song-table td:nth-child(3) {
+    width: 30%;
+}
+
+.song-table td:nth-child(4) {
+    width: 20%;
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .song-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .song-table thead,
+    .song-table tbody,
+    .song-table tr,
+    .song-table th,
+    .song-table td {
+        display: block;
+    }
+    
+    .song-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    .song-table tr {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .song-table td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        width: 100%;
+        text-align: left;
+        white-space: normal;
+    }
+    
+    .song-table td:before {
+        position: absolute;
+        left: 0.5rem;
+        width: 45%;
+        padding-right: 0.5rem;
+        white-space: nowrap;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .song-table td:nth-of-type(1):before { content: "序号"; }
+    .song-table td:nth-of-type(2):before { content: "歌曲名称"; }
+    .song-table td:nth-of-type(3):before { content: "歌手"; }
+    .song-table td:nth-of-type(4):before { content: "播放次数"; }
+    
+    .song-table td:first-child,
+    .song-table td:nth-child(2),
+    .song-table td:nth-child(3),
+    .song-table td:nth-child(4) {
+        width: 100%;
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    .song-table td {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .song-table td:before {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .song-table td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .song-table td:before {
+        font-size: 0.75rem;
+    }
+}
 </style>

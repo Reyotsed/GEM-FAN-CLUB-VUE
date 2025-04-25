@@ -152,10 +152,17 @@ onMounted(() => {
 <style scoped>
 .shop-page {
   width: 100%;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #fff6fe 0%, #f8f0ff 100%);
-  position: relative;
-  overflow: hidden;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fff6fe 0%, #f8f0ff 100%);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 50px;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
 }
 
 .shop-page::before {
