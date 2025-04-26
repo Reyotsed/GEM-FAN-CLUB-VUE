@@ -15,7 +15,7 @@
                 <router-link to="/" @click="closeMenu">首页</router-link>
                 <router-link to="/song" @click="closeMenu">歌曲</router-link>
                 <router-link to="/quote" @click="closeMenu">语录</router-link>
-                <router-link to="/video" @click="closeMenu">视频</router-link>
+                <router-link to="/games" @click="closeMenu">游戏</router-link>
                 <router-link to="/picture" @click="closeMenu">照片</router-link>
                 <router-link to="/ai" @click="closeMenu">AI-GEM</router-link>
                 <router-link to="/shop" @click="closeMenu">商店</router-link>
