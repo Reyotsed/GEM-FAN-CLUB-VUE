@@ -10,98 +10,132 @@
     </div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <template v-else>
-      <div v-if="!gameCompleted" class="game-stats">
-        <div class="progress-bar">
-          <div class="progress" :style="{ width: `${(currentQuestion + 1) * 10}%` }"></div>
+      <!-- 添加难度选择界面 -->
+      <div v-if="!gameStarted" class="difficulty-selection">
+        <h3>选择难度</h3>
+        <div class="difficulty-options">
+          <button 
+            @click="selectDifficulty(1)" 
+            class="difficulty-button"
+            :class="{ 'selected': selectedDifficulty === 1 }"
+          >
+            路人难度
+            <span class="difficulty-desc">我知道邓紫棋，听过一些她的大火歌曲</span>
+          </button>
+          <button 
+            @click="selectDifficulty(2)" 
+            class="difficulty-button"
+            :class="{ 'selected': selectedDifficulty === 2 }"
+          >
+            歌迷难度
+            <span class="difficulty-desc">我是邓紫棋的歌迷，对她的歌曲很熟悉</span>
+          </button>
         </div>
-        <div class="stats-container">
-          <div class="stat-item">
-            <span class="stat-label">当前进度</span>
-            <span class="stat-value">{{ currentQuestion + 1 }}/10</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">得分</span>
-            <span class="stat-value">{{ score }}</span>
-          </div>
-        </div>
-      </div>
-      <div v-if="gameCompleted" class="game-completed">
-        <div class="completion-animation">
-          <div class="checkmark">✓</div>
-        </div>
-        <h3>恭喜完成！</h3>
-        <p>总得分: {{ score }}</p>
-        <p>完成时间: {{ formatTime(completionTime) }}</p>
-        <div class="record-form" v-if="!hasRecorded">
-          <input 
-            v-model="nickname" 
-            placeholder="输入昵称保存记录" 
-            class="nickname-input"
-            maxlength="10"
-          />
-          <button @click="saveRecord" class="save-record-button">保存记录</button>
-        </div>
-        <button @click="restartGame" class="restart-button">再来一次</button>
+        <button 
+          @click="startGame" 
+          class="start-game-button"
+          :disabled="!selectedDifficulty"
+        >
+          开始游戏
+        </button>
       </div>
       <template v-else>
-        <div class="current-lyric">
-          <p v-if="currentLyric.song" class="song-name">歌曲：{{ currentLyric.song }}</p>
-        </div>
-        <div class="input-area">
-          <div class="inputs-container">
-            <template v-for="(part, index) in lyricParts" :key="index">
-              <span class="lyric-text">{{ part.text }}</span>
-              <input 
-                v-if="part.isQuestion"
-                v-model="userInputs[part.inputIndex]"
-                @input="handleInput($event, part.inputIndex)"
-                @keydown="handleKeydown($event, part.inputIndex)"
-                ref="inputRefs"
-                class="lyric-input"
-              />
-            </template>
+        <div v-if="!gameCompleted" class="game-stats">
+          <div class="progress-bar">
+            <div class="progress" :style="{ width: `${(currentQuestion + 1) * 10}%` }"></div>
           </div>
-          <div class="button-group">
-            <button @click="submitAnswer" class="submit-button">提交</button>
-            <button @click="giveUp" class="give-up-button">放弃</button>
+          <div class="stats-container">
+            <div class="stat-item">
+              <span class="stat-label">当前进度</span>
+              <span class="stat-value">{{ currentQuestion + 1 }}/10</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">得分</span>
+              <span class="stat-value">{{ score }}</span>
+            </div>
           </div>
         </div>
-        <div class="history">
-          <h3>答题历史</h3>
-          <ul>
-            <li v-for="(item, index) in history" :key="index" :class="{ 'correct': item.isCorrect, 'incorrect': !item.isCorrect }">
-              <div class="history-item">
-                <div class="history-content">
-                  {{ item.lyric }}
-                  <span class="result-icon">{{ item.isCorrect ? '✓' : '✗' }}</span>
+        <div v-if="gameCompleted" class="game-completed">
+          <div class="completion-animation">
+            <div class="checkmark">✓</div>
+          </div>
+          <h3>恭喜完成！</h3>
+          <p>总得分: {{ score }}</p>
+          <p>完成时间: {{ formatTime(completionTime) }}</p>
+          <div class="record-form" v-if="!hasRecorded">
+            <input 
+              v-model="nickname" 
+              placeholder="输入昵称保存记录" 
+              class="nickname-input"
+              maxlength="10"
+            />
+            <button @click="saveRecord" class="save-record-button">保存记录</button>
+          </div>
+          <button @click="restartGame" class="restart-button">再来一次</button>
+        </div>
+        <template v-else>
+          <div class="current-lyric">
+            <div class="song-info">
+              <span class="song-icon">🎵</span>
+              <p class="song-name">{{ currentLyric.song }}</p>
+            </div>
+          </div>
+          <div class="input-area">
+            <div class="inputs-container">
+              <template v-for="(part, index) in lyricParts" :key="index">
+                <span class="lyric-text">{{ part.text }}</span>
+                <input 
+                  v-if="part.isQuestion"
+                  v-model="userInputs[part.inputIndex]"
+                  @input="handleInput($event, part.inputIndex)"
+                  @keydown="handleKeydown($event, part.inputIndex)"
+                  ref="inputRefs"
+                  class="lyric-input"
+                />
+              </template>
+            </div>
+            <div class="button-group">
+              <button @click="submitAnswer" class="submit-button">提交</button>
+              <button @click="giveUp" class="give-up-button">放弃</button>
+            </div>
+          </div>
+          <div class="history">
+            <h3>答题历史</h3>
+            <ul>
+              <li v-for="(item, index) in history" :key="index" :class="{ 'correct': item.isCorrect, 'incorrect': !item.isCorrect }">
+                <div class="history-item">
+                  <div class="history-content">
+                    {{ item.lyric }}
+                    <span class="result-icon">{{ item.isCorrect ? '✓' : '✗' }}</span>
+                  </div>
+                  <div v-if="!item.isCorrect" class="correct-answer">
+                    正确答案: {{ item.correctAnswer }}
+                  </div>
                 </div>
-                <div v-if="!item.isCorrect" class="correct-answer">
-                  正确答案: {{ item.correctAnswer }}
-                </div>
-              </div>
-            </li>
-          </ul>
+              </li>
+            </ul>
+          </div>
+        </template>
+        <div v-if="showLeaderboard" class="leaderboard">
+          <h3>歌词接龙排行榜</h3>
+          <div class="leaderboard-list">
+            <div class="leaderboard-header">
+              <span class="rank">排名</span>
+              <span class="name">昵称</span>
+              <span class="difficulty">难度</span>
+              <span class="score">得分</span>
+              <span class="time">用时</span>
+            </div>
+            <div v-for="(record, index) in leaderboard" :key="index" class="leaderboard-item">
+              <span class="rank">{{ index + 1 }}</span>
+              <span class="name">{{ record.nickname }}</span>
+              <span class="difficulty">{{ record.diffLevel === 1 ? '普通' : '困难' }}</span>
+              <span class="score">{{ record.score }}</span>
+              <span class="time">{{ formatTime(record.completionTime) }}</span>
+            </div>
+          </div>
         </div>
       </template>
-      <div v-if="showLeaderboard" class="leaderboard">
-        <h3>歌词接龙排行榜</h3>
-        <div class="leaderboard-list">
-          <div class="leaderboard-header">
-            <span class="rank">排名</span>
-            <span class="name">昵称</span>
-            <span class="difficulty">难度</span>
-            <span class="score">得分</span>
-            <span class="time">用时</span>
-          </div>
-          <div v-for="(record, index) in leaderboard" :key="index" class="leaderboard-item">
-            <span class="rank">{{ index + 1 }}</span>
-            <span class="name">{{ record.nickname }}</span>
-            <span class="difficulty">{{ record.diffLevel === 1 ? '普通' : '困难' }}</span>
-            <span class="score">{{ record.score }}</span>
-            <span class="time">{{ formatTime(record.completionTime) }}</span>
-          </div>
-        </div>
-      </div>
     </template>
   </div>
   <!-- 正确答案弹窗 -->
@@ -126,7 +160,6 @@
 
 <script setup>
 import { ref, onMounted, computed, nextTick } from 'vue'
-import lyricsData from '@/../public/data/lyrics.json'
 import apiClient from '@/utils/api'
 
 const currentLyric = ref({})
@@ -147,6 +180,8 @@ const hasRecorded = ref(false)
 const showLeaderboard = ref(false)
 const leaderboard = ref([])
 let availableLyrics = []
+const gameStarted = ref(false)
+const selectedDifficulty = ref(null)
 
 const lyricParts = computed(() => {
   if (!currentLyric.value.guess) return []
@@ -253,9 +288,15 @@ const handleKeydown = (event, index) => {
 
 const startGame = () => {
   try {
-    // 获取所有有guess字段的歌词
-    const allLyrics = lyricsData.lyrics.filter(lyric => lyric.guess)
-    if (allLyrics.length === 0) {
+    // 根据选择的难度筛选歌词
+    let filteredLyrics = availableLyrics.filter(lyric => lyric.guess)
+    if (selectedDifficulty.value === 1) {
+      // 只选择难度为1的题目
+      filteredLyrics = filteredLyrics.filter(lyric => lyric.level === 1)
+    }
+    // 难度2包含所有题目，不需要额外过滤
+
+    if (filteredLyrics.length === 0) {
       throw new Error('没有可用的歌词题目')
     }
 
@@ -263,10 +304,10 @@ const startGame = () => {
     availableLyrics = []
     const usedIndices = new Set()
     
-    while (availableLyrics.length < 10 && availableLyrics.length < allLyrics.length) {
-      const randomIndex = Math.floor(Math.random() * allLyrics.length)
+    while (availableLyrics.length < 10 && availableLyrics.length < filteredLyrics.length) {
+      const randomIndex = Math.floor(Math.random() * filteredLyrics.length)
       if (!usedIndices.has(randomIndex)) {
-        availableLyrics.push(allLyrics[randomIndex])
+        availableLyrics.push(filteredLyrics[randomIndex])
         usedIndices.add(randomIndex)
       }
     }
@@ -278,6 +319,7 @@ const startGame = () => {
     currentQuestion.value = 0
     gameCompleted.value = false
     startTime.value = Date.now()
+    gameStarted.value = true
     
     // 开始第一题
     getNewLyric()
@@ -345,7 +387,8 @@ const giveUp = () => {
 }
 
 const restartGame = () => {
-  startGame()
+  gameStarted.value = false
+  selectedDifficulty.value = null
   hasRecorded.value = false
   showLeaderboard.value = false
   nickname.value = ''
@@ -370,7 +413,7 @@ const saveRecord = async () => {
     nickname: nickname.value,
     score: score.value,
     completionTime: completionTime.value,
-    diffLevel: 1, // 默认难度级别
+    diffLevel: selectedDifficulty.value, // 默认难度级别
     userId: (localStorage.getItem('userId') || '').replace(/"/g, '') // 移除双引号
   }
   try {
@@ -404,11 +447,27 @@ const loadLeaderboard = async () => {
   }
 }
 
+const selectDifficulty = (level) => {
+  selectedDifficulty.value = level
+}
+
+// 加载歌词数据
+const loadLyrics = async () => {
+  try {
+    const response = await fetch('/data/lyrics.json')
+    const data = await response.json()
+    availableLyrics = data.lyrics
+    loading.value = false
+  } catch (err) {
+    error.value = '加载游戏数据失败，请稍后重试'
+    loading.value = false
+  }
+}
+
 onMounted(() => {
   try {
-    startGame()
+    loadLyrics()
     loadLeaderboard()
-    loading.value = false
   } catch (err) {
     error.value = '加载游戏数据失败，请稍后重试'
     loading.value = false
@@ -916,29 +975,30 @@ onMounted(() => {
 
 .answer-item {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 
 .answer-label {
   font-size: 1rem;
   color: #666;
+  min-width: 80px;
+  font-weight: 500;
 }
 
 .user-answer {
   font-size: 1.1rem;
   color: #f44336;
-  padding: 0.8rem;
-  background: rgba(244, 67, 54, 0.1);
-  border-radius: 8px;
+  flex: 1;
 }
 
 .correct-answer-text {
   font-size: 1.1rem;
   color: #2e7d32;
-  padding: 0.8rem;
-  background: rgba(76, 175, 80, 0.1);
-  border-radius: 8px;
+  flex: 1;
 }
 
 .modal-close-button {
@@ -1099,15 +1159,186 @@ onMounted(() => {
     font-size: 1rem;
   }
 
+  .answer-item {
+    padding: 0.6rem;
+  }
+  
+  .answer-label {
+    font-size: 0.9rem;
+    min-width: 70px;
+  }
+  
   .user-answer,
   .correct-answer-text {
     font-size: 1rem;
-    padding: 0.6rem;
   }
 
   .modal-close-button {
     padding: 0.7rem 1.2rem;
     font-size: 0.9rem;
+  }
+}
+
+/* 添加难度选择界面的样式 */
+.difficulty-selection {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #fff0fa 0%, #f3e6ff 100%);
+  border-radius: 16px;
+  margin: 1rem 0;
+  box-shadow: 0 2px 10px rgba(223, 13, 238, 0.07);
+  border: 1px solid #f3caff;
+}
+
+.difficulty-selection h3 {
+  font-size: 1.5rem;
+  color: #a505de;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.difficulty-options {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.difficulty-button {
+  padding: 1.5rem 2rem;
+  background: #fff6fd;
+  border: 2px solid #f3caff;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 180px;
+  box-shadow: 0 2px 8px rgba(223, 13, 238, 0.07);
+}
+
+.difficulty-button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(223, 13, 238, 0.13);
+  border-color: #df0dee;
+}
+
+.difficulty-button.selected {
+  background: linear-gradient(135deg, #df0dee, #a505de);
+  color: white;
+  border-color: #df0dee;
+}
+
+.difficulty-desc {
+  font-size: 0.9rem;
+  color: #7a3fa7;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+.difficulty-button.selected .difficulty-desc {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.start-game-button {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #df0dee, #a505de);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(223, 13, 238, 0.13);
+  transition: all 0.3s;
+}
+
+.start-game-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(223, 13, 238, 0.18);
+}
+
+.start-game-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .difficulty-selection {
+    padding: 1.5rem;
+  }
+
+  .difficulty-options {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .difficulty-button {
+    padding: 1.2rem 1.5rem;
+    min-width: auto;
+  }
+
+  .start-game-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+.song-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fff0fa 0%, #f3e6ff 100%);
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 10px rgba(223, 13, 238, 0.07);
+  border: 1px solid #f3caff;
+  animation: fadeIn 0.5s ease;
+}
+
+.song-icon {
+  font-size: 1.5rem;
+  color: #df0dee;
+  animation: pulse 2s infinite;
+}
+
+.song-name {
+  font-size: 1.2rem;
+  color: #7a3fa7;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-align: center;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .song-info {
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .song-icon {
+    font-size: 1.3rem;
+  }
+  
+  .song-name {
+    font-size: 1.1rem;
   }
 }
 </style> 
