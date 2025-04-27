@@ -138,8 +138,8 @@
                             <a href="https://github.com/Reyotsed" target="_blank" rel="noopener noreferrer">GitHub: @Reyotsed</a>
                         </div>
                         <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <a href="mailto:zxiaoyao522@gmail.com">Email: zxiaoyao522@gmail.com</a>
+                            <i class="fab fa-weibo"></i>
+                            <a href="https://weibo.com/u/6374535201" target="_blank" rel="noopener noreferrer">微博: @Reyotsed</a>
                         </div>
                     </div>
                     

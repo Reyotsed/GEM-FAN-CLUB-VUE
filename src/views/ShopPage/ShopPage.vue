@@ -114,7 +114,35 @@
             </div>
             <div class="product-info">
               <h3 class="product-title">启示录专辑庆功版</h3>
-              <p class="product-desc">站长买过姐姐的启示录专辑庆功版，本来想挂个链接，结果现在要么售罄要么涨价到1k了(站长380入手的)，那就放一张照片好了，想买的宝子可以去咸鱼看看，站长要收藏的，不出！</p>
+              <p class="product-desc">站长有姐姐的启示录专辑庆功版，本来想挂个链接，结果现在要么售罄要么涨价到1k了(站长380入手的)，那就放一张照片好了，想买的宝子可以去咸鱼看看，站长要收藏的，不出！</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-grid">
+          <div class="product-card">
+            <div class="product-image">
+              <img src="/img/shop/003.png" alt="站长买过">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">启示录、摩天动物园、童话三部曲专辑</h3>
+              <a href="https://detail.tmall.com/item.htm?id=692695693942&pisk=g1Q-21YZ--2lbw_Ji_rmx2NndmVcvofzDT5s-pvoAtBAOT9kKQiWlxOBtQ9COpYdp9BpEHwyrwBAOOFyt87hDXCNH9KUapvBp9fCqS4gS_5y8e9LIP4MuJPrr9dWV2tbOCdtNSx55ZdkZewgIPmmG3ykR9x-1c4jcCJXNB9WRSHXZBLBNLt7MKOp_DM5d9NvhBRZR0gWAxgX6KiINHOQlqO9w4GWdHNAGKRBRp6BVSCjpUPJ3bO-JGR7PbnL9TuIRZdJcofWh7_NuQd6B__-R2Zew3p1NKe7BXoJc6-d8XupF_sNLC6SFRxPOiBvweUmVF1AAOdVPPDJggffsK1tT25yyGQ9Pgeq0UXRlE_5XXgCMUpyvaxxe-p1zs_wln4_6s_VE_7AtXaBiOvfaaTL558JPLTvgw2qPpIfAaxy8YwM46sAHQL14A7GWq4oIddnVSFxYD-WgReMTguSL2GHMdVWVDoexIRvISFxYD-WgIpgN4iEYHAV.&spm=a21xtw.29978518.0.0&sku_properties=134942334%3A3269586" target="_blank" class="product-button">
+                立即购买
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-grid">
+          <div class="product-card">
+            <div class="product-image">
+              <img src="/img/shop/004.png" alt="站长买过">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">摩天动物园马版专辑</h3>
+              <a href="https://item.taobao.com/item.htm?id=826791204921&pisk=g9JSVrbg8z4SIs6LA_mVfgStkFBCdmkw9kspjHezvTBRJkTvv7ULwgKYkGjF9JllU66BkZJPz3WRJJTeYL8evpSpdTv2aJ7rr9tp79gZ7Akwq3fhpVuNOEUIZOIa9yUFvSQALMtO5tI2q3XhpozK_IKuAtocHuIdJm6AAMbdpgCLkmsFAJBdy6UYMGQAp9QRpZeAbgIdJ7e-coICbzERw6KADgSF29BpJnnfxZIRp9HFtrsENMKSqc6BbIzQ13_bpJpfD2b2V2wFcKSWrNtJFJeKtg15W3QjyVZEDsKhOpq3daKJsej9yz3NZHdXlg6I37B9cBL1mLHaPiAyDh7vfk2HqTO6CTdSoSXyPKBveCZLpn65r69PGzgfWLxvItCqBctvnU-khHrKpi8Nk3vRdAnGFTQRhivEo8QBMBpPZ94-7_xpGEs5BgPuQNOpVWZfsJsf7mibtWDKmDvVmB674_Ic2AojcrNhwijf7mibtWfRmgdZcmabt&spm=a21xtw.29978518.0.0" target="_blank" class="product-button">
+                立即购买
+              </a>
             </div>
           </div>
         </div>
@@ -385,6 +413,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 2rem;
   justify-content: center;
+  margin-bottom: 2rem;
 }
 
 .product-card {

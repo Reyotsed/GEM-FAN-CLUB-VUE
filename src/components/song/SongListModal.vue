@@ -33,7 +33,7 @@
       <section class="song-section">
         <h2 class="section-title">
           <i class="icon hidden"></i>
-          冷门歌曲推荐
+          站长推荐
         </h2>
         <div class="song-list">
           <a 
