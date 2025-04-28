@@ -109,7 +109,6 @@
             <button class="submit-btn" @click="handleRegister">注册</button>
           </div>
           <div v-if="activeTab === 'login'" class="login-container">
-            <a href="#" class="forgot-password">忘记密码？</a>
             <button class="submit-btn" @click="handleLogin">登录</button>
           </div>
         </div>
@@ -254,7 +253,6 @@
   </script>
   
   <style scoped>
-  /* 添加相同的样式 */
   .modal {
     position: fixed;
     top: 0;
@@ -266,115 +264,204 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
   }
   
   .modal-content {
-    background-color: white;
-    width: 400px;
-    padding: 20px;
-    border-radius: 8px;
+    background: linear-gradient(135deg, #fff0fa 0%, #f3e6ff 100%);
+    width: 420px;
+    padding: 30px;
+    border-radius: 16px;
     position: relative;
+    box-shadow: 0 10px 25px rgba(223, 13, 238, 0.1);
+    animation: modalFadeIn 0.3s ease;
+    border: 1px solid #f3caff;
+  }
+  
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   
   .tab-container {
     display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #f3caff;
   }
   
   .tab {
-    padding: 10px 20px;
+    padding: 12px 24px;
     cursor: pointer;
     border-bottom: 2px solid transparent;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    color: #7a3fa7;
+  }
+  
+  .tab:hover {
+    color: #df0dee;
   }
   
   .tab.active {
-    color: #3388ff;
-    border-bottom: 2px solid #3388ff;
+    color: #df0dee;
+    border-bottom: 2px solid #df0dee;
   }
   
   .form-group {
     display: flex;
-    margin-bottom: 15px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 20px;
     margin-left: 5px;
     margin-right: 5px;
-    white-space: nowrap;
   }
   
   .form-group label {
-    display: flex;
-    margin-right: 10px;
-    /* margin-bottom: 5px; */
-    color: #666;
-    
+    margin-bottom: 0;
+    margin-right: 12px;
+    color: #7a3fa7;
+    font-weight: 500;
+    font-size: 14px;
+    min-width: 60px;
+    text-align: right;
   }
   
   .form-group input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #f3caff;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background-color: #fff6fd;
+    box-shadow: 0 1px 4px rgba(223, 13, 238, 0.08);
+  }
+  
+  .form-group input:focus {
+    outline: none;
+    border-color: #df0dee;
+    box-shadow: 0 0 0 3px #f3caff88;
+    background-color: #fff0fa;
   }
   
   .forgot-password {
-    float: right;
-    color: #3388ff;
+    color: #df0dee;
     text-decoration: none;
-    font-size: 12px;
+    font-size: 13px;
+    transition: all 0.3s ease;
   }
   
-  .get-sms-code {
-    margin-top: 5px;
-    background-color: #f0f0f0;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
+  .forgot-password:hover {
+    color: #a505de;
+    text-decoration: underline;
   }
   
   .modal-footer {
     display: flex;
     justify-content: flex-end;
-    margin-top: 20px;
+    margin-top: 25px;
   }
+  
   .login-container {
-    flex-direction: column;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     width: 100%;
-    place-items: center;
-  }
-  
-
-  
-  .register-btn {
-    background-color: #3388ff;
-    color: white;
-  
+    align-items: center;
+    gap: 15px;
   }
   
   .submit-btn {
-    background-color: #3388ff;
+    background: linear-gradient(135deg, #df0dee, #a505de);
     color: white;
-    
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(223, 13, 238, 0.13);
+    letter-spacing: 1px;
+  }
+  
+  .submit-btn:hover {
+    filter: brightness(1.08) saturate(1.2);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 16px rgba(223, 13, 238, 0.18);
+  }
+  
+  .submit-btn:active {
+    filter: brightness(0.98);
+    transform: scale(0.98);
   }
   
   .close-modal {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 20px;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
     cursor: pointer;
+    color: #7a3fa7;
+    transition: all 0.3s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
   }
+  
+  .close-modal:hover {
+    background-color: #fff6fd;
+    color: #df0dee;
+  }
+  
   .image-container {
     text-align: center;
-    margin: 0px;
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
   }
-
-  img {
-    max-width: 500px;
-    max-height: 500px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+  
+  .image-container img {
+    max-width: 120px;
+    max-height: 40px;
+    border: 1px solid #f3caff;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: #fff6fd;
+  }
+  
+  .image-container img:hover {
+    transform: scale(1.05);
+  }
+  
+  .image-container button {
+    background: #fff6fd;
+    border: 1px solid #f3caff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #7a3fa7;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 4px rgba(223, 13, 238, 0.08);
+  }
+  
+  .image-container button:hover {
+    background: #fff0fa;
+    color: #df0dee;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(223, 13, 238, 0.13);
   }
   </style>

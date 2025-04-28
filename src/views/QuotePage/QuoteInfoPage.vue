@@ -29,16 +29,17 @@
 
                 <!-- 右侧内容区域 -->
                 <div class="right-section">
-                    <!-- 用户信息和互动区 -->
-                    <div class="user-section">
-                        <div class="author-info" @click="goToUserPage(quoteData.quoteInfo.userId)">
-                            <img :src="quoteData.userAvatar" alt="user avatar" class="author-avatar">
-                            <div class="user-details">
-                                <span class="author-name">{{ quoteData.userNickName }}</span>
-                            </div>
-                        </div>
+                    <!-- 内容区（上方） -->
+                    <div class="quote-content-wrapper">
                         <div class="quote-content">
                             <p>{{ quoteData.quoteInfo.content }}</p>
+                        </div>
+                    </div>
+                    <!-- 作者和点赞区（下方同一行） -->
+                    <div class="author-like-row">
+                        <div class="author-info" @click="goToUserPage(quoteData.quoteInfo.userId)">
+                            <img :src="quoteData.userAvatar" alt="user avatar" class="author-avatar">
+                            <span class="author-name">{{ quoteData.userNickName }}</span>
                         </div>
                         <div class="interaction">
                             <div class="like-button" @click="addlike(quoteData)">
@@ -50,7 +51,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- 评论区 -->
                     <div class="comments-section">
                         <h3>评论区</h3>
@@ -690,112 +690,85 @@ const loadMoreReplies = (comment) => {
     transform: scale(1.2);
 }
 
-.user-section {
-    padding: 20px;
-    border-bottom: 1px solid #eaefff;
-    background: linear-gradient(to bottom, #ffffff, #f8f9ff);
-}
-
-.author-info {
+.quote-content-wrapper {
+    width: 100%;
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    margin-bottom: 12px;
-    transition: transform 0.2s ease;
-}
-
-.author-info:hover {
-    transform: translateY(-2px);
-}
-
-.author-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #fff;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.author-info:hover .author-avatar {
-    transform: scale(1.05);
-}
-
-.user-details {
-    flex: 1;
-}
-
-.author-name {
-    font-weight: 600;
-    color: #5b6f9d;
-    display: block;
-    font-size: 16px;
-    transition: color 0.2s ease;
-}
-
-.author-info:hover .author-name {
-    color: #9567b1;
+    margin-bottom: 10px;
 }
 
 .quote-content {
+    text-align: center;
     font-size: 16px;
     line-height: 1.6;
     color: #333;
-    margin: 14px 0;
+    margin: 0 auto 10px auto;
     word-break: break-word;
     padding: 0 4px;
     letter-spacing: 0.01em;
 }
 
-.quote-content p {
-    margin: 0;
+.author-like-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 0 2px;
+    min-height: unset;
+    gap: 0;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.author-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+}
+
+.author-name {
+    font-weight: 500;
+    color: #5b6f9d;
+    font-size: 13px;
+    transition: color 0.2s ease;
 }
 
 .interaction {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 12px;
+    align-items: center;
 }
 
 .like-button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.9);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(111, 134, 214, 0.08);
+    padding: 0.25rem 0.7rem;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(111, 134, 214, 0.06);
     transition: all 0.3s ease;
 }
 
-.like-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(111, 134, 214, 0.12);
-}
-
 .like-icon {
-    font-size: 20px;
-    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    font-size: 14px;
 }
 
 .like-count {
-    font-size: 15px;
+    font-size: 12px;
     color: #555;
-    font-weight: 600;
-}
-
-.like-icon.liked {
-    transform: scale(1.2);
-    animation: heartBeat 0.4s ease-in-out;
-}
-
-@keyframes heartBeat {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1.2); }
+    font-weight: 500;
 }
 
 .comments-section {
@@ -935,12 +908,14 @@ const loadMoreReplies = (comment) => {
 
     .left-section {
         width: 100%;
-        height: 50%;
+        height: 40%; /* 减小图片区域高度 */
+        min-height: 300px; /* 设置最小高度 */
     }
 
     .right-section {
         width: 100%;
-        height: 50%;
+        height: 60%; /* 增加评论区高度 */
+        overflow-y: auto; /* 允许评论区滚动 */
     }
 
     .close-button {
@@ -950,6 +925,111 @@ const loadMoreReplies = (comment) => {
 
     .comments-section {
         padding: 16px;
+        height: 100%; /* 让评论区占满整个右侧区域 */
+        overflow-y: auto; /* 允许评论区滚动 */
+    }
+
+    .author-like-row {
+        margin-bottom: 4px;
+        padding: 0 1px;
+    }
+
+    .author-avatar {
+        width: 22px;
+        height: 22px;
+    }
+
+    .author-name {
+        font-size: 12px;
+    }
+
+    .quote-content {
+        font-size: 15px;
+    }
+
+    .like-button {
+        padding: 0.18rem 0.5rem;
+        border-radius: 12px;
+    }
+
+    .like-icon {
+        font-size: 12px;
+    }
+
+    .like-count {
+        font-size: 11px;
+    }
+
+    .comment-item {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+    .comment-content {
+        font-size: 14px;
+        line-height: 1.5;
+        margin-left: 42px;
+    }
+
+    .reply-item {
+        padding: 10px;
+        margin-top: 8px;
+    }
+
+    .image-container {
+        padding: 2%;
+    }
+
+    .image-container img {
+        max-width: 95%;
+        max-height: 95%;
+        min-width: 60%;
+        min-height: 60%;
+    }
+
+    .carousel-button {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+
+    .carousel-indicators {
+        bottom: 1rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .indicator {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+/* 小屏幕手机优化 */
+@media (max-width: 360px) {
+    .left-section {
+        height: 35%;
+        min-height: 250px;
+    }
+
+    .right-section {
+        height: 65%;
+    }
+
+    .comments-section {
+        padding: 12px;
+    }
+
+    .comment-item {
+        padding: 10px;
+    }
+
+    .comment-content {
+        font-size: 13px;
+        margin-left: 38px;
+    }
+
+    .reply-item {
+        padding: 8px;
     }
 }
 
