@@ -4,25 +4,25 @@
       <span class="icon">🎮</span>
       邓紫棋粉丝小游戏
     </h2>
-    <div class="game-card" @click="navigateTo('lyrics-chain')">
+    <div class="games-grid">
+      <div class="game-card highlight" @click="navigateTo('lyrics-chain')">
         <div class="game-icon">📝</div>
         <h3>歌词接龙</h3>
         <p>看看你能接出多少句歌词</p>
       </div>
-    <div class="games-grid">
-      <div class="game-card" @click="navigateTo('guess-song')">
+      <div class="game-card highlight" @click="navigateTo('guess-song')">
         <div class="game-icon">🎵</div>
-        <h3>听歌猜歌名（未开发）</h3>
-        <p>测试你对邓紫棋歌曲的熟悉程度</p>
+        <h3>听歌猜歌名 <span class="game-status">（测试中）</span></h3>
+        <p>测试你对邓紫棋歌曲的熟悉程度，快来挑战吧！</p>
       </div>
-      <div class="game-card" @click="navigateTo('quiz')">
+      <div class="game-card disabled" @click="navigateTo('quiz')">
         <div class="game-icon">❓</div>
-        <h3>知识问答（未开发）</h3>
+        <h3>知识问答 <span class="game-status">（未开发）</span></h3>
         <p>挑战你对邓紫棋的了解</p>
       </div>
     </div>
-    <p>后面两个游戏还在开发中，由于需要收集大量的解解的歌曲切片以及相关题目，开发周期较长，敬请期待。</p>
-    <p>如果有愿意提供帮助的朋友，可以通过首页最下方的联系方式联系我！</p>
+    <p class="dev-tip">歌词接龙和听歌猜歌名已开放体验，后续更多游戏开发中，敬请期待！</p>
+    <p class="dev-tip">由于需要收集大量解解的有关题目，如果有愿意提供帮助的朋友，可以通过首页最下方的联系方式联系我！</p>
   </div>
 </template>
 
@@ -93,11 +93,18 @@ const navigateTo = (gameType) => {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  border: 2px solid transparent;
 }
 
-.game-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(223, 13, 238, 0.15);
+.game-card.highlight {
+  border: 2px solid #df0dee;
+  box-shadow: 0 6px 24px rgba(223, 13, 238, 0.15);
+  background: linear-gradient(135deg, #fff0fa 0%, #f3e6ff 100%);
+}
+
+.game-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .game-icon {
@@ -121,6 +128,24 @@ const navigateTo = (gameType) => {
   font-size: 1rem;
   margin: 0;
   line-height: 1.5;
+}
+
+.game-status {
+  font-size: 1rem;
+  color: #a505de;
+  font-weight: 500;
+  margin-left: 0.2em;
+}
+
+.dev-tip {
+  margin-top: 2rem;
+  color: #a505de;
+  font-size: 1.1rem;
+  text-align: center;
+  background: linear-gradient(90deg, #fff0fa 0%, #f3e6ff 100%);
+  border-radius: 10px;
+  padding: 1rem 0.5rem;
+  box-shadow: 0 2px 8px rgba(223, 13, 238, 0.07);
 }
 
 @media (max-width: 1024px) {
