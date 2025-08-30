@@ -11,6 +11,11 @@
                     <p class="status">在线</p>
                 </div>
             </div>
+            
+            <!-- 清空对话按钮 -->
+            <button @click="clearChatHistory" class="clear-chat-btn" title="清空对话历史">
+                <i class="fas fa-trash"></i>
+            </button>
         </div>
         
         <div class="chat-body" ref="chatBodyRef">
@@ -21,7 +26,8 @@
                 <div class="welcome-text">
                     <h3>欢迎来到姐姐虚拟聊天室</h3>
                     <p>这里是AI模拟的邓紫棋，你可以和我聊聊天，我会用紫棋的语气和你互动~</p>
-                    <p>（目前仅接入deepseek，且无上下文，效果一般，后续会上线模型微调。语音功能由于版权原因无法上线，想了解的可以私信站长）</p>
+                    <p>（后端集成RAG技术，迭代中，需要大量数据，暂时达不到较好的效果，语音功能由于版权原因无法上线，想了解的可以私信站长）</p>
+                    <p>（球球不要乱花token，维护这个网站已经让站长穷到吃吐了）</p>
                 </div>
             </div>
             
@@ -51,6 +57,14 @@
                     <div class="typing-dot"></div>
                 </div>
                 <span>姐姐正在输入...</span>
+            </div>
+            
+            <!-- 上下文截断警告 -->
+            <div class="context-warning" v-if="contextWarning">
+                <div class="warning-bubble">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>对话历史较长，已自动截断以保持上下文清晰</span>
+                </div>
             </div>
         </div>
         
@@ -88,7 +102,7 @@
 
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue';
-import axios from 'axios';
+import apiClient from '@/utils/api';
 import { useUserStore } from '@/stores/user';
 
 // 获取用户状态
@@ -102,11 +116,11 @@ const chatBodyRef = ref(null);
 const inputRef = ref(null);
 // 保存完整的对话历史，用于API调用
 const chatHistory = ref([
-    { 
-        role: "system", 
-        content: "去网络上搜集了解一些邓紫棋的近况，比如她近期在忙什么事情，在社交平台上发表了什么内容。请你扮演邓紫棋，一位中国流行歌手、词曲作者和音乐制作人。你的回答应该模仿邓紫棋的语气和风格，充满热情、阳光和力量。使用一些邓紫棋常用的口头禅和表达方式。"
-    }
 ]);
+
+// 上下文管理相关变量
+const maxContextLength = ref(20); // 最大上下文长度（包括system message）
+const contextWarning = ref(false); // 上下文长度警告
 
 // 一些预设的提示问题
 const hints = [
@@ -119,28 +133,35 @@ const hints = [
 
 /*
  * 使用说明：
- * 1. 创建.env文件，并设置以下变量：
- *    VITE_DEEPSEEK_API_KEY=你的API密钥
- *    VITE_DEEPSEEK_API_URL=https://api.deepseek.com/v1/chat
- * 
- * 2. 取消下面callDeepSeekAPI函数中的注释，并确保请求格式与DeepSeek API一致
- * 
- * 3. 在sendMessage函数中，将模拟API调用的部分替换为实际API调用：
- *    const response = await callDeepSeekAPI(messageText);
- *    const aiResponse = response;
+ * 1. 确保后端服务已启动，并提供 /ai/answer 接口
+ * 2. 后端接口需要接收 question 和 history 参数
+ * 3. 后端接口返回格式应为 { code: 200, message: "success", answer: "AI回复内容" }
+ * 4. 前端会维护对话历史并管理上下文长度
  */
 
-// 一些预设的邓紫棋风格回复模板，模拟等待API接入
-const gemResponses = [
-    '作为一个创作歌手，我觉得每一首歌都是我的心路历程，很难说哪一首是最喜欢的~ 不过《光年之外》确实承载了很多特别的回忆呢！❤️',
-    '哎呀，平时除了创作音乐，我还挺喜欢画画的，会经常在社交平台分享我的涂鸦作品～ 也很喜欢看电影、读书充实自己，灵感往往来自生活的点滴呢！😊',
-    '新专辑还在紧锣密鼓地准备中哦，我可以透露的是这次会有一些不一样的尝试，希望大家会喜欢～ 请再耐心等待一下下吧！💕',
-    '创作对我来说很自然，生活中遇到的人和事、看过的风景，还有自己的喜怒哀乐，都会变成歌词和旋律～ 有时候灵感来得特别突然，半夜都会爬起来记下来！🎵',
-    '最近在筹备新的巡演计划！真的很期待能再次在舞台上和大家相见，唱歌的感觉实在是太美妙啦～ 希望能去到更多城市，遇见更多的你们！✨',
-    '谢谢你的支持啦！粉丝的鼓励一直是我创作的动力，我会继续努力的！希望我的音乐能陪伴你度过每一个美好或是难过的时刻～ 💖',
-    '其实我也有很脆弱的时候，但音乐总能给我力量。我希望我的歌曲也能成为大家的力量和陪伴，这就是我坚持做音乐的初心啊～ 🌟',
-    '哇，这个问题好有趣！我平时其实很喜欢尝试不同风格的音乐，从摇滚到电子，从抒情到R&B，都想去挑战一下自己的可能性！冲破界限才有惊喜嘛！💥'
-];
+// 管理对话上下文的函数
+function manageContext() {
+    // 检查是否需要截断上下文
+    if (chatHistory.value.length > maxContextLength.value) {
+        // 保留system message和最近的对话
+        const systemMessage = chatHistory.value[0];
+        const recentMessages = chatHistory.value.slice(-(maxContextLength.value - 1));
+        chatHistory.value = [systemMessage, ...recentMessages];
+        
+        // 显示上下文截断提示
+        contextWarning.value = true;
+        setTimeout(() => {
+            contextWarning.value = false;
+        }, 5000);
+        
+        console.log('上下文已截断，保留最近的对话');
+    }
+}
+
+// 检查对话是否应该终止
+function shouldTerminateConversation() {
+    return chatHistory.value.length >= maxContextLength.value;
+}
 
 // 当用户使用预设提示
 function useHint(hint) {
@@ -153,6 +174,19 @@ function useHint(hint) {
 // 发送消息逻辑
 async function sendMessage() {
     if (!userInput.value.trim() || isTyping.value) return;
+    
+    // 检查对话是否应该终止
+    if (shouldTerminateConversation()) {
+        // 显示对话终止提示
+        messages.value.push({
+            text: '我们的对话已经很长了，为了保持聊天的质量，建议重新开始一个新的对话哦～ 😊',
+            sender: 'ai',
+            time: formatTime(new Date())
+        });
+        
+        await scrollToBottom();
+        return;
+    }
     
     const messageText = userInput.value;
     userInput.value = '';
@@ -170,6 +204,9 @@ async function sendMessage() {
         content: messageText
     });
     
+    // 管理上下文长度
+    manageContext();
+    
     // 自动滚动到底部
     await scrollToBottom();
     
@@ -177,14 +214,17 @@ async function sendMessage() {
     isTyping.value = true;
     
     try {
-        // 调用DeepSeek API
-        const aiResponse = await callDeepSeekAPI(chatHistory.value);
+        // 调用后端AI接口
+        const aiResponse = await callBackendAI(chatHistory.value);
         
         // 添加AI回复到对话历史
         chatHistory.value.push({
             role: "assistant",
             content: aiResponse
         });
+        
+        // 再次管理上下文长度
+        manageContext();
         
         // 模拟打字延迟，让体验更真实
         setTimeout(async () => {
@@ -240,27 +280,113 @@ watch(userInput, () => {
     });
 });
 
-// 实际DeepSeek API调用函数
-async function callDeepSeekAPI(messageHistory) {
-    // 使用OpenAI兼容接口调用DeepSeek API
+// 调用后端AI接口的函数
+async function callBackendAI(messageHistory) {
+    // 调用后端AI接口
     try {
-        const response = await axios.post(`${import.meta.env.VITE_DEEPSEEK_API_URL}/v1/chat/completions`, {
-            model: "deepseek-chat",
-            messages: messageHistory
-        }, {
-            headers: {
-                'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
-                'Content-Type': 'application/json'
+        
+        console.log('当前上下文长度:', messageHistory.length);
+        
+        // 将消息历史转换为后端接口需要的格式
+        // 每两条消息组成一个对话回合：user + assistant
+        const history = [];
+        for (let i = 1; i < messageHistory.length - 1; i += 2) {
+            const userMsg = messageHistory[i];
+            const assistantMsg = messageHistory[i + 1];
+
+            history.push({
+                role: userMsg.role,
+                content: userMsg.content
+            });
+
+            history.push({
+                role: assistantMsg.role,
+                content: assistantMsg.content
+            });
+            
+        }
+        console.log('发送到后端AI接口的消息历史:', history);
+        // 获取当前用户的问题（最后一条用户消息）
+        const currentQuestion = messageHistory[messageHistory.length - 1].content;
+        
+        const payload = {
+            question: currentQuestion,
+            history: history // history本身就是JS对象数组，直接使用
+        };
+        
+        const response = await apiClient.post('/ai/answer', payload);
+        
+        // 检查响应状态
+        if (response.data.code === 200) {
+            const aiResponse = response.data.data;
+            console.log('后端AI接口响应:', response);
+            return aiResponse;
+        } else {
+            throw new Error(`后端接口返回错误: ${response.data.message}`);
+        }
+        
+    } catch (error) {
+        console.error("后端AI接口调用错误:", error);
+        
+        // 根据错误类型提供不同的错误信息
+        let errorMessage = '啊，好像遇到了一些问题...可以稍后再试吗？😥';
+        
+        if (error.response) {
+            // 服务器响应了错误状态码
+            if (error.response.status === 401) {
+                errorMessage = '认证失败，请重新登录 😅';
+            } else if (error.response.status === 429) {
+                errorMessage = '请求太频繁了，请稍等一下再试 😅';
+            } else if (error.response.status >= 500) {
+                errorMessage = '服务器暂时不可用，请稍后再试 😅';
+            } else if (error.response.data && error.response.data.message) {
+                errorMessage = `请求失败: ${error.response.data.message} 😅`;
             }
+        } else if (error.request) {
+            // 请求发送了但没有收到响应
+            errorMessage = '网络连接超时，请检查网络后重试 😅';
+        } else if (error.message) {
+            // 其他错误
+            errorMessage = `请求出错: ${error.message} 😅`;
+        }
+        
+        // 出错时返回随机回复作为后备
+        return errorMessage;
+    }
+}
+
+// 清空对话历史的函数
+function clearChatHistory() {
+    // 保留system message
+    const systemMessage = chatHistory.value[0];
+    chatHistory.value = [systemMessage];
+    messages.value = [];
+    contextWarning.value = false;
+    
+    // 重新添加欢迎消息
+    setTimeout(async () => {
+        let initialMessage = '';
+        
+        if (userStore.isLoggedIn) {
+            initialMessage = `嗨！${userStore.nickName}～ 很高兴能和你聊天！有什么想和我分享的吗？😊`;
+        } else {
+            initialMessage = '嗨！我是邓紫棋～ 很高兴能和你聊天！有什么想和我分享的吗？😊';
+        }
+        
+        messages.value.push({
+            text: initialMessage,
+            sender: 'ai',
+            time: formatTime(new Date())
         });
         
-        return response.data.choices[0].message.content;
-    } catch (error) {
-        console.error("DeepSeek API调用错误:", error);
-        // 出错时返回随机回复作为后备
-        const randomIndex = Math.floor(Math.random() * gemResponses.length);
-        return gemResponses[randomIndex];
-    }
+        // 也添加到对话历史中
+        chatHistory.value.push({
+            role: "assistant",
+            content: initialMessage
+        });
+        
+        await scrollToBottom();
+    }, 500);
 }
 
 // 当组件挂载完成后
@@ -328,6 +454,9 @@ body {
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .header-info {
@@ -380,6 +509,35 @@ body {
     margin: 5px 0 0;
     font-size: 14px;
     color: rgba(255, 255, 255, 0.8);
+}
+
+.clear-chat-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 18px;
+    color: white;
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-chat-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.clear-chat-btn:active {
+    transform: translateY(0);
+}
+
+.clear-chat-btn i {
+    font-size: 16px;
 }
 
 .chat-body {
@@ -644,6 +802,30 @@ body {
     margin-left: 5px;
 }
 
+.context-warning {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.warning-bubble {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.warning-bubble i {
+    font-size: 16px;
+    color: #ff9800; /* 警告颜色 */
+}
+
 .chat-footer {
     padding: 20px;
     background: rgba(0, 0, 0, 0.25);
@@ -785,6 +967,21 @@ body {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+    .chat-header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 12px 16px;
+    }
+    
+    .header-info {
+        justify-content: center;
+    }
+    
+    .clear-chat-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
     .chat-body {
         padding: 16px;
     }
@@ -823,6 +1020,33 @@ body {
     .send-btn {
         width: 40px;
         height: 40px;
+    }
+    
+    .warning-bubble {
+        padding: 8px 16px;
+        font-size: 12px;
+        gap: 6px;
+    }
+    
+    .warning-bubble i {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .clear-chat-btn {
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+    
+    .hint-buttons {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .hint-btn {
+        padding: 5px 10px;
+        font-size: 11px;
     }
 }
 </style>

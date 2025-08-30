@@ -33,10 +33,10 @@ export default defineConfig(({ mode }) => {
         '@': resolve(__dirname, 'src') // 设置 '@' 指向 'src' 目录
       }
     },
+
     define: {
       // 为客户端代码提供环境变量
-      'process.env.VUE_APP_BASEURL': JSON.stringify(env.VUE_APP_BASEURL || ''),
-      'process.env.VUE_APP_API_PREFIX': JSON.stringify(env.VUE_APP_API_PREFIX || '')
+      'process.env.VUE_APP_BASEURL': JSON.stringify(env.VUE_APP_BASEURL || '')
     }
   }
 })

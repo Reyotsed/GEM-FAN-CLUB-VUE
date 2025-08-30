@@ -14,6 +14,7 @@ const GamesPage = () => import('@/views/GamesPage/GamesPage.vue')
 const GuessSongGame = () => import('@/views/GamesPage/GuessSongGame.vue')
 const LyricsChainGame = () => import('@/views/GamesPage/LyricsChainGame.vue')
 const QuizGame = () => import('@/views/GamesPage/QuizGame.vue')
+const TicketRushGame = () => import('@/views/GamesPage/TicketRushGame.vue')
 
 const routes = [
     { path: '/', redirect: '' },
@@ -36,7 +37,8 @@ const routes = [
           { path: 'games', name: "games", component: GamesPage },
           { path: 'games/guess-song', name: "guess-song", component: GuessSongGame },
           { path: 'games/lyrics-chain', name: "lyrics-chain", component: LyricsChainGame },
-          { path: 'games/quiz', name: "quiz", component: QuizGame }
+          { path: 'games/quiz', name: "quiz", component: QuizGame },
+          { path: 'games/ticket-rush', name: "ticket-rush", component: TicketRushGame }
         ]
     }
 ]
