@@ -357,13 +357,13 @@ async function callBackendAI(messageHistory) {
 
 // 清空对话历史的函数
 function clearChatHistory() {
-    // 保留system message
-    const systemMessage = chatHistory.value[0];
-    chatHistory.value = [systemMessage];
+    // 完全清空所有内容
     messages.value = [];
+    chatHistory.value = [];
     contextWarning.value = false;
     
-    // 重新添加欢迎消息
+    // 可选：重新添加欢迎消息（如果你希望保留欢迎消息，取消下面的注释）
+    /*
     setTimeout(async () => {
         let initialMessage = '';
         
@@ -387,6 +387,7 @@ function clearChatHistory() {
         
         await scrollToBottom();
     }, 500);
+    */
 }
 
 // 当组件挂载完成后
