@@ -139,28 +139,24 @@ const hints = [
  * 4. 前端会维护对话历史并管理上下文长度
  */
 
-// 管理对话上下文的函数
+// Manage conversation context length
 function manageContext() {
-    // 检查是否需要截断上下文
     if (chatHistory.value.length > maxContextLength.value) {
-        // 保留system message和最近的对话
-        const systemMessage = chatHistory.value[0];
-        const recentMessages = chatHistory.value.slice(-(maxContextLength.value - 1));
-        chatHistory.value = [systemMessage, ...recentMessages];
+        // Keep the welcome message (first assistant message) and most recent messages
+        const welcomeMessage = chatHistory.value[0];
+        // Keep an even number of recent messages to preserve user-assistant pairs
+        const keepCount = maxContextLength.value - 1;
+        const recentMessages = chatHistory.value.slice(-keepCount);
+        chatHistory.value = [welcomeMessage, ...recentMessages];
         
-        // 显示上下文截断提示
+        // Show context truncation warning
         contextWarning.value = true;
         setTimeout(() => {
             contextWarning.value = false;
         }, 5000);
         
-        console.log('上下文已截断，保留最近的对话');
+        console.log('Context truncated, keeping recent messages');
     }
-}
-
-// 检查对话是否应该终止
-function shouldTerminateConversation() {
-    return chatHistory.value.length >= maxContextLength.value;
 }
 
 // 当用户使用预设提示
@@ -174,19 +170,6 @@ function useHint(hint) {
 // 发送消息逻辑
 async function sendMessage() {
     if (!userInput.value.trim() || isTyping.value) return;
-    
-    // 检查对话是否应该终止
-    if (shouldTerminateConversation()) {
-        // 显示对话终止提示
-        messages.value.push({
-            text: '我们的对话已经很长了，为了保持聊天的质量，建议重新开始一个新的对话哦～ 😊',
-            sender: 'ai',
-            time: formatTime(new Date())
-        });
-        
-        await scrollToBottom();
-        return;
-    }
     
     const messageText = userInput.value;
     userInput.value = '';
@@ -287,23 +270,18 @@ async function callBackendAI(messageHistory) {
         
         console.log('当前上下文长度:', messageHistory.length);
         
-        // 将消息历史转换为后端接口需要的格式
-        // 每两条消息组成一个对话回合：user + assistant
+        // Convert message history to the format required by backend API
+        // Skip welcome message (index 0) and current question (last message)
+        // Send all intermediate user/assistant messages as history
         const history = [];
-        for (let i = 1; i < messageHistory.length - 1; i += 2) {
-            const userMsg = messageHistory[i];
-            const assistantMsg = messageHistory[i + 1];
-
-            history.push({
-                role: userMsg.role,
-                content: userMsg.content
-            });
-
-            history.push({
-                role: assistantMsg.role,
-                content: assistantMsg.content
-            });
-            
+        for (let i = 1; i < messageHistory.length - 1; i++) {
+            const msg = messageHistory[i];
+            if (msg && msg.role && msg.content) {
+                history.push({
+                    role: msg.role,
+                    content: msg.content
+                });
+            }
         }
         console.log('发送到后端AI接口的消息历史:', history);
         // 获取当前用户的问题（最后一条用户消息）
@@ -321,8 +299,11 @@ async function callBackendAI(messageHistory) {
             const aiResponse = response.data.data;
             console.log('后端AI接口响应:', response);
             return aiResponse;
+        } else if (response.data.code === 429) {
+            // Rate limited
+            return response.data.message || '请求太频繁啦，请稍后再试～ 😅';
         } else {
-            throw new Error(`后端接口返回错误: ${response.data.message}`);
+            return response.data.message || '啊，好像遇到了一些问题...可以稍后再试吗？😥';
         }
         
     } catch (error) {

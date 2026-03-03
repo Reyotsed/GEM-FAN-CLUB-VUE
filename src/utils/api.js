@@ -4,7 +4,7 @@ import { getCachedImage, cacheImage } from './imageCache';
 // 创建axios实例，使用环境变量中的配置
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASEURL + import.meta.env.VITE_API_PREFIX,
-  timeout: 30000
+  timeout: 120000 // 120s to accommodate RAG service (2 LLM calls)
 });
 
 // 请求拦截器，可以在这里添加token等通用信息
@@ -37,13 +37,13 @@ apiClient.interceptors.response.use(
  * @param {string} path - 图片路径
  * @returns {Promise<string>} - 图片URL
  */
-apiClient.getImageUrl = async function(path) {
+apiClient.getImageUrl = async function (path) {
   // 检查缓存中是否已有该图片
   const cachedUrl = getCachedImage(path);
   if (cachedUrl) {
     return cachedUrl;
   }
-  
+
   // 缓存中没有，则请求图片
   try {
     const response = await this.get("/image/getImageByPath", {
