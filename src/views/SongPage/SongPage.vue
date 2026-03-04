@@ -44,7 +44,7 @@
                             <p class="lyrics-line" 
                                 v-for="(lyric, index) in displayedLyrics" 
                                 :key="index" 
-                                :class="{ 'highlight': index === 2 }" 
+                                :class="{ 'highlight': index === highlightIndex }" 
                                 >
                                 {{ lyric.text }}
                             </p>
@@ -181,6 +181,12 @@ const displayedLyrics = computed(() => {
     const start = Math.max(0, currentLyricIndex.value - 2); // 从当前歌词索引向上取2条
     const end = Math.min(parsedLyrics.value.length, currentLyricIndex.value + 3); // 当前歌词索引向下取3条
     return parsedLyrics.value.slice(start, end); // 返回需要显示的歌词
+});
+
+// Compute the highlight index within the displayedLyrics slice
+const highlightIndex = computed(() => {
+    const start = Math.max(0, currentLyricIndex.value - 2);
+    return currentLyricIndex.value - start;
 });
 
 // 简化监听函数，但确保在组件挂载时立即设置音频

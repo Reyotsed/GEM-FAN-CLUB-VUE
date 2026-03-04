@@ -25,21 +25,21 @@ const routes = [
         component: Index,
         meta: { requestAuth: false },
         children: [
-            { path: '', name: "home", component: HomePage },
-            { path: 'song', name: "song", component: SongPage },
-            { path: 'quote', name: "quote", component: QuotePage },
-            { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage },
-            { path: 'picture', name: "picture", component: PicturePage },
-            { path: 'shop', name: "shop", component: ShopPage },
-            { path: 'AI', name: "AI", component: AIPage },
-            { path: 'info', name: "info", component: InfoPage },
-            { path: 'user', name: "user", component: UserPage, meta: { requestAuth: true } },
-            { path: 'upload', name: "upload", component: UploadModal, meta: { requestAuth: true } },
-            { path: 'games', name: "games", component: GamesPage },
-            { path: 'games/guess-song', name: "guess-song", component: GuessSongGame },
-            { path: 'games/lyrics-chain', name: "lyrics-chain", component: LyricsChainGame },
-            { path: 'games/quiz', name: "quiz", component: QuizGame },
-            { path: 'games/ticket-rush', name: "ticket-rush", component: TicketRushGame }
+            { path: '', name: "home", component: HomePage, meta: { title: 'GEM Fan Club - 首页' } },
+            { path: 'song', name: "song", component: SongPage, meta: { title: 'GEM Fan Club - 音乐' } },
+            { path: 'quote', name: "quote", component: QuotePage, meta: { title: 'GEM Fan Club - 语录' } },
+            { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage, meta: { title: 'GEM Fan Club - 语录详情' } },
+            { path: 'picture', name: "picture", component: PicturePage, meta: { title: 'GEM Fan Club - 图片' } },
+            { path: 'shop', name: "shop", component: ShopPage, meta: { title: 'GEM Fan Club - 商店' } },
+            { path: 'AI', name: "AI", component: AIPage, meta: { title: 'GEM Fan Club - AI 对话' } },
+            { path: 'info', name: "info", component: InfoPage, meta: { title: 'GEM Fan Club - 信息' } },
+            { path: 'user', name: "user", component: UserPage, meta: { requestAuth: true, title: 'GEM Fan Club - 个人中心' } },
+            { path: 'upload', name: "upload", component: UploadModal, meta: { requestAuth: true, title: 'GEM Fan Club - 上传' } },
+            { path: 'games', name: "games", component: GamesPage, meta: { title: 'GEM Fan Club - 游戏' } },
+            { path: 'games/guess-song', name: "guess-song", component: GuessSongGame, meta: { title: 'GEM Fan Club - 猜歌游戏' } },
+            { path: 'games/lyrics-chain', name: "lyrics-chain", component: LyricsChainGame, meta: { title: 'GEM Fan Club - 歌词接龙' } },
+            { path: 'games/quiz', name: "quiz", component: QuizGame, meta: { title: 'GEM Fan Club - 知识问答' } },
+            { path: 'games/ticket-rush', name: "ticket-rush", component: TicketRushGame, meta: { title: 'GEM Fan Club - 抢票模拟' } }
         ]
     }
 ]
@@ -58,8 +58,15 @@ const router = createRouter({
 
 export default router;
 
-// Route guard: protect pages that require authentication
+// Route guard: protect pages that require authentication & set page title
 router.beforeEach((to, from, next) => {
+    // Set document title from route meta
+    if (to.meta.title) {
+        document.title = to.meta.title;
+    } else {
+        document.title = 'GEM Fan Club';
+    }
+
     if (to.meta.requestAuth) {
         const userStore = useUserStore();
         if (!userStore.isLoggedIn) {
