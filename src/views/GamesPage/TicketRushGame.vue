@@ -280,15 +280,13 @@ async function setStock(ticketId, stock) {
       }
     })
     
-    console.log('设置库存响应:', response.data)
     return response.data.code === 200
   } catch (error) {
-    console.error('设置库存失败:', error)
     return false
   }
 }
 
-// 清除库存接口
+// Clear stock API
 async function clearStock(ticketId) {
   try {
     const response = await apiClient.get('/game/ticket/clearStock', {
@@ -297,10 +295,8 @@ async function clearStock(ticketId) {
       }
     })
     
-    console.log('清除库存响应:', response.data)
     return response.data.code === 200
   } catch (error) {
-    console.error('清除库存失败:', error)
     return false
   }
 }
@@ -308,10 +304,9 @@ async function clearStock(ticketId) {
 // 抢票API调用函数
 async function grabTicketApi(userId) {
   try {
-    // 添加随机数判断，30%概率直接失败
+    // 30% chance of random failure for realism
     const randomValue = Math.random();
     if (randomValue < 0.3) {
-      console.log(`用户${userId} 随机失败，随机值: ${randomValue.toFixed(3)}`);
       return {
         success: false,
         message: '随机失败'
@@ -326,9 +321,6 @@ async function grabTicketApi(userId) {
        }
      })
     
-    console.log('后端响应:', response.data)
-    
-    // 根据后端返回的code判断是否成功
     if (response.data.code === 200) {
       return {
         success: true,
@@ -341,8 +333,6 @@ async function grabTicketApi(userId) {
       }
     }
   } catch (error) {
-    console.error('抢票请求失败:', error)
-    // 如果是网络错误，返回失败结果
     return {
       success: false,
       message: '网络错误，请重试'
@@ -352,9 +342,6 @@ async function grabTicketApi(userId) {
 
 // 定义虚拟用户的核心行为
 async function startVirtualUser(user) {
-  console.log(`[用户-${user.displayId}] 开始抢票循环`)
-  
-  // 只要抢票还在进行中，且自己没抢到，就不断尝试
   while (gameStarted.value && !gameEnded.value && remainingTickets.value > 0 && !user.success) {
     try {
       // 1. 模拟思考/网络延迟（核心！）
@@ -364,7 +351,6 @@ async function startVirtualUser(user) {
 
       // 再次检查抢票是否已结束
       if (!gameStarted.value || gameEnded.value || remainingTickets.value <= 0) {
-        console.log(`[用户-${user.displayId}] 游戏结束，停止抢票`)
         break;
       }
 
@@ -372,10 +358,7 @@ async function startVirtualUser(user) {
       user.status = '抢票中...';
       user.active = true;
       totalRequests.value++;
-      
-      console.log(`[用户-${user.displayId}] 正在抢票，当前剩余票数: ${remainingTickets.value}`)
 
-      // 2. 发送抢票请求
       const result = await grabTicketApi(user.userId);
 
       // 3. 更新自身状态
@@ -385,20 +368,13 @@ async function startVirtualUser(user) {
         successfulRequests.value++;
         remainingTickets.value--;
         
-        console.log(`[用户-${user.displayId}] 抢票成功！剩余票数: ${remainingTickets.value}`)
-        
-        // 2秒后重置状态
         setTimeout(() => resetUserStatus(user), 2000);
       } else {
         user.status = '抢票失败';
         user.failed = true;
         failedRequests.value++;
         
-        console.log(`[用户-${user.displayId}] 抢票失败，继续尝试`)
-        
-        // 1秒后重置状态，继续尝试
-        setTimeout(() => {
-          if (!user.success && gameStarted.value && !gameEnded.value && remainingTickets.value > 0) {
+        setTimeout(() => {          if (!user.success && gameStarted.value && !gameEnded.value && remainingTickets.value > 0) {
             user.status = '等待中';
             user.failed = false;
             user.active = false;
@@ -410,11 +386,7 @@ async function startVirtualUser(user) {
       user.failed = true;
       failedRequests.value++;
       
-      console.log(`[用户-${user.displayId}] 网络错误: ${error.message}`)
-      
-      // 1秒后重置状态，继续尝试
-      setTimeout(() => {
-        if (!user.success && gameStarted.value && !gameEnded.value && remainingTickets.value > 0) {
+      setTimeout(() => {        if (!user.success && gameStarted.value && !gameEnded.value && remainingTickets.value > 0) {
           user.status = '等待中';
           user.failed = false;
           user.active = false;
@@ -426,7 +398,6 @@ async function startVirtualUser(user) {
   // 循环结束后的最终状态
   if (!user.success) {
     user.status = '等待中';
-    console.log(`[用户-${user.displayId}] 停止抢票，最终未成功`)
   }
 }
 
@@ -488,7 +459,6 @@ const startGame = async () => {
       }
     }, 1000)
   } catch (error) {
-    console.error('开始游戏失败:', error)
     statusMessage.value = '❌ 开始游戏失败，请重试！'
   }
 }
@@ -583,7 +553,6 @@ const endGame = async () => {
       statusMessage.value = '⚠️ 游戏结束，但清除库存失败'
     }
   } catch (error) {
-    console.error('清除库存失败:', error)
     statusMessage.value = '⚠️ 游戏结束，但清除库存失败'
   }
 }
@@ -619,145 +588,175 @@ onUnmounted(() => {
 
 <style scoped>
 .ticket-rush-game {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(235, 7, 238, 0.15);
+  min-height: 100vh;
+  width: 100%;
+  padding: calc(var(--nav-height, 70px) + 2rem) 2rem 2rem;
+  background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
+  box-sizing: border-box;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .game-header {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
 }
 
 .game-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  color: #333;
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  gap: 1rem;
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  background: linear-gradient(to right, #fff, #f3caff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(235, 7, 238, 0.3);
 }
 
 .icon {
-  font-size: 1.8rem;
+  font-size: 2.5rem;
+  filter: drop-shadow(0 0 10px rgba(235, 7, 238, 0.5));
 }
 
 .game-description {
-  color: #666;
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
   margin: 0;
 }
 
-/* 游戏设置区域 */
+/* Game setup area */
 .game-setup {
-  background: linear-gradient(135deg, #fff0fa 0%, #f3e6ff 100%);
-  border-radius: 12px;
-  padding: 1.2rem;
-  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-width: 900px;
+  width: 100%;
 }
 
 .setup-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .form-row {
   display: flex;
-  gap: 1.2rem;
+  gap: 2rem;
   margin-bottom: 0.6rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.5rem;
   flex: 1;
 }
 
 .form-group label {
   font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
 }
 
 .form-group input {
-  padding: 0.6rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 0.8rem 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 1rem;
   transition: border-color 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #df0dee;
+  border-color: var(--primary, #eb07ee);
+  box-shadow: 0 0 0 3px rgba(235, 7, 238, 0.2);
+}
+
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .form-hint {
-  font-size: 0.8rem;
-  color: #888;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.4);
   margin-top: 0.1rem;
 }
 
 .start-btn {
-  background: linear-gradient(135deg, #df0dee 0%, #a505de 100%);
+  background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
   color: white;
   border: none;
-  padding: 0.7rem 1.8rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 0.6rem;
+  margin-top: 1rem;
+  letter-spacing: 1px;
+  box-shadow: 0 10px 30px rgba(235, 7, 238, 0.3);
 }
 
 .start-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(223, 13, 238, 0.3);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(235, 7, 238, 0.5);
+  filter: brightness(1.1);
 }
 
 .start-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* 游戏进行中区域 */
+/* Game playing area */
 .game-playing {
   text-align: center;
-  padding: 1.2rem;
+  padding: 2rem;
+  max-width: 900px;
+  width: 100%;
 }
 
 .countdown-display {
-  margin-bottom: 1.2rem;
+  margin-bottom: 2rem;
 }
 
 .countdown-number {
-  font-size: 3rem;
+  font-size: 4rem;
   font-weight: bold;
-  color: #df0dee;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #fff, #f3caff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 20px rgba(235, 7, 238, 0.6));
 }
 
 .countdown-label {
-  font-size: 1rem;
-  color: #666;
-  margin-top: 0.3rem;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.5rem;
 }
 
 .game-info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.8rem;
-  margin-bottom: 1.2rem;
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 12px;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .info-item {
@@ -769,35 +768,38 @@ onUnmounted(() => {
 }
 
 .info-item .label {
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
 }
 
 .info-item .value {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  color: #333;
+  color: #fff;
 }
 
-/* 实时抢票状态 */
+/* Real-time rush status */
 .rush-status {
-  margin-bottom: 1.2rem;
-  background: #f0f8ff;
-  padding: 1rem;
-  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .rush-status h4 {
-  margin: 0 0 0.6rem 0;
-  color: #333;
-  font-size: 1rem;
+  margin: 0 0 1rem 0;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.8rem;
+  gap: 1rem;
 }
 
 .status-item {
@@ -809,37 +811,40 @@ onUnmounted(() => {
 }
 
 .status-item .label {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
 }
 
 .status-item .value {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: bold;
-  color: #333;
+  color: #fff;
 }
 
 .status-item .value.success {
-  color: #28a745;
+  color: #69F0AE;
 }
 
 .status-item .value.failed {
-  color: #dc3545;
+  color: #FF5252;
 }
 
-/* 虚拟用户抢票动画 */
+/* Virtual users animation */
 .virtual-users {
-  margin-bottom: 1.2rem;
-  background: #fff5f5;
-  padding: 1rem;
-  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .virtual-users h4 {
-  margin: 0 0 0.6rem 0;
-  color: #333;
-  font-size: 1rem;
+  margin: 0 0 1rem 0;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .users-container {
@@ -857,24 +862,24 @@ onUnmounted(() => {
   gap: 0.15rem;
   padding: 0.3rem;
   border-radius: 8px;
-  background: #f8f9fa;
+  background: rgba(255, 255, 255, 0.03);
   transition: all 0.3s ease;
   border: 2px solid transparent;
 }
 
 .virtual-user.active {
-  border-color: #ffc107;
-  background: #fff3cd;
+  border-color: rgba(255, 193, 7, 0.6);
+  background: rgba(255, 193, 7, 0.1);
 }
 
 .virtual-user.success {
-  background: #d4edda;
-  border: 2px solid #c3e6cb;
+  background: rgba(0, 200, 83, 0.1);
+  border: 2px solid rgba(0, 200, 83, 0.3);
 }
 
 .virtual-user.failed {
-  background: #f8d7da;
-  border: 2px solid #f5c6cb;
+  background: rgba(255, 23, 68, 0.1);
+  border: 2px solid rgba(255, 23, 68, 0.3);
 }
 
 .user-icon {
@@ -884,12 +889,12 @@ onUnmounted(() => {
 .user-id {
   font-size: 0.65rem;
   font-weight: bold;
-  color: #333;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .user-status {
   font-size: 0.6rem;
-  color: #666;
+  color: rgba(255, 255, 255, 0.5);
   text-align: center;
   line-height: 1;
 }
@@ -901,38 +906,39 @@ onUnmounted(() => {
   gap: 0.15rem;
   padding: 0.3rem;
   border-radius: 8px;
-  background: #e9ecef;
-  border: 2px dashed #6c757d;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
 }
 
 .more-icon {
   font-size: 1.2rem;
-  color: #6c757d;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .more-text {
   font-size: 0.6rem;
-  color: #6c757d;
+  color: rgba(255, 255, 255, 0.5);
   text-align: center;
 }
 
-/* 用户抢票按钮 */
+/* User rush button */
 .rush-button-container {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
 }
 
 .rush-btn {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: white;
   border: none;
-  padding: 1rem 2.2rem;
-  border-radius: 12px;
-  font-size: 1.2rem;
+  padding: 1.2rem 2.5rem;
+  border-radius: 50px;
+  font-size: 1.3rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-  margin-bottom: 0.6rem;
+  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+  margin-bottom: 0.8rem;
+  letter-spacing: 1px;
 }
 
 .rush-btn:hover:not(:disabled) {
@@ -952,49 +958,56 @@ onUnmounted(() => {
 }
 
 .rush-btn.success {
-  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  background: linear-gradient(135deg, #00C853 0%, #00E676 100%);
+  box-shadow: 0 10px 30px rgba(0, 200, 83, 0.3);
   cursor: default;
 }
 
 .rush-btn.success:hover {
   transform: none;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 200, 83, 0.3);
 }
 
 .rush-hint {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
   margin: 0;
 }
 
 .status-message {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #df0dee;
+  color: var(--primary-light, #f3caff);
   min-height: 1.5rem;
+  text-shadow: 0 0 10px rgba(235, 7, 238, 0.4);
 }
 
-/* 游戏结果区域 */
+/* Game result area */
 .game-result {
   text-align: center;
-  padding: 1.2rem;
+  padding: 3rem 2rem;
+  max-width: 700px;
+  width: 100%;
 }
 
 .result-header h3 {
-  color: #333;
-  font-size: 1.6rem;
-  margin-bottom: 1.2rem;
+  color: #fff;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  font-weight: 800;
+  text-shadow: 0 0 20px rgba(235, 7, 238, 0.6);
 }
 
 .result-content {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin-bottom: 1.2rem;
-  background: #f8f9fa;
-  padding: 1.2rem;
-  border-radius: 12px;
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  padding: 2rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .result-item {
@@ -1006,91 +1019,106 @@ onUnmounted(() => {
 }
 
 .result-item .label {
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
 }
 
 .result-item .value {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: bold;
-  color: #333;
+  color: #fff;
 }
 
 .result-item .value.success {
-  color: #28a745;
+  color: #69F0AE;
 }
 
 .result-item .value.failed {
-  color: #dc3545;
+  color: #FF5252;
 }
 
 .result-message {
-  margin-bottom: 1.2rem;
+  margin-bottom: 2rem;
 }
 
 .success-message {
-  color: #28a745;
-  font-size: 1.1rem;
+  color: #69F0AE;
+  font-size: 1.2rem;
   font-weight: 600;
   margin: 0;
+  text-shadow: 0 0 15px rgba(0, 200, 83, 0.4);
 }
 
 .failed-message {
-  color: #dc3545;
-  font-size: 1.1rem;
+  color: #FF5252;
+  font-size: 1.2rem;
   font-weight: 600;
   margin: 0;
+  text-shadow: 0 0 15px rgba(255, 23, 68, 0.4);
 }
 
 .action-buttons {
   display: flex;
-  gap: 0.6rem;
+  gap: 1.5rem;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .restart-btn, .back-btn {
-  padding: 0.6rem 1.2rem;
+  padding: 1rem 2rem;
   border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
+  letter-spacing: 1px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .restart-btn {
-  background: linear-gradient(135deg, #df0dee 0%, #a505de 100%);
+  background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
   color: white;
+  box-shadow: 0 10px 30px rgba(235, 7, 238, 0.3);
 }
 
 .back-btn {
-  background: #6c757d;
-  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .restart-btn:hover, .back-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
 }
 
-/* 响应式设计 */
+.restart-btn:hover {
+  box-shadow: 0 15px 40px rgba(235, 7, 238, 0.5);
+  filter: brightness(1.1);
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .ticket-rush-game {
-    padding: 0.8rem;
+    padding: calc(var(--nav-height, 70px) + 1rem) 1rem 1rem;
   }
   
   .game-title {
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
   
   .countdown-number {
-    font-size: 2.5rem;
+    font-size: 3rem;
   }
   
   .rush-btn {
-    padding: 0.8rem 1.8rem;
+    padding: 1rem 2rem;
     font-size: 1.1rem;
   }
   

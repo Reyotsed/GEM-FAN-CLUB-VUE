@@ -662,110 +662,110 @@ onMounted(() => {
 .info-page {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #fff6fe 0%, #f8f0ff 100%);
+  background: var(--bg-dark);
+  background-image: 
+      radial-gradient(circle at 10% 20%, rgba(235, 7, 238, 0.1), transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(0, 242, 255, 0.1), transparent 40%);
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  position: absolute;
-  top: 50px;
-  left: 0;
-  right: 0;
+  position: relative;
   box-sizing: border-box;
+  color: #fff;
+  padding-top: var(--nav-height, 70px);
 }
 
 .page-header {
-  background: linear-gradient(135deg, #eb07ee, #a505de);
-  color: white;
-  padding: 2rem;
+  background: transparent;
+  padding: 4rem 2rem 2rem;
   text-align: center;
   position: relative;
-  overflow: hidden;
   width: 100%;
   box-sizing: border-box;
 }
 
-.header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
+.header-content h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  margin: 0 0 1rem 0;
+  background: linear-gradient(to right, #fff, #f3caff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(235, 7, 238, 0.3);
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
 }
 
 .info-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 2rem;
   box-sizing: border-box;
   width: 100%;
 }
 
 .info-section {
-  margin-bottom: 2rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  margin-bottom: 3rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
   position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.info-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  transform: skewX(-15deg);
-  transition: 0.5s;
-  pointer-events: none;
-}
-
-.info-section:hover::before {
-  left: 100%;
-  transition: 0.8s;
+.info-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .section-title {
-  padding: 1.2rem;
-  font-size: 1.3rem;
-  color: #333;
-  background: linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
-  position: relative;
+  padding: 1.5rem 2rem;
+  font-size: 1.4rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
+  font-weight: 700;
 }
 
 .icon {
-  margin-right: 0.5rem;
-  font-size: 1.4rem;
+  margin-right: 1rem;
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 10px rgba(235, 7, 238, 0.5));
 }
 
 .section-content {
-  padding: 1.5rem;
+  padding: 2rem;
 }
 
 /* 演出活动样式 */
 .tour-title-box {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
   position: relative;
 }
 
 .tour-title-box h3 {
   font-size: 1.8rem;
-  color: #333;
+  color: #fff;
   margin: 0;
   padding: 1rem 0;
   position: relative;
   display: inline-block;
+  text-shadow: 0 0 20px rgba(235, 7, 238, 0.4);
 }
 
 .tour-title-box h3::after {
@@ -774,23 +774,24 @@ onMounted(() => {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 80px;
+  width: 100px;
   height: 3px;
   background: linear-gradient(to right, #eb07ee, #a505de);
   border-radius: 2px;
+  box-shadow: 0 0 10px #eb07ee;
 }
 
 .performance-section {
-  background: white;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 16px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .performance-subtitle {
-  font-size: 1.3rem;
-  color: #333;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 2rem;
   padding-left: 1rem;
   border-left: 4px solid #eb07ee;
@@ -799,49 +800,51 @@ onMounted(() => {
 .performance-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
+  gap: 1.5rem;
+  padding: 0.5rem;
 }
 
 .performance-item {
-  padding: 1.2rem;
-  border-radius: 10px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
 }
 
 .performance-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(235, 7, 238, 0.15);
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(235, 7, 238, 0.3);
+  box-shadow: 0 10px 30px rgba(235, 7, 238, 0.1);
 }
 
 .performance-date {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed rgba(235, 7, 238, 0.2);
+  margin-bottom: 1.2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 .date-segments {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .date-segment {
-  background: linear-gradient(135deg, #fff1fd, #f9f0ff);
+  background: rgba(235, 7, 238, 0.1);
   padding: 0.4rem 0.8rem;
-  border-radius: 15px;
+  border-radius: 8px;
   font-size: 0.9rem;
-  color: #eb07ee;
+  color: #f3caff;
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(235, 7, 238, 0.1);
+  border: 1px solid rgba(235, 7, 238, 0.2);
 }
 
 .performance-info {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .venue-info {
@@ -851,28 +854,30 @@ onMounted(() => {
 }
 
 .city {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
 }
 
 .consecutive-shows {
   background: linear-gradient(135deg, #eb07ee, #a505de);
   color: white;
   padding: 0.3rem 0.8rem;
-  border-radius: 15px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(235, 7, 238, 0.4);
 }
 
 .venue {
   font-size: 0.95rem;
-  color: #666;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* 待定场次样式 */
 .pending-section {
-  background: linear-gradient(to right, #fff1fd, #f9f0ff);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 .pending-cities {
@@ -884,44 +889,134 @@ onMounted(() => {
 .pending-row {
   display: flex;
   justify-content: center;
-  gap: 2rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
 }
 
 .pending-city {
   font-size: 1.1rem;
-  color: #333;
+  color: rgba(255, 255, 255, 0.8);
   padding: 0.8rem 1.5rem;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
 }
 
 .pending-city:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(235, 7, 238, 0.15);
+  background: rgba(235, 7, 238, 0.1);
+  border-color: rgba(235, 7, 238, 0.3);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(235, 7, 238, 0.2);
+}
+
+/* 表格样式优化 */
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.concerts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.concerts-table th {
+  background: rgba(235, 7, 238, 0.15);
+  color: #fff;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.concerts-table td {
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.concerts-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.station-cell {
+  background-color: rgba(235, 7, 238, 0.05);
+  font-weight: 600;
+  color: #f3caff;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.concerts-table tfoot td {
+  background-color: rgba(235, 7, 238, 0.1);
+  font-weight: 600;
+  color: #fff;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.2rem;
+}
+
+.summary-value {
+  font-size: 1.2rem;
   color: #eb07ee;
+  text-shadow: 0 0 10px rgba(235, 7, 238, 0.5);
 }
 
-/* 响应式断点 */
-@media (max-width: 1200px) {
-  .info-content {
-    padding: 1.2rem;
-  }
+.notes-cell {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
 }
 
+.table-explanation {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 加载动画 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(235, 7, 238, 0.1);
+  border-radius: 50%;
+  border-top-color: #eb07ee;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 15px rgba(235, 7, 238, 0.2);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 响应式调整 */
 @media (max-width: 768px) {
   .page-header {
-    padding: 1.5rem;
+    padding: 2rem 1rem;
   }
 
   .header-content h1 {
-    font-size: 1.6rem;
-  }
-
-  .subtitle {
-    font-size: 1rem;
+    font-size: 2rem;
   }
 
   .info-content {
@@ -935,431 +1030,15 @@ onMounted(() => {
 
   .performance-list {
     grid-template-columns: 1fr;
-    padding: 0.8rem;
-  }
-
-  .performance-item {
-    padding: 1rem;
-  }
-
-  .date-segment {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.85rem;
-  }
-
-  .table-container {
-    margin: 0.8rem;
   }
 
   .concerts-table {
     font-size: 0.8rem;
   }
-
-  .concerts-table th,
-  .concerts-table td {
-    padding: 0.5rem 0.3rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-header {
-    padding: 1.2rem;
-  }
-
-  .header-content h1 {
-    font-size: 1.4rem;
-  }
-
-  .subtitle {
-    font-size: 0.9rem;
-  }
-
-  .info-content {
-    padding: 0.8rem;
-  }
-
-  .section-title {
-    padding: 0.8rem;
-    font-size: 1.1rem;
-  }
-
-  .performance-item {
-    padding: 0.8rem;
-  }
-
-  .date-segment {
-    padding: 0.2rem 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .concerts-table {
-    font-size: 0.75rem;
-  }
-
-  .concerts-table th,
-  .concerts-table td {
-    padding: 0.4rem 0.3rem;
-  }
-}
-
-/* 确保所有主要容器都有正确的盒模型设置 */
-.info-section,
-.table-container,
-.performance-list,
-.performance-item {
-  box-sizing: border-box;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-/* 添加动画效果 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.info-section {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-/* 优化滚动体验 */
-.table-container {
-  scrollbar-width: thin;
-  scrollbar-color: #eb07ee rgba(235, 7, 238, 0.1);
-}
-
-.table-container::-webkit-scrollbar {
-  height: 6px;
-}
-
-.table-container::-webkit-scrollbar-track {
-  background: rgba(235, 7, 238, 0.1);
-  border-radius: 3px;
-}
-
-.table-container::-webkit-scrollbar-thumb {
-  background: #eb07ee;
-  border-radius: 3px;
-}
-
-/* 演唱会统计信息样式 */
-.statistics-intro {
-  margin-bottom: 2rem;
-  color: #555;
-  line-height: 1.6;
-}
-
-.tour-summary {
-  text-align: center;
-  color: #666;
-  margin-top: 10px;
-  font-size: 0.95rem;
-}
-
-.table-container {
-  overflow-x: auto;
-  margin-bottom: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
-}
-
-.concerts-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: white;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.concerts-table th {
-  background: linear-gradient(135deg, #f373f9, #eb07ee);
-  color: white;
-  padding: 1rem 0.8rem;
-  text-align: center;
-  white-space: nowrap;
-  font-weight: 600;
-  border: 1px solid #f2b0f3;
-}
-
-.concerts-table td {
-  padding: 0.8rem 0.6rem;
-  text-align: center;
-  border: 1px solid #eee;
-  vertical-align: middle;
-}
-
-.concerts-table tbody tr:hover {
-  background-color: #fff8fe;
-}
-
-.concerts-table tbody tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
-.station-cell {
-  background-color: #fef0ff;
-  font-weight: 600;
-  color: #eb07ee;
-  border-right: 2px solid #f2b0f3 !important;
-}
-
-/* 添加轮次之间的分割线 */
-.concerts-table tbody tr:first-child td.station-cell {
-  border-top: 2px solid #f2b0f3 !important;
-}
-
-/* 在每个轮次的最后一行添加底部分割线 */
-.concerts-table tbody tr:last-child td {
-  border-bottom: 2px solid #f2b0f3;
-}
-
-/* 每个轮次组的最后一行添加明显的分割线 */
-.round-divider td {
-  border-bottom: 3px solid #eb07ee !important;
-  position: relative;
-}
-
-.round-divider td::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -3px;
-  height: 3px;
-  background: linear-gradient(to right, #eb07ee, #a505de);
-  z-index: 1;
-}
-
-.concerts-table tfoot td {
-  background-color: #fef0ff;
-  font-weight: 600;
-  color: #333;
-  border-top: 2px solid #f2b0f3;
-}
-
-.concerts-table .highlight-row {
-  background-color: #fcf4ff;
-}
-
-.summary-label {
-  text-align: right;
-  padding-right: 1rem;
-}
-
-.summary-value {
-  font-weight: 700;
-  color: #eb07ee;
-}
-
-.notes-cell {
-  max-width: 180px;
-  white-space: normal;
-  word-break: break-word;
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.table-explanation {
-  margin-top: 1rem;
-  padding: 0.8rem 1rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: #777;
-}
-
-.table-explanation p {
-  margin: 0.3rem 0;
-}
-
-@media (max-width: 768px) {
-  .concerts-table {
-    font-size: 0.8rem;
-  }
   
   .concerts-table th,
   .concerts-table td {
-    padding: 0.5rem 0.3rem;
+    padding: 0.8rem 0.5rem;
   }
-  
-  .notes-cell {
-    max-width: 80px;
-  }
-}
-
-/* 演唱会里程碑样式 */
-.concerts-highlights {
-  margin-top: 2rem;
-}
-
-.highlights-title {
-  font-size: 1.3rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  padding-left: 1rem;
-  color: #333;
-}
-
-.highlights-title:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.2rem;
-  bottom: 0.2rem;
-  width: 4px;
-  background: linear-gradient(to bottom, #eb07ee, #a505de);
-  border-radius: 2px;
-}
-
-.highlights-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.highlight-card {
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.highlight-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-}
-
-.highlight-icon {
-  font-size: 2rem;
-  color: #eb07ee;
-  flex-shrink: 0;
-}
-
-.highlight-info h4 {
-  margin: 0 0 0.5rem 0;
-  color: #333;
-  font-size: 1.1rem;
-}
-
-.highlight-info p {
-  margin: 0;
-  color: #666;
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.tour-info {
-  margin-top: 3rem;
-  background: linear-gradient(to right, #fff1fd, #f9f0ff);
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 3px 15px rgba(235, 7, 238, 0.08);
-}
-
-.tour-title {
-  font-size: 1.4rem;
-  color: #333;
-  margin-bottom: 1rem;
-  position: relative;
-  padding-left: 1rem;
-}
-
-.tour-title:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.2rem;
-  bottom: 0.2rem;
-  width: 4px;
-  background: linear-gradient(to bottom, #eb07ee, #a505de);
-  border-radius: 2px;
-}
-
-.tour-desc {
-  color: #555;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-}
-
-.tour-action {
-  text-align: right;
-}
-
-.tour-link {
-  color: #eb07ee;
-  text-decoration: none;
-  font-weight: 500;
-  display: inline-block;
-  transition: opacity 0.2s;
-}
-
-.tour-link:hover {
-  opacity: 0.8;
-  text-decoration: underline;
-}
-
-/* 响应式样式调整 */
-@media (max-width: 768px) {
-  .tour-info {
-    padding: 1.5rem;
-  }
-  
-  .tour-title {
-    font-size: 1.2rem;
-  }
-  
-  .tour-action {
-    text-align: center;
-  }
-  
-  .concerts-table {
-    font-size: 0.75rem;
-  }
-  
-  .concerts-table th,
-  .concerts-table td {
-    padding: 0.5rem 0.3rem;
-  }
-  
-  .highlights-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .highlight-card {
-    padding: 1.2rem;
-  }
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.loading-spinner {
-  width: 30px;
-  height: 30px;
-  border: 2px solid rgba(235, 7, 238, 0.2);
-  border-radius: 50%;
-  border-top-color: #eb07ee;
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 </style>

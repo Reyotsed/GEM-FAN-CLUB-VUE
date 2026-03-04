@@ -209,18 +209,15 @@ async function sendMessage() {
         // 再次管理上下文长度
         manageContext();
         
-        // 模拟打字延迟，让体验更真实
-        setTimeout(async () => {
-            // 添加AI回复到界面显示
-            messages.value.push({
-                text: aiResponse,
-                sender: 'ai',
-                time: formatTime(new Date())
-            });
-            
-            isTyping.value = false;
-            await scrollToBottom();
-        }, 1000 + Math.random() * 2000); // 随机1-3秒的延迟，模拟打字时间
+        // Add AI response to display
+        messages.value.push({
+            text: aiResponse,
+            sender: 'ai',
+            time: formatTime(new Date())
+        });
+        
+        isTyping.value = false;
+        await scrollToBottom();
         
     } catch (error) {
         console.error('聊天出错:', error);
@@ -409,11 +406,11 @@ onMounted(() => {
 .chat-container {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 50px);
-    height: calc(100vh - 50px);
+    min-height: calc(100vh - var(--nav-height, 70px));
+    height: calc(100vh - var(--nav-height, 70px));
     background: linear-gradient(135deg, #121232, #252550);
     position: fixed;
-    top: 50px;
+    top: var(--nav-height, 70px);
     left: 0;
     right: 0;
     bottom: 0;

@@ -206,106 +206,170 @@ const handleKeyDown = (e) => {
 
 <style scoped>
 .picture-page {
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(235, 7, 238, 0.15);
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg-dark);
+  background-image: 
+      radial-gradient(circle at 20% 30%, rgba(235, 7, 238, 0.1), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(0, 242, 255, 0.1), transparent 40%);
+  margin: 0;
+  padding: calc(var(--nav-height, 70px) + 2rem) 2rem 2rem;
+  box-sizing: border-box;
+  color: #fff;
+}
+
+.section-title {
+  text-align: center;
   margin-bottom: 3rem;
+  font-size: 2.5rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: linear-gradient(to right, #fff, #f3caff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(235, 7, 238, 0.3);
+}
+
+.icon {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 0 10px rgba(235, 7, 238, 0.5));
 }
 
 .waterfall-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .waterfall-item {
   position: relative;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background: #fff;
-  aspect-ratio: 1; /* 保持1:1的宽高比 */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.waterfall-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.8));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
 }
 
 .waterfall-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(235, 7, 238, 0.2);
+  border-color: rgba(235, 7, 238, 0.5);
+}
+
+.waterfall-item:hover::before {
+  opacity: 1;
 }
 
 .waterfall-item img {
   width: 100%;
   height: 100%;
   display: block;
-  transition: transform 0.3s ease;
-  object-fit: cover; /* 确保图片填充整个容器 */
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  object-fit: cover;
 }
 
 .waterfall-item:hover img {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
-.section-title {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #333;
-  font-size: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.icon {
-  font-size: 1.8rem;
-}
-
+/* 加载更多按钮 */
 .load-more {
   text-align: center;
-  margin-top: 2rem;
+  margin-top: 4rem;
+  margin-bottom: 2rem;
 }
 
 .load-more button {
-  padding: 0.8rem 2rem;
-  background: #eb07ee;
+  padding: 1rem 3rem;
+  background: linear-gradient(135deg, #eb07ee, #a505de);
   color: white;
   border: none;
-  border-radius: 25px;
+  border-radius: 50px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 1px;
   transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(235, 7, 238, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.load-more button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
 }
 
 .load-more button:hover {
-  background: #a505de;
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(235, 7, 238, 0.5);
 }
 
+.load-more button:hover::after {
+  transform: translateX(100%);
+}
+
+/* 预览模态框 */
 .preview-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .preview-content {
   position: relative;
-  width: 80vw;
-  height: 80vh;
-  background: white;
-  border-radius: 12px;
+  width: 90vw;
+  height: 90vh;
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: none;
 }
 
 .preview-header {
@@ -313,28 +377,36 @@ const handleKeyDown = (e) => {
   top: 0;
   left: 0;
   right: 0;
-  padding: 1rem;
+  padding: 2rem;
   display: flex;
   justify-content: space-between;
-  z-index: 1;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+  pointer-events: none; /* 让点击穿透 */
+}
+
+.preview-header button {
+  pointer-events: auto; /* 恢复按钮点击 */
 }
 
 .close-btn, .save-btn {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.3s ease;
+  gap: 0.6rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .close-btn:hover, .save-btn:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
 }
 
 .preview-image {
@@ -342,7 +414,7 @@ const handleKeyDown = (e) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #000;
+  background: transparent;
   position: relative;
   overflow: hidden;
 }
@@ -354,6 +426,8 @@ const handleKeyDown = (e) => {
   height: auto;
   object-fit: contain;
   transition: transform 0.3s ease;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
 }
 
 .preview-controls {
@@ -364,57 +438,86 @@ const handleKeyDown = (e) => {
   transform: translateY(-50%);
   display: flex;
   justify-content: space-between;
-  padding: 0 1rem;
-  z-index: 1;
+  padding: 0 2rem;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .preview-controls button {
-  background: rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  border: none;
-  width: 50px;
-  height: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
+  backdrop-filter: blur(10px);
 }
 
 .preview-controls button:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(235, 7, 238, 0.2);
+  border-color: rgba(235, 7, 238, 0.5);
   transform: scale(1.1);
+  color: #fff;
 }
 
 .preview-controls button:disabled {
-  background: rgba(0, 0, 0, 0.3);
+  opacity: 0.3;
   cursor: not-allowed;
   transform: none;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* 响应式布局 */
 @media (max-width: 1200px) {
   .waterfall-container {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
+  .picture-page {
+    padding: calc(var(--nav-height, 70px) + 1rem) 1rem 1rem;
+  }
+
+  .section-title {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+  }
+
   .waterfall-container {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
-    padding: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+  
+  .preview-controls {
+    padding: 0 1rem;
+  }
+  
+  .preview-controls button {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
   }
 }
 
 @media (max-width: 480px) {
   .waterfall-container {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 8px;
-    padding: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.8rem;
+  }
+  
+  .load-more button {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
   }
 }
 </style>

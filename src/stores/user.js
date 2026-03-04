@@ -40,26 +40,26 @@ export const useUserStore = defineStore('user', {
       localStorage.removeItem('avatar');
       this.isLoggedIn = false;
     },
-    autoLogin(){
+    autoLogin() {
       console.log("autoLogin");
       const token = localStorage.getItem('token');
-      if(token === "null") {
-        
-      }else{
+      if (!token || token === "null") {
+        return;
+      } else {
         apiClient.post('/account/autoLogin',
           {},
-          {headers: { Authorization: "Bearer " + localStorage.getItem('token')} }
+          { headers: { Authorization: "Bearer " + localStorage.getItem('token') } }
         ).then(response => {
           if (response.data.code != 200) {
             this.logout();
           }
-          else{
+          else {
             this.setToken(token);
             this.setUserId(response.data.data.userId);
             this.setNickName(response.data.data.nickName);
             // 根据avatarUrl获取头像
             apiClient.getImageUrl(response.data.data.avatar).then(avatarUrl => {
-                this.setAvatar(avatarUrl);
+              this.setAvatar(avatarUrl);
             });
           }
         }).catch(error => {

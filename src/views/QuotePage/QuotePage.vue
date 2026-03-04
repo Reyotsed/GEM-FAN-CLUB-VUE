@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref,onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import apiClient from '@/utils/api';
 import { useUserStore } from '@/stores/user';
 import { useRouter } from 'vue-router';
@@ -70,6 +70,7 @@ import QuoteInfoPage from './QuoteInfoPage.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
+const isMounted = ref(true);
 
 interface QuoteInfo{
     quoteId: number;
@@ -104,32 +105,27 @@ const getDisplayedQuoteIds = () => {
 // 加载 Quote 数据的通用函数
 const loadQuoteData = async (quote: Quote) => {
     try {
-        // 获取图片列表
-        const pictureRes = await apiClient.get('/quote/quotePicture', {
-            params: { quoteId: quote.quoteInfo.quoteId }
-        });
-        
-        // 只获取第一张图片
+        // 并行请求图片、用户信息、点赞状态
+        const [pictureRes, userRes, likeRes] = await Promise.all([
+            apiClient.get('/quote/quotePicture', { params: { quoteId: quote.quoteInfo.quoteId } }),
+            apiClient.get('/user/getUserInfo', { params: { userId: quote.quoteInfo.userId } }),
+            userStore.isLoggedIn ? apiClient.get('/quote/isLiked', { params: { quoteId: quote.quoteInfo.quoteId, userId: userStore.userId } }) : Promise.resolve(null)
+        ]);
+
+        if (!isMounted.value) return;
+
+        // 处理图片
         if (pictureRes.data.data.length > 0) {
             const imageUrl = await apiClient.getImageUrl(pictureRes.data.data[0].filePath);
             quote.pictureList = [imageUrl];
         }
 
-        // 获取用户信息
-        const userRes = await apiClient.get('/user/getUserInfo', {
-            params: { userId: quote.quoteInfo.userId }
-        });
+        // 处理用户信息
         quote.userNickName = userRes.data.data.nickName;
         quote.userAvatar = await apiClient.getImageUrl(userRes.data.data.avatar);
 
-        // 如果用户已登录，获取点赞状态
-        if (userStore.isLoggedIn) {
-            const likeRes = await apiClient.get('/quote/isLiked', {
-                params: {
-                    quoteId: quote.quoteInfo.quoteId,
-                    userId: userStore.userId
-                }
-            });
+        // 处理点赞
+        if (likeRes) {
             quote.isliked = likeRes.data.data;
         }
     } catch (error) {
@@ -149,6 +145,8 @@ const loadMoreQuotes = async () => {
             count: batchSize
         });
 
+        if (!isMounted.value) return;
+
         const newQuotes = response.data.data;
         
         // 如果返回的数量小于请求的数量，说明没有更多了
@@ -156,8 +154,8 @@ const loadMoreQuotes = async () => {
             noMoreQuotes.value = true;
         }
 
-        // 处理每个新的 quote
-        for (const quoteInfo of newQuotes) {
+        // 并行处理所有新 quote 的数据加载
+        const quotePromises = newQuotes.map(async (quoteInfo) => {
             const quote: Quote = {
                 quoteInfo: quoteInfo,
                 userNickName: '',
@@ -165,21 +163,33 @@ const loadMoreQuotes = async () => {
                 pictureList: [],
                 isliked: false
             };
-            
             await loadQuoteData(quote);
-            quoteList.value.push(quote);
-        }
+            return quote;
+        });
+
+        const processedQuotes = await Promise.all(quotePromises);
+        
+        if (!isMounted.value) return;
+
+        quoteList.value.push(...processedQuotes);
     } catch (error) {
         console.error('加载更多 Quotes 失败:', error);
     } finally {
-        loading.value = false;
+        if (isMounted.value) {
+            loading.value = false;
+        }
     }
 };
 
 // 初始加载
 onMounted(async () => {
+    isMounted.value = true;
     window.scrollTo(0, 0);
     await loadMoreQuotes();
+});
+
+onUnmounted(() => {
+    isMounted.value = false;
 });
 
 // 添加点赞功能
@@ -224,40 +234,19 @@ const goToQuoteDetail = (quoteId) => {
 <style scoped>
 .quote-page {
     min-height: 100vh;
-    padding: 2rem 1rem;
-    background: linear-gradient(135deg, #f6f8ff 0%, #f3e7ff 100%);
+    padding: calc(var(--nav-height, 70px) + 2rem) 1rem 2rem;
+    background: var(--bg-dark);
+    background-image: 
+        radial-gradient(circle at 20% 20%, rgba(235, 7, 238, 0.1), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(0, 242, 255, 0.1), transparent 40%);
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     width: 100%;
     box-sizing: border-box;
-}
-
-/* 添加装饰性背景元素 */
-.quote-page::before {
-    content: '';
-    position: fixed;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 60%);
-    transform: rotate(30deg);
-    z-index: 0;
-}
-
-.quote-page::after {
-    content: '';
-    position: fixed;
-    bottom: -50%;
-    left: -50%;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(186,104,200,0.1) 0%, rgba(111,134,214,0.1) 100%);
-    transform: rotate(-30deg);
-    z-index: 0;
+    color: #fff;
 }
 
 .quote-list {
@@ -267,149 +256,156 @@ const goToQuoteDetail = (quoteId) => {
     max-width: 1400px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
     box-sizing: border-box;
     padding: 1rem;
 }
 
 .quote-item {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(111, 134, 214, 0.1),
-                0 2px 8px rgba(111, 134, 214, 0.05);
-    padding: 1.2rem;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .quote-item:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 15px 35px rgba(111, 134, 214, 0.15),
-                0 5px 15px rgba(111, 134, 214, 0.1);
-    border-color: rgba(255, 255, 255, 1);
+    transform: translateY(-10px);
+    box-shadow: 0 20px 50px rgba(235, 7, 238, 0.15);
+    border-color: rgba(235, 7, 238, 0.3);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .quote-item-content {
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
 }
 
 .quote-item-content-text {
-    font-size: 1.1rem;
-    color: #343a40;
-    margin: 1rem 0;
-    line-height: 1.6;
+    margin: 1.2rem 0;
 }
 
 .quote-item-content-text-content {   
-    white-space: nowrap;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 1.2rem;
-    color: #5b6f9d;
-    margin-bottom: 1rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
+    white-space: normal;
+    font-weight: 400;
+    letter-spacing: 0.5px;
 }
 
 .quote-item-content-picture {
-    display: flex;
-    flex-wrap: wrap; /* 允许换行 */
-    gap: 0.5rem; /* 图片之间的间距 */
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.8rem;
     border-radius: 12px;
     overflow: hidden;
+    margin-bottom: 1rem;
 }
 
 .quote-item-content-picture-item {
-    flex: 1 1 150px;
-    max-width: 100%;
-    height: 300px;
+    width: 100%;
+    aspect-ratio: 1; /* 保持正方形 */
     overflow: hidden;
     border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .quote-item-content-picture-item img {
     width: 100%;
-    height: 100%; /* 使图片填满容器 */
-    object-fit: cover; /* 保持比例并填满容器 */
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 添加过渡效果 */
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.quote-item-content-picture-item:hover img {
-    transform: scale(1.05); /* 悬停时放大图片 */
+.quote-item:hover .quote-item-content-picture-item img {
+    transform: scale(1.1);
 }
 
 /* 用户信息部分样式 */
 .quote-item-content-user {
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 12px;
-    padding: 0.8rem 1rem;
-    margin-top: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50px;
+    padding: 0.5rem 0.8rem 0.5rem 0.5rem;
+    margin-top: auto;
     display: flex;
-    align-items: center; /* 垂直居中 */
-    justify-content: space-between; /* 使内容分布在两边 */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.quote-item:hover .quote-item-content-user {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .quote-item-content-user-avatar {
-    width: 42px; /* 头像宽度 */
-    height: 42px; /* 头像高度 */
-    border-radius: 50%; /* 圆形头像 */
-    overflow: hidden; /* 隐藏溢出部分 */
-    margin-right: 0.7rem; /* 头像与昵称之间的间距 */
-    transition: transform 0.2s ease-in-out; /* 添加过渡效果 */
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 0.8rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
 }
 
 .quote-item-content-user-avatar img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 保持图片比例 */
-    border: 2px solid white;
-    transition: all 0.3s ease;
+    object-fit: cover;
+}
+
+.quote-item-content-user:hover .quote-item-content-user-avatar {
+    border-color: #eb07ee;
+    transform: scale(1.1);
 }
 
 .quote-item-content-user-nickname {
-    font-weight: 600;
-    color: #5b6f9d;
-    font-size: 0.95rem;
-    transition: color 0.2s ease;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    margin-right: auto;
 }
 
 /* 点赞量样式 */
 .quote-item-content-like {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.4rem 0.9rem;
-    border-radius: 20px;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(111, 134, 214, 0.08);
+    gap: 0.4rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
 }
 
 .quote-item-content-like:hover {
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 12px rgba(111, 134, 214, 0.12);
-    transform: translateY(-2px);
+    background: rgba(235, 7, 238, 0.2);
 }
 
 .like-icon {
-    margin-right: 0.3rem; /* 红心图标与数量之间的间距 */
-    cursor: pointer; /* 鼠标悬停时显示为可点击 */
-    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); /* 添加弹性过渡效果 */
-    font-size: 1.1rem;
+    font-size: 1rem;
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 .like-icon.liked {
-    transform: scale(1.2); /* 点赞时放大 */
+    transform: scale(1.2);
     animation: heartBeat 0.3s ease-in-out;
 }
 
@@ -421,133 +417,44 @@ const goToQuoteDetail = (quoteId) => {
 
 .quote-item-content-like-count {
     font-weight: 600;
-    color: #5b6f9d;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
 }
 
-/* 悬停效果 */
-.quote-item-content-user:hover .quote-item-content-user-avatar {
-    transform: scale(1.05); /* 放大头像 */
-}
-
-.quote-item-content-user:hover .quote-item-content-user-nickname {
-    color: #9567b1; /* 悬停时改变昵称颜色 */
-}
-
-/* 修改响应式布局 */
-@media (max-width: 768px) {
-    .quote-page {
-        padding: 0.5rem 0.3rem;
-    }
-
-    .quote-list {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
-        padding: 0.3rem;
-    }
-
-    .quote-item {
-        padding: 0.5rem;
-    }
-
-    .quote-item-content-picture-item {
-        height: 180px;
-    }
-
-    .quote-item-content-text-content {
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .quote-item-content-user {
-        padding: 0.4rem 0.5rem;
-        margin-top: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .quote-item-content-user-avatar {
-        width: 28px;
-        height: 28px;
-        margin-right: 0.4rem;
-    }
-
-    .quote-item-content-user-nickname {
-        font-size: 0.75rem;
-        max-width: calc(100% - 80px);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .quote-item-content-like {
-        padding: 0.2rem 0.5rem;
-        font-size: 0.75rem;
-    }
-
-    .like-icon {
-        font-size: 0.9rem;
-    }
-
-    .quote-item-content-like-count {
-        font-size: 0.75rem;
-    }
-}
-
-/* 小屏幕手机优化 */
-@media (max-width: 360px) {
-    .quote-list {
-        grid-template-columns: repeat(1, 1fr);
-    }
-
-    .quote-item-content-picture-item {
-        height: 200px;
-    }
-}
-
-/* 平板端样式优化 */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .quote-list {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-        padding: 0.8rem;
-    }
-
-    .quote-item-content-picture-item {
-        height: 250px;
-    }
-}
-
+/* 加载更多按钮 */
 .load-more-container {
     width: 100%;
     display: flex;
     justify-content: center;
-    margin: 2rem 0;
+    margin: 3rem 0;
     padding: 1rem;
 }
 
 .load-more-btn {
-    background: linear-gradient(135deg, #9567b1 0%, #6f86d6 100%);
+    background: linear-gradient(135deg, #eb07ee, #a505de);
     color: white;
     border: none;
-    padding: 0.8rem 2.5rem;
-    border-radius: 25px;
+    padding: 0.8rem 3rem;
+    border-radius: 50px;
     font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(111, 134, 214, 0.2);
-    pointer-events: auto; /* 恢复按钮的点击事件 */
+    box-shadow: 0 10px 20px rgba(235, 7, 238, 0.3);
     position: relative;
-    min-width: 120px;
+    overflow: hidden;
 }
 
 .load-more-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(111, 134, 214, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(235, 7, 238, 0.5);
 }
 
 .load-more-btn:disabled {
-    background: #ccc;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
     cursor: not-allowed;
-    transform: none;
+    box-shadow: none;
 }
 
 .loading-spinner {
@@ -570,24 +477,42 @@ const goToQuoteDetail = (quoteId) => {
     width: 100%;
     display: flex;
     justify-content: center;
-    margin: 2rem 0;
-    padding: 1rem;
+    margin: 3rem 0;
 }
 
 .no-more {
     text-align: center;
-    color: #666;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.8rem 1.5rem;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 0.6rem 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.no-more-icon {
-    font-size: 1.2rem;
+/* 响应式布局 */
+@media (max-width: 1024px) {
+    .quote-list {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .quote-page {
+        padding: calc(var(--nav-height, 70px) + 1rem) 1rem 1rem;
+    }
+
+    .quote-list {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .quote-item {
+        padding: 1.2rem;
+    }
 }
 </style>

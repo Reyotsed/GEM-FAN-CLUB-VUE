@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-const Index = () => import('../views/Index.vue')
+import { useUserStore } from '@/stores/user'
+const Index = () => import('@/views/Index.vue')
 const AIPage = () => import('@/views/AIPage/AIPage.vue')
 const InfoPage = () => import('@/views/InfoPage/InfoPage.vue')
 const PicturePage = () => import('@/views/PicturePage/PicturePage.vue')
@@ -24,21 +25,21 @@ const routes = [
         component: Index,
         meta: { requestAuth: false },
         children: [
-          { path: '', name: "home", component: HomePage },
-          { path: 'song', name: "song", component: SongPage },
-          { path: 'quote', name: "quote", component: QuotePage},
-          { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage},
-          { path: 'picture', name: "picture", component: PicturePage},
-          { path: 'shop', name: "shop", component: ShopPage},
-          { path: 'AI', name: "AI", component: AIPage},
-          { path: 'info', name: "info", component: InfoPage},
-          { path: 'user', name: "user", component: UserPage},
-          { path: 'upload', name: "upload", component: UploadModal},
-          { path: 'games', name: "games", component: GamesPage },
-          { path: 'games/guess-song', name: "guess-song", component: GuessSongGame },
-          { path: 'games/lyrics-chain', name: "lyrics-chain", component: LyricsChainGame },
-          { path: 'games/quiz', name: "quiz", component: QuizGame },
-          { path: 'games/ticket-rush', name: "ticket-rush", component: TicketRushGame }
+            { path: '', name: "home", component: HomePage },
+            { path: 'song', name: "song", component: SongPage },
+            { path: 'quote', name: "quote", component: QuotePage },
+            { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage },
+            { path: 'picture', name: "picture", component: PicturePage },
+            { path: 'shop', name: "shop", component: ShopPage },
+            { path: 'AI', name: "AI", component: AIPage },
+            { path: 'info', name: "info", component: InfoPage },
+            { path: 'user', name: "user", component: UserPage, meta: { requestAuth: true } },
+            { path: 'upload', name: "upload", component: UploadModal, meta: { requestAuth: true } },
+            { path: 'games', name: "games", component: GamesPage },
+            { path: 'games/guess-song', name: "guess-song", component: GuessSongGame },
+            { path: 'games/lyrics-chain', name: "lyrics-chain", component: LyricsChainGame },
+            { path: 'games/quiz', name: "quiz", component: QuizGame },
+            { path: 'games/ticket-rush', name: "ticket-rush", component: TicketRushGame }
         ]
     }
 ]
@@ -56,3 +57,16 @@ const router = createRouter({
 });
 
 export default router;
+
+// Route guard: protect pages that require authentication
+router.beforeEach((to, from, next) => {
+    if (to.meta.requestAuth) {
+        const userStore = useUserStore();
+        if (!userStore.isLoggedIn) {
+            // Redirect to home page if not logged in
+            next({ name: 'home' });
+            return;
+        }
+    }
+    next();
+});

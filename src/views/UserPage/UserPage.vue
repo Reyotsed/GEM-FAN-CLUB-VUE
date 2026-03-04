@@ -140,6 +140,7 @@ import { useUserStore } from '@/stores/user';
 import UploadModal from '@/components/upload/UploadModal.vue';
 import EditProfileModal from '@/components/user/EditProfileModal.vue';
 import QuoteInfoPage from '@/views/QuotePage/QuoteInfoPage.vue';
+import { showToast, showConfirm } from '@/utils/toast';
 
 interface UserInfo {
     userId: string;
@@ -258,15 +259,18 @@ const editQuote = (quote) => {
     console.log('Edit quote:', quote);
 };
 
-// 删除语录的函数
+// Delete quote with custom confirm dialog
 const deleteQuote = async (quote) => {
-    if (!confirm('确定要删除这条语录吗？')) return;
+    const confirmed = await showConfirm('确定要删除这条语录吗？', '删除确认');
+    if (!confirmed) return;
     
     try {
         await apiClient.delete(`/quote/delete/${quote.quoteId}`);
         userQuotes.value = userQuotes.value.filter(q => q.quoteId !== quote.quoteId);
+        showToast('语录已删除', 'success');
     } catch (error) {
         console.error('Error deleting quote:', error);
+        showToast('删除失败', 'error');
     }
 };
 
@@ -316,7 +320,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     position: absolute;
-    top: 50px;
+    top: var(--nav-height, 70px);
     left: 0;
     right: 0;
     box-sizing: border-box;

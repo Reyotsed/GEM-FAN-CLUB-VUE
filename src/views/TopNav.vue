@@ -1,97 +1,95 @@
 <template>
-    <div class="page-container">
-        <nav class="top-nav" :class="{ 'nav-hidden': false }">
-            <div class="logo">G E M</div>
+    <nav class="top-nav">
+        <div class="nav-inner">
+            <router-link to="/" class="logo">
+                <span class="logo-gem">G.E.M.</span>
+                <span class="logo-sub">Fan Club</span>
+            </router-link>
             
-            <!-- 汉堡菜单按钮 -->
-            <div class="menu-toggle" @click="toggleMenu">
+            <!-- Hamburger menu button -->
+            <div class="menu-toggle" :class="{ active: isMobileMenuOpen }" @click="toggleMenu">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
 
-            <!-- 导航链接，添加mobile-nav类 -->
+            <!-- Nav links -->
             <ul class="nav-links" :class="{ 'mobile-nav': isMobileMenuOpen }">
-                <router-link to="/" @click="closeMenu">首页</router-link>
-                <router-link to="/song" @click="closeMenu">歌曲</router-link>
-                <router-link to="/quote" @click="closeMenu">语录</router-link>
-                <router-link to="/games" @click="closeMenu">游戏</router-link>
-                <router-link to="/picture" @click="closeMenu">照片</router-link>
-                <router-link to="/ai" @click="closeMenu">AI-GEM</router-link>
-                <router-link to="/shop" @click="closeMenu">商店</router-link>
-                <router-link to="/info" @click="closeMenu">资讯</router-link>
+                <router-link to="/" exact @click="closeMenu">
+                    <i class="fas fa-home"></i> 首页
+                </router-link>
+                <router-link to="/song" @click="closeMenu">
+                    <i class="fas fa-music"></i> 歌曲
+                </router-link>
+                <router-link to="/quote" @click="closeMenu">
+                    <i class="fas fa-quote-right"></i> 语录
+                </router-link>
+                <router-link to="/games" @click="closeMenu">
+                    <i class="fas fa-gamepad"></i> 游戏
+                </router-link>
+                <router-link to="/picture" @click="closeMenu">
+                    <i class="fas fa-images"></i> 照片
+                </router-link>
+                <router-link to="/ai" @click="closeMenu">
+                    <i class="fas fa-robot"></i> AI-GEM
+                </router-link>
+                <router-link to="/shop" @click="closeMenu">
+                    <i class="fas fa-store"></i> 商店
+                </router-link>
+                <router-link to="/info" @click="closeMenu">
+                    <i class="fas fa-newspaper"></i> 资讯
+                </router-link>
             </ul>
 
-            <!-- 用户部分保持不变 -->
+            <!-- User section -->
             <div class="user-section">
-                <img 
-                    v-if="userStore.isLoggedIn" 
-                    :src="userStore.avatar" 
-                    alt="用户头像" 
-                    class="user-avatar" 
-                    @click.prevent="navigateToUserPage" 
-                    role="button"
-                    aria-label="查看个人主页"
-                >
-                <span v-if="userStore.isLoggedIn" class="user-nickname">{{ userStore.nickName }}</span>
-                <div v-if="userStore.isLoggedIn === false" class="login-button">
-                    <button @click="openLoginModal">登录</button>
+                <template v-if="userStore.isLoggedIn">
+                    <div class="user-profile" @click.prevent="navigateToUserPage">
+                        <img 
+                            :src="userStore.avatar" 
+                            alt="用户头像" 
+                            class="user-avatar"
+                        >
+                        <span class="user-nickname">{{ userStore.nickName }}</span>
+                    </div>
+                    <button @click="userStore.logout" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </template>
+                <template v-else>
+                    <button @click="openLoginModal" class="btn-login">
+                        <i class="fas fa-user"></i> 登录
+                    </button>
                     <LoginModal ref="loginModal" />
-                </div>
-                <div v-else>
-                    <button @click="userStore.logout" class="login-button">退出</button>
-                </div>
+                </template>
             </div>
-        </nav>
-
-        <div class="content-wrapper">
-            <router-view></router-view>
         </div>
-    </div>
+    </nav>
 </template>
   
 <script setup>
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import LoginModal from '@/components/Login/LoginModal.vue';
-import { usePageStore } from '@/stores/page';
 import { useUserStore } from '@/stores/user';
 
 const router = useRouter();
 const route = useRoute();
 const loginModal = ref(null);
-
-const pageStore = usePageStore();
-
 const userStore = useUserStore();
-
 const isMobileMenuOpen = ref(false);
 
-const openLoginModal  = () => {
-    // 把登录窗口设置为可视的
+const openLoginModal = () => {
     loginModal.value.openModal();
 };
 
-// 修改导航到用户页面的方法
 const navigateToUserPage = () => {
-    console.log('User store state:', userStore);
-    console.log('Is logged in?', userStore.isLoggedIn);
-    console.log('User ID:', userStore.userId);
-    
     if (userStore.isLoggedIn && userStore.userId) {
-        // 检查当前是否已经在用户页面，且是否查看的是同一用户
-        if (route.path === '/user' && route.query.id === userStore.userId) {
-            // 如果已经在查看自己的用户页面，直接刷新页面
-            window.location.reload();
-        } else {
-            // 否则正常导航
-            router.push({
-                path: '/user',
-                query: { id: userStore.userId }
-            });
-        }
-    } else {
-        console.error('Cannot navigate: User not logged in or missing ID');
+        // Always push with a fresh timestamp to force re-render when already on user page
+        router.push({
+            path: '/user',
+            query: { id: userStore.userId, t: Date.now() }
+        });
     }
 };
 
@@ -105,122 +103,295 @@ const closeMenu = () => {
 </script>
   
 <style scoped>
-.page-container {
-    min-height: 100vh;
-    margin-top: 0px;
-    width: 100%;
-}
-
 .top-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #eb07ee;
-    color: white;
-    padding: 10px;
-    width: 100%;
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
     z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-    height: 50px; /* 固定导航栏高度 */
+    height: var(--nav-height, 70px);
+    background: rgba(10, 10, 18, 0.6); /* 深色半透明背景 */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
 }
 
-.content-wrapper {
-    padding-top: 0px; /* 与导航栏高度相同 */
-    width: 100%;
+/* 滚动时加深背景（如果需要JS配合，这里先做静态优化） */
+.top-nav.scrolled {
+    background: rgba(10, 10, 18, 0.9);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
+.nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    gap: 2rem;
+}
+
+/* Logo */
+.logo {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    line-height: 1.1;
+    flex-shrink: 0;
+    transition: transform 0.3s var(--ease-bounce);
+    position: relative;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.logo-gem {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 2px;
+    text-shadow: 0 0 15px rgba(235, 7, 238, 0.8), 0 0 30px rgba(235, 7, 238, 0.4);
+    background: linear-gradient(to right, #fff, #f3caff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.logo-sub {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-left: 2px;
+}
+
+/* Nav links */
+.nav-links {
+    display: flex;
+    list-style: none;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    justify-content: center;
+}
+
+.nav-links a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s var(--ease-out);
+    position: relative;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+}
+
+.nav-links a i {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+/* 悬停效果 */
+.nav-links a:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-links a:hover i {
+    transform: translateY(-2px);
+    color: var(--primary-light);
+    opacity: 1;
+}
+
+/* 激活状态 */
+.nav-links a.router-link-active,
+.nav-links a.router-link-exact-active {
+    color: #fff;
+    background: rgba(235, 7, 238, 0.15);
+    font-weight: 600;
+    box-shadow: 0 0 20px rgba(235, 7, 238, 0.2);
+    border: 1px solid rgba(235, 7, 238, 0.3);
+}
+
+.nav-links a.router-link-active i,
+.nav-links a.router-link-exact-active i {
+    color: var(--primary);
+    opacity: 1;
+}
+
+/* User section */
 .user-section {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-right: 2rem;
+    flex-shrink: 0;
 }
 
-.user-nickname {
-    color: white;
-    font-size: 16px;
-}
-
-.login-button {
-    font-size: 16px;
-    color: rgb(2, 123, 251);
-}
-
-.logo{
-    margin-left: 2rem;
-    color: white;
-    text-decoration: none;
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-.nav-links {
+.user-profile {
     display: flex;
-    list-style: none;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    padding: 0.4rem 1rem 0.4rem 0.4rem;
+    border-radius: var(--radius-pill);
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
-.nav-links li {
-    margin-left: 5rem; /* 增加左边距，拉开元素之间的距离 */
-    margin-right: 5rem;
-}
-.nav-links a {
-    color: white;
-    text-decoration: none;
-    transition: color 0.3s ease ;
-    padding: 0.5rem 2rem; /* 增加内边距，让链接区域更大 */
-}
-.nav-links a:hover {
-    color: #4CAF50;
-}
-.nav-links a.active {
-    color: #4CAF50;
-    font-weight: bold;
+
+.user-profile:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    cursor: pointer;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
-    border: 2px solid transparent;
 }
 
-.user-avatar:hover {
-    transform: scale(1.1);
-    border-color: white;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+.user-profile:hover .user-avatar {
+    border-color: var(--primary);
+    transform: scale(1.05);
 }
 
-/* 登录按钮样式 */
-.login-button:hover {
-    background-color: #0a2cee;
+.user-nickname {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* 汉堡菜单按钮样式 */
+.btn-login {
+    background: linear-gradient(135deg, rgba(235, 7, 238, 0.2), rgba(165, 5, 222, 0.2));
+    border: 1px solid rgba(235, 7, 238, 0.4);
+    color: #fff;
+    padding: 0.5rem 1.5rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(235, 7, 238, 0.1);
+}
+
+.btn-login:hover {
+    background: linear-gradient(135deg, rgba(235, 7, 238, 0.4), rgba(165, 5, 222, 0.4));
+    border-color: rgba(235, 7, 238, 0.8);
+    transform: translateY(-1px);
+    box-shadow: 0 0 20px rgba(235, 7, 238, 0.4);
+}
+
+.btn-logout {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 70, 70, 0.2);
+    border-color: rgba(255, 70, 70, 0.4);
+    color: #ff4646;
+    transform: rotate(90deg);
+}
+
+/* Hamburger menu */
 .menu-toggle {
     display: none;
     flex-direction: column;
-    justify-content: space-between;
-    width: 30px;
-    height: 21px;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
     cursor: pointer;
-    margin-left: 1rem;
     z-index: 1001;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+    gap: 6px;
+}
+
+.menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .menu-toggle span {
     display: block;
-    width: 100%;
-    height: 3px;
+    width: 24px;
+    height: 2px;
     background-color: white;
-    border-radius: 3px;
-    transition: all 0.3s ease;
+    border-radius: 2px;
+    transition: all 0.3s var(--ease-bounce);
+    transform-origin: center;
 }
 
-/* 移动端适配 */
+.menu-toggle.active span:first-child {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.menu-toggle.active span:last-child {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Mobile */
+@media screen and (max-width: 1024px) {
+    .nav-inner {
+        padding: 0 1.5rem;
+        gap: 1rem;
+    }
+    
+    .nav-links {
+        gap: 0.2rem;
+    }
+    
+    .nav-links a {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .nav-links a span {
+        display: none; /* 平板模式下只显示图标 */
+    }
+    
+    .nav-links a i {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+}
+
 @media screen and (max-width: 768px) {
     .menu-toggle {
         display: flex;
@@ -229,13 +400,30 @@ const closeMenu = () => {
     .nav-links {
         display: none;
         position: fixed;
-        top: 50px;
+        top: var(--nav-height, 70px);
         left: 0;
-        width: 100%;
-        background-color: #eb07ee;
+        right: 0;
+        background: rgba(10, 10, 18, 0.95);
+        backdrop-filter: blur(20px);
         flex-direction: column;
-        padding: 1rem 0;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        gap: 0.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        animation: slideDown 0.4s var(--ease-bounce);
+        max-height: calc(100vh - var(--nav-height, 70px));
+        overflow-y: auto;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .nav-links.mobile-nav {
@@ -243,40 +431,29 @@ const closeMenu = () => {
     }
 
     .nav-links a {
-        padding: 1rem 2rem;
+        padding: 1rem 1.5rem;
         width: 100%;
-        text-align: left;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .nav-links a:last-child {
-        border-bottom: none;
-    }
-
-    .user-section {
-        margin-left: auto;
-        margin-right: 1rem;
-    }
-
-    .top-nav {
+        border-radius: 12px;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.03);
         justify-content: flex-start;
     }
-
-    /* 当菜单打开时的汉堡按钮动画 */
-    .menu-toggle.active span:first-child {
-        transform: rotate(45deg) translate(5px, 5px);
+    
+    .nav-links a span {
+        display: inline; /* 手机模式下恢复显示文字 */
     }
 
-    .menu-toggle.active span:nth-child(2) {
-        opacity: 0;
+    .nav-links a:hover,
+    .nav-links a.router-link-active {
+        background: rgba(235, 7, 238, 0.15);
+        transform: translateX(5px);
     }
-
-    .menu-toggle.active span:last-child {
-        transform: rotate(-45deg) translate(5px, -5px);
+    
+    .user-section {
+        margin-left: auto; /* 将用户区域推到右边 */
     }
 }
 
-/* 优化用户部分在移动端的显示 */
 @media screen and (max-width: 480px) {
     .user-nickname {
         display: none;
@@ -286,9 +463,25 @@ const closeMenu = () => {
         gap: 0.5rem;
     }
 
-    .logo {
-        margin-left: 1rem;
-        font-size: 1.2rem;
+    .logo-gem {
+        font-size: 1.4rem;
+    }
+
+    .logo-sub {
+        display: none;
+    }
+
+    .btn-login {
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .btn-login span {
+        display: none;
+    }
+    
+    .btn-login i {
+        margin: 0;
     }
 }
 </style>

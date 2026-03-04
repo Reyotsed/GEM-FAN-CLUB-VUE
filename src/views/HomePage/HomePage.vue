@@ -1,156 +1,228 @@
 <template>
     <div class="home-container">
-        <div class="slider-container">
-            <div 
-                class="slider-track"
-                :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
-            >
+        <!-- Hero Section: 全屏轮播与大标题 -->
+        <section class="hero-section">
+            <div class="slider-container">
                 <div 
-                    v-for="(image, index) in images" 
-                    :key="index"
-                    class="slide"
-                    :class="{ active: currentIndex === index }"
+                    class="slider-track"
+                    :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
                 >
-                    <div class="image-container">
-                        <img 
-                            :src="image" 
-                            :alt="`Slide ${index + 1}`"
-                            class="slide-image"
-                        >
+                    <div 
+                        v-for="(image, index) in images" 
+                        :key="index"
+                        class="slide"
+                        :class="{ active: currentIndex === index }"
+                    >
+                        <!-- 背景模糊层：用于填充氛围 -->
+                        <div class="slide-bg">
+                            <img 
+                                :src="image" 
+                                :alt="`G.E.M. Slide Background ${index + 1}`"
+                                class="bg-image"
+                            >
+                        </div>
+                        <!-- 前景完整层：用于展示完整图片 -->
+                        <div class="image-wrapper">
+                            <img 
+                                :src="image" 
+                                :alt="`G.E.M. Slide ${index + 1}`"
+                                class="slide-image"
+                            >
+                        </div>
                     </div>
+                </div>
+                <div class="hero-overlay"></div>
+            </div>
+
+            <!-- Hero 内容悬浮层 -->
+            <div class="hero-content">
+                <h1 class="main-title">
+                    <span class="glitch" data-text="G.E.M.">G.E.M.</span>
+                    <span class="chinese-name">邓紫棋</span>
+                </h1>
+                <p class="sub-title">Get Everybody Moving</p>
+                <div class="hero-actions">
+                    <button class="cta-button primary" @click="scrollToContent">
+                        <span>探索音乐宇宙</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- 左右导航按钮 -->
-            <button class="nav-button prev" @click="prevSlide" v-show="currentIndex > 0">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button 
-                class="nav-button next" 
-                @click="nextSlide" 
-                v-show="currentIndex < images.length - 1"
-            >
-                <i class="fas fa-chevron-right"></i>
-            </button>
-
-            <!-- 底部指示器 -->
-            <div class="slider-indicators">
-                <button 
-                    v-for="(_, index) in images" 
-                    :key="index"
-                    class="indicator"
-                    :class="{ active: currentIndex === index }"
-                    @click="goToSlide(index)"
-                ></button>
+            <!-- 轮播控制 -->
+            <div class="slider-controls">
+                <button class="nav-btn prev" @click="prevSlide">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="indicators">
+                    <span 
+                        v-for="(_, index) in images" 
+                        :key="index"
+                        class="dot"
+                        :class="{ active: currentIndex === index }"
+                        @click="goToSlide(index)"
+                    ></span>
+                </div>
+                <button class="nav-btn next" @click="nextSlide">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
-        </div>
 
-        <!-- 内容部分 -->
-        <div class="content-container">
-            <div class="content-item">
-                <h2>邓紫棋</h2>
-                <p>邓紫棋（G.E.M.），本名邓诗颖，1991年8月16日出生于上海市，中国香港流行乐女歌手、词曲作者、音乐制作人。2008年，邓紫棋因参加香港TVB举办的全球华人新秀歌唱大赛而获得关注。2009年，发行首张EP《G.E.M.》，从而正式出道。此后，她凭借独特的嗓音和出色的创作才华，迅速成为华语乐坛的顶级歌手之一。</p>
-                <p>邓紫棋的音乐风格多样，融合了流行、摇滚、电子等多种元素，创作了众多广受欢迎的歌曲，如《泡沫》《光年之外》《手心的蔷薇》等。她的音乐不仅在华语地区广受欢迎，也在国际上具有一定的影响力。</p>
-                <p>除了音乐事业，邓紫棋还积极参与公益活动，关注环保、教育、健康等多个领域，用自己的影响力传递正能量。</p>
-                <p>邓紫棋用音乐传递爱与力量，一路与粉丝共同成长。欢迎加入GEM Fan Club，一起支持邓紫棋，分享音乐带来的快乐！</p>
-                <p>爱姐姐是一辈子的事！</p>
-                <p>网站还在开发中，作者苦逼读研中，更新较慢，请见谅</p>
+            <!-- 滚动提示 -->
+            <div class="scroll-hint" @click="scrollToContent">
+                <div class="mouse">
+                    <div class="wheel"></div>
+                </div>
+                <span>SCROLL</span>
             </div>
+        </section>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content" id="main-content">
             
-            <!-- 音乐成就部分 -->
-            <div class="achievements-section">
-                <h2>音乐成就与里程碑</h2>
+            <!-- 个人简介：交错布局 -->
+            <section class="section intro-section">
+                <div class="section-header">
+                    <span class="section-tag">PROFILE</span>
+                    <h2>关于 <span class="highlight">G.E.M.</span></h2>
+                </div>
+                
+                <div class="intro-grid">
+                    <div class="intro-card glass-card" data-aos="fade-up">
+                        <div class="card-icon"><i class="fas fa-microphone-alt"></i></div>
+                        <h3>音乐起点</h3>
+                        <p>邓紫棋（G.E.M.），本名邓诗颖，1991年8月16日出生于上海。2008年出道，凭借首张EP《G.E.M.》一鸣惊人。她以广阔的音域和极具爆发力的嗓音，迅速成为华语乐坛的焦点。</p>
+                    </div>
+                    <div class="intro-card glass-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-icon"><i class="fas fa-music"></i></div>
+                        <h3>创作才华</h3>
+                        <p>作为全能型创作歌手，她融合流行、摇滚、R&B、电子等多种风格。《泡沫》、《光年之外》、《句号》等无数金曲皆出自她手，用音乐书写着属于她的传奇。</p>
+                    </div>
+                    <div class="intro-card glass-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card-icon"><i class="fas fa-heart"></i></div>
+                        <h3>爱与力量</h3>
+                        <p>除了音乐，她热衷公益，关注环保与教育。G.E.M. 意为 "Get Everybody Moving"，她始终致力于用音乐和行动传递爱与正能量，激励着无数粉丝。</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 音乐成就：数据可视化风格 -->
+            <section class="section achievements-section">
+                <div class="section-bg-glow"></div>
+                <div class="section-header center">
+                    <span class="section-tag">MILESTONES</span>
+                    <h2>荣耀 <span class="highlight">时刻</span></h2>
+                </div>
+
                 <div class="achievements-grid">
-                    <div class="achievement-card">
-                        <div class="achievement-icon"><i class="fas fa-trophy"></i></div>
-                        <h3>多白金唱片</h3>
-                        <p>多张专辑在中国大陆、香港、台湾地区获得白金唱片认证，专辑《新的心跳》创下白金唱片销量纪录。</p>
+                    <div class="achievement-item">
+                        <div class="stat-number">30+</div>
+                        <div class="stat-label">白金唱片认证</div>
+                        <p class="stat-desc">专辑《新的心跳》创下销量纪录</p>
                     </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon"><i class="fas fa-award"></i></div>
-                        <h3>国际认可</h3>
-                        <p>入选美国《时代》杂志"30位30岁以下对世界有影响力人物"，Billboard中国榜单多次占据榜首。</p>
+                    <div class="achievement-item">
+                        <div class="stat-number">TOP 1</div>
+                        <div class="stat-label">Billboard 中国</div>
+                        <p class="stat-desc">多首单曲霸榜，国际影响力非凡</p>
                     </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon"><i class="fas fa-globe-asia"></i></div>
-                        <h3>全球影响力</h3>
-                        <p>成功举办多轮世界巡回演唱会，足迹遍布亚洲、北美洲、大洋洲等地区，影响力不断扩大。</p>
+                    <div class="achievement-item">
+                        <div class="stat-number">100+</div>
+                        <div class="stat-label">世界巡回演唱会</div>
+                        <p class="stat-desc">足迹遍布亚洲、北美、大洋洲</p>
                     </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon"><i class="fas fa-music"></i></div>
-                        <h3>音乐创作</h3>
-                        <p>不仅是出色的歌手，还是优秀的词曲创作人，《光年之外》、《再见》等歌曲广为传唱。</p>
+                    <div class="achievement-item">
+                        <div class="stat-number">30 Under 30</div>
+                        <div class="stat-label">福布斯精英榜</div>
+                        <p class="stat-desc">入选全球最具影响力年轻领袖</p>
                     </div>
                 </div>
-            </div>
+            </section>
             
-            
-            <!-- 社交媒体链接部分 -->
-            <div class="social-media-section">
-                <h2>官方社交媒体</h2>
-                <p class="social-intro">关注邓紫棋的官方社交媒体账号，获取最新动态、音乐发布和演唱会信息！</p>
-                <div class="social-links">
-                    <a href="https://weibo.com/1705586121?refer_flag=1001030103_" target="_blank" class="social-link">
-                        <div class="social-icon weibo"><i class="fab fa-weibo"></i></div>
-                        <span>微博</span>
-                        <small>@GEM鄧紫棋</small>
+            <!-- 社交媒体：霓虹风格 -->
+            <section class="section social-section">
+                <div class="section-header">
+                    <span class="section-tag">CONNECT</span>
+                    <h2>关注 <span class="highlight">动态</span></h2>
+                </div>
+                
+                <div class="social-grid">
+                    <a href="https://weibo.com/1705586121" target="_blank" class="social-card weibo">
+                        <div class="icon-box"><i class="fab fa-weibo"></i></div>
+                        <div class="social-info">
+                            <span class="platform">Weibo</span>
+                            <span class="handle">@GEM鄧紫棋</span>
+                        </div>
+                        <div class="hover-glow"></div>
                     </a>
-                    <a href="https://youtube.com/user/GEMblog" target="_blank" class="social-link">
-                        <div class="social-icon youtube"><i class="fab fa-youtube"></i></div>
-                        <span>YouTube</span>
-                        <small>G.E.M. 鄧紫棋</small>
+                    <a href="https://youtube.com/user/GEMblog" target="_blank" class="social-card youtube">
+                        <div class="icon-box"><i class="fab fa-youtube"></i></div>
+                        <div class="social-info">
+                            <span class="platform">YouTube</span>
+                            <span class="handle">G.E.M. 鄧紫棋</span>
+                        </div>
+                        <div class="hover-glow"></div>
                     </a>
-                    <a href="https://music.163.com/#/artist?id=7763" target="_blank" class="social-link">
-                        <div class="social-icon netease"><i class="fas fa-music"></i></div>
-                        <span>网易云音乐</span>
-                        <small>G.E.M.邓紫棋</small>
+                    <a href="https://music.163.com/#/artist?id=7763" target="_blank" class="social-card netease">
+                        <div class="icon-box"><i class="fas fa-music"></i></div>
+                        <div class="social-info">
+                            <span class="platform">NetEase</span>
+                            <span class="handle">G.E.M.邓紫棋</span>
+                        </div>
+                        <div class="hover-glow"></div>
                     </a>
-                    <a href="https://y.qq.com/n/yqq/singer/001fNHEf1SFEFN.html" target="_blank" class="social-link">
-                        <div class="social-icon qqmusic"><i class="fas fa-music"></i></div>
-                        <span>QQ音乐</span>
-                        <small>G.E.M.邓紫棋</small>
+                    <a href="https://space.bilibili.com/1889545341" target="_blank" class="social-card bilibili">
+                        <div class="icon-box">
+                            <!-- 使用 SVG 替换 Font Awesome 图标 -->
+                            <svg viewBox="0 0 512 512" width="1em" height="1em" fill="currentColor">
+                                <path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.3c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-13.8 9.5-23 9.8-9.2-.3-17.1-3.5-23.3-9.8-6.3-6.3-9.7-14-10.1-23.2v-33.3c.4-9.2 3.8-16.9 10.1-23.2 6.2-6.3 14.1-9.5 23.3-9.8 9.2.3 16.8 3.5 23 9.8zm178.1 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-13.8 9.5-23 9.8-9.2-.3-17.1-3.5-23.3-9.8-6.3-6.3-9.7-14-10.1-23.2v-33.3c.4-9.2 3.8-16.9 10.1-23.2 6.2-6.3 14.1-9.5 23.3-9.8 9.2.3 16.8 3.5 23 9.8z"/>
+                            </svg>
+                        </div>
+                        <div class="social-info">
+                            <span class="platform">Bilibili</span>
+                            <span class="handle">邓紫棋</span>
+                        </div>
+                        <div class="hover-glow"></div>
                     </a>
-                    <a href="https://space.bilibili.com/1889545341?spm_id_from=333.337.0.0" target="_blank" class="social-link">
-                        <div class="social-icon bilibili"><i class="fas fa-play-circle"></i></div>
-                        <span>哔哩哔哩</span>
-                        <small>邓紫棋</small>
+                    <a href="https://www.xiaohongshu.com/user/profile/5b8cc0472611925a1caca48a" target="_blank" class="social-card xiaohongshu">
+                        <div class="icon-box"><i class="fas fa-book"></i></div>
+                        <div class="social-info">
+                            <span class="platform">RED</span>
+                            <span class="handle">邓紫棋</span>
+                        </div>
+                        <div class="hover-glow"></div>
                     </a>
-                    <a href="https://www.xiaohongshu.com/user/profile/5b8cc0472611925a1caca48a?xsec_token=ABb3En6PVp9dKhRWeEKnO_AjjGOk3mrS64Enwx15dNLDg%3D&xsec_source=pc_search" target="_blank" class="social-link">
-                        <div class="social-icon xiaohongshu"><i class="fas fa-book"></i></div>
-                        <span>小红书</span>
-                        <small>邓紫棋</small>
-                    </a>
-                    <a href="https://www.douyin.com/user/MS4wLjABAAAAh7MdVA-UbMYLeO3_zhA_Z-Mrkh8cDwBCU_qQqucnrFE?from_tab_name=main" target="_blank" class="social-link">
-                        <div class="social-icon douyin"><i class="fas fa-music"></i></div>
-                        <span>抖音</span>
-                        <small>邓紫棋</small>
+                    <a href="https://www.douyin.com/user/MS4wLjABAAAAh7MdVA-UbMYLeO3_zhA_Z-Mrkh8cDwBCU_qQqucnrFE" target="_blank" class="social-card douyin">
+                        <div class="icon-box"><i class="fab fa-tiktok"></i></div>
+                        <div class="social-info">
+                            <span class="platform">Douyin</span>
+                            <span class="handle">邓紫棋</span>
+                        </div>
+                        <div class="hover-glow"></div>
                     </a>
                 </div>
-            </div>
+            </section>
             
-            <!-- 联系方式区域 -->
-            <div class="footer-container">
+            <!-- 页脚 -->
+            <footer class="main-footer">
                 <div class="footer-content">
-                    <h3>关于作者</h3>
-                    <div class="contact-info">
-                        <div class="contact-item">
-                            <i class="fab fa-github"></i>
-                            <a href="https://github.com/Reyotsed" target="_blank" rel="noopener noreferrer">GitHub: @Reyotsed</a>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fab fa-weibo"></i>
-                            <a href="https://weibo.com/u/6374535201" target="_blank" rel="noopener noreferrer">微博: @Reyotsed</a>
+                    <div class="footer-logo">
+                        <span>G.E.M.</span> FAN CLUB
+                    </div>
+                    <div class="footer-links">
+                        <div class="author-info">
+                            <span>Developed by Reyotsed</span>
+                            <div class="author-socials">
+                                <a href="https://github.com/Reyotsed" target="_blank"><i class="fab fa-github"></i></a>
+                                <a href="https://weibo.com/u/6374535201" target="_blank"><i class="fab fa-weibo"></i></a>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="disclaimer">
-                        <h4>免责声明</h4>
-                        <p>本网站为邓紫棋粉丝自行开发的非官方网站，仅用于粉丝交流与分享。所有内容均来源于公开资料，版权归原作者所有。</p>
-                        <p>网站使用 Vue.js 构建，采用响应式设计确保在不同设备上的良好体验。如发现任何问题或有改进建议，欢迎通过上述联系方式反馈。</p>
-                        <p>© 2025 GEM Fan Club. 保留所有权利。</p>
-                    </div>
+                    <p class="copyright">
+                        &copy; 2025 GEM Fan Club. 非官方粉丝网站，仅供交流学习。<br>
+                        所有素材版权归原作者所有。
+                    </p>
                 </div>
-            </div>
+            </footer>
         </div>
     </div>
 </template>
@@ -158,7 +230,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 
-// 不需要导入，直接定义图片路径
+// 图片路径
 const images = [
   '/img/homepage/001.jpg',
   '/img/homepage/002.jpg',
@@ -169,6 +241,14 @@ const images = [
 const currentIndex = ref(0);
 let isAnimating = false;
 let autoPlayTimer = null;
+
+// 滚动到内容区域
+const scrollToContent = () => {
+    const content = document.getElementById('main-content');
+    if (content) {
+        content.scrollIntoView({ behavior: 'smooth' });
+    }
+};
 
 // 重置自动播放
 const resetAutoPlay = () => {
@@ -181,52 +261,59 @@ const resetAutoPlay = () => {
         } else {
             currentIndex.value = 0;
         }
-    }, 5000);
+    }, 6000); // 延长轮播时间
 };
 
 // 切换到下一张
 const nextSlide = () => {
-    if (isAnimating || currentIndex.value >= images.length - 1) return;
+    if (isAnimating) return;
     
     isAnimating = true;
-    currentIndex.value++;
-    resetAutoPlay(); // 重置计时器
+    if (currentIndex.value >= images.length - 1) {
+        currentIndex.value = 0;
+    } else {
+        currentIndex.value++;
+    }
+    resetAutoPlay();
     
     setTimeout(() => {
         isAnimating = false;
-    }, 1000);
+    }, 800);
 };
 
 // 切换到上一张
 const prevSlide = () => {
-    if (isAnimating || currentIndex.value <= 0) return;
+    if (isAnimating) return;
     
     isAnimating = true;
-    currentIndex.value--;
-    resetAutoPlay(); // 重置计时器
+    if (currentIndex.value <= 0) {
+        currentIndex.value = images.length - 1;
+    } else {
+        currentIndex.value--;
+    }
+    resetAutoPlay();
     
     setTimeout(() => {
         isAnimating = false;
-    }, 1000);
+    }, 800);
 };
 
 // 直接跳转到指定幻灯片
 const goToSlide = (index) => {
-    if (isAnimating) return;
+    if (isAnimating || currentIndex.value === index) return;
     
     isAnimating = true;
     currentIndex.value = index;
-    resetAutoPlay(); // 重置计时器
+    resetAutoPlay();
     
     setTimeout(() => {
         isAnimating = false;
-    }, 1000);
+    }, 800);
 };
 
 onMounted(() => {
-    resetAutoPlay(); // 初始启动自动播放
+    resetAutoPlay();
     window.addEventListener('keydown', handleKeydown);
-    // 确保页面滚动到顶部
     window.scrollTo(0, 0);
 });
 
@@ -248,35 +335,40 @@ const handleKeydown = (event) => {
 </script>
 
 <style scoped>
+/* ========== 基础布局 ========== */
 .home-container {
     width: 100%;
     min-height: 100vh;
+    background-color: var(--bg-dark);
     overflow-x: hidden;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    margin: 0;
-    padding: 0;
+    position: relative;
+}
+
+/* ========== Hero Section ========== */
+.hero-section {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 50px;
-    left: 0;
-    right: 0;
-    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
 }
 
 .slider-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: calc(100vh - 50px);
-    overflow: hidden;
-    margin: 0;
+    height: 100%;
+    z-index: 1;
 }
 
 .slider-track {
     display: flex;
     width: 100%;
     height: 100%;
-    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .slide {
@@ -284,407 +376,573 @@ const handleKeydown = (event) => {
     height: 100%;
     position: relative;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.image-container {
+/* 背景模糊层 */
+.slide-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.bg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(30px) brightness(0.5);
+    transform: scale(1.1); /* 防止模糊边缘露白 */
+}
+
+/* 前景完整层 */
+.image-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    margin: 0; /* 移除边距 */
-    padding: 0; /* 移除内边距 */
+    padding: 0; /* 移除内边距，让图片尽可能大 */
 }
 
 .slide-image {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* 保持原有的图片显示方式 */
-    max-height: 100%;
-    transition: transform 0.8s ease;
+    object-fit: contain; /* 确保图片完整显示 */
+    transition: transform 6s ease-out;
+    filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5)); /* 给主体图片加阴影，增加层次感 */
 }
 
 .slide.active .slide-image {
-    transform: scale(1.03);
+    transform: scale(1.05); /* 轻微缩放，增加动态感但不至于裁剪太多 */
 }
 
-/* 导航按钮样式 */
-.nav-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 50px;
-    border: none;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(4px);
-    z-index: 10;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.nav-button:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-50%) scale(1.1);
-}
-
-.prev {
-    left: 30px;
-}
-
-.next {
-    right: 30px;
-}
-
-/* 指示器样式 */
-.slider-indicators {
-    position: absolute;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 12px;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 10px 20px;
-    border-radius: 30px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 0;
-}
-
-.indicator.active {
-    background: white;
-    transform: scale(1.2);
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-}
-
-/* 内容区域样式 */
-.content-container {
-    position: relative;
-    width: 100%;
-    padding: 50px 20px;
-    color: white;
-    text-align: center;
-    z-index: 5;
-    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.3));
-    box-sizing: border-box;
-}
-
-.content-item {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    animation: fadeInUp 1s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.content-item::before {
-    content: '';
+.hero-overlay {
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 200%;
+    left: 0;
+    width: 100%;
     height: 100%;
     background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.1),
-        transparent
+        to bottom,
+        rgba(10, 10, 18, 0.2) 0%,
+        rgba(10, 10, 18, 0.1) 50%,
+        var(--bg-dark) 100%
     );
-    transform: skewX(-15deg);
-    transition: 0.5s;
+    z-index: 3; /* 确保遮罩在图片之上 */
     pointer-events: none;
 }
 
-.content-item:hover::before {
-    left: 100%;
-    transition: 0.8s;
+/* Hero 内容 */
+.hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    color: #fff;
+    padding: 0 20px;
+    margin-top: -60px;
 }
 
-.content-item h2 {
-    margin-bottom: 30px;
-    font-size: 36px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    background: linear-gradient(135deg, #ff69b4, #eb07ee);
+.main-title {
+    font-size: 6rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 1rem;
+    letter-spacing: -2px;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.glitch {
+    position: relative;
+    color: #fff;
+    font-size: 8rem;
+    letter-spacing: 10px;
+    animation: glitch-skew 3s infinite linear alternate-reverse;
+}
+
+.glitch::before,
+.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 #ff00c1;
+    clip: rect(44px, 450px, 56px, 0);
+    animation: glitch-anim 5s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+    left: -2px;
+    text-shadow: -2px 0 #00fff9;
+    clip: rect(44px, 450px, 56px, 0);
+    animation: glitch-anim2 5s infinite linear alternate-reverse;
+}
+
+.chinese-name {
+    font-size: 3rem;
+    font-weight: 300;
+    letter-spacing: 1rem;
+    background: linear-gradient(to right, #fff, var(--primary-light));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    animation: fadeInUp 1s ease 0.5s forwards;
+}
+
+.sub-title {
+    font-size: 1.2rem;
+    letter-spacing: 0.5rem;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeInUp 1s ease 0.8s forwards;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.cta-button {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    border-radius: 50px;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    animation: fadeInUp 1s ease 1.1s forwards;
+}
+
+.cta-button:hover {
+    background: #fff;
+    color: #000;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+}
+
+/* 轮播控制 */
+.slider-controls {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+.indicators {
+    display: flex;
+    gap: 12px;
+}
+
+.dot {
+    width: 40px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background: #fff;
+    width: 60px;
+}
+
+/* 滚动提示 */
+.scroll-hint {
+    position: absolute;
+    bottom: 30px;
+    right: 40px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.scroll-hint:hover {
+    opacity: 1;
+}
+
+.mouse {
+    width: 26px;
+    height: 40px;
+    border: 2px solid #fff;
+    border-radius: 13px;
+    position: relative;
+}
+
+.wheel {
+    width: 4px;
+    height: 8px;
+    background: #fff;
+    border-radius: 2px;
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: scrollWheel 1.5s infinite;
+}
+
+.scroll-hint span {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+}
+
+/* ========== 主要内容区域 ========== */
+.main-content {
+    position: relative;
+    z-index: 5;
+    background: var(--bg-dark);
+    padding-bottom: 50px;
+}
+
+.section {
+    padding: 100px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.section-header {
+    margin-bottom: 60px;
+    position: relative;
+}
+
+.section-header.center {
+    text-align: center;
+}
+
+.section-tag {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--primary);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.section-header h2 {
+    font-size: 3rem;
+    color: #fff;
+    margin: 0;
+}
+
+.highlight {
+    color: var(--accent-pink);
     position: relative;
     display: inline-block;
 }
 
-.content-item h2::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #ff69b4, transparent);
+/* 简介卡片 */
+.intro-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
 }
 
-.content-item p {
-    font-size: 18px;
-    line-height: 1.8;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 20px;
-    text-align: justify;
-    padding: 0 10px;
+.glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    padding: 40px 30px;
+    border-radius: 20px;
+    transition: all 0.4s ease;
     position: relative;
+    overflow: hidden;
+}
+
+.glass-card:hover {
+    transform: translateY(-10px);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    color: var(--primary-light);
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.glass-card h3 {
+    font-size: 1.5rem;
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.glass-card p {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+/* 成就部分 */
+.achievements-section {
+    background: linear-gradient(180deg, var(--bg-dark) 0%, #1a1a2e 50%, var(--bg-dark) 100%);
+    padding: 120px 20px;
+    max-width: 100%;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.achievement-item {
+    text-align: center;
+    padding: 30px;
+    position: relative;
+}
+
+.stat-number {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff 30%, var(--primary-light) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 10px;
+    font-family: 'Impact', sans-serif;
+}
+
+.stat-label {
+    font-size: 1.2rem;
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.stat-desc {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* 社交媒体 */
+.social-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.social-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 30px 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.icon-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #fff;
+    margin-bottom: 15px;
     transition: all 0.3s ease;
 }
 
-.content-item p:hover {
-    color: white;
-    transform: translateX(5px);
+.social-info {
+    text-align: center;
 }
 
-.content-item p:last-child {
-    margin-bottom: 0;
-    padding-bottom: 10px;
+.platform {
+    display: block;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 5px;
 }
 
-/* 添加响应式设计 */
-@media (max-width: 768px) {
-    .home-container {
-        width: 100%;
-        padding: 0;
-        overflow-x: hidden;
-    }
-
-    .content-container {
-        padding: 20px 10px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .content-item,
-    .achievements-section,
-    .social-media-section {
-        width: 100%;
-        margin-left: auto;
-        margin-right: auto;
-        box-sizing: border-box;
-    }
-
-    .social-links {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        padding: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .social-link {
-        width: 100%;
-        padding: 10px;
-        box-sizing: border-box;
-    }
-
-    .footer-container {
-        width: 100%;
-        padding: 20px 10px;
-        box-sizing: border-box;
-    }
-
-    .footer-content {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .contact-info {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0 10px;
-    }
-
-    .contact-item {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .slider-container {
-        width: 100%;
-        margin: 0;
-        box-sizing: border-box;
-    }
-
-    .image-container {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .slide-image {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
-    .content-item h2 {
-        font-size: 24px;
-        margin-bottom: 20px;
-    }
-
-    .content-item p {
-        font-size: 15px;
-        line-height: 1.6;
-        padding: 0;
-        text-align: left;
-    }
-
-    .achievements-section {
-        padding: 20px 15px;
-        margin: 30px auto;
-    }
-
-    .achievements-section h2 {
-        font-size: 24px;
-    }
-
-    .achievements-grid {
-        grid-template-columns: repeat(1, 1fr);
-        gap: 15px;
-    }
-
-    .achievement-card {
-        padding: 15px;
-    }
-
-    .social-media-section {
-        padding: 20px 15px;
-        margin: 30px auto;
-    }
-
-    .social-media-section h2 {
-        font-size: 24px;
-    }
-
-    .social-icon {
-        width: 40px;
-        height: 40px;
-    }
-
-    .social-icon i {
-        font-size: 20px;
-    }
-
-    .social-link span {
-        font-size: 14px;
-    }
-
-    .social-link small {
-        font-size: 11px;
-    }
-
-    .nav-button {
-        width: 35px;
-        height: 35px;
-        font-size: 18px;
-    }
-
-    .prev {
-        left: 10px;
-    }
-
-    .next {
-        right: 10px;
-    }
-
-    .slider-indicators {
-        bottom: 20px;
-        padding: 8px 15px;
-    }
-
-    .indicator {
-        width: 8px;
-        height: 8px;
-    }
+.handle {
+    display: block;
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 600;
 }
 
-/* 平板端样式优化 */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .slider-container {
-        height: 50vh;
-    }
-    
-    .content-container {
-        padding: 30px 20px;
-    }
-    
-    .achievements-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .social-links {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-/* 修改渐变效果 */
-.slide::after {
-    content: '';
+.hover-glow {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.15) 0%,
-        rgba(0, 0, 0, 0) 30%,
-        rgba(0, 0, 0, 0) 70%,
-        rgba(0, 0, 0, 0.15) 100%
-    );
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, var(--glow-color, rgba(255,255,255,0.1)) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
     pointer-events: none;
 }
 
-/* 添加加载和内容动画 */
-.slide-image {
-    opacity: 0;
-    animation: fadeIn 0.8s ease forwards;
+/* 社交卡片悬停效果 */
+.social-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+.social-card:hover .hover-glow {
+    opacity: 1;
+}
+
+.social-card.weibo { --glow-color: rgba(255, 60, 74, 0.2); }
+.social-card.weibo:hover .icon-box { background: #ff3c4a; box-shadow: 0 0 20px rgba(255, 60, 74, 0.4); }
+
+.social-card.youtube { --glow-color: rgba(255, 0, 0, 0.2); }
+.social-card.youtube:hover .icon-box { background: #ff0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); }
+
+.social-card.netease { --glow-color: rgba(212, 60, 51, 0.2); }
+.social-card.netease:hover .icon-box { background: #d43c33; box-shadow: 0 0 20px rgba(212, 60, 51, 0.4); }
+
+.social-card.bilibili { --glow-color: rgba(251, 114, 153, 0.2); }
+.social-card.bilibili:hover .icon-box { background: #fb7299; box-shadow: 0 0 20px rgba(251, 114, 153, 0.4); }
+
+.social-card.xiaohongshu { --glow-color: rgba(254, 44, 85, 0.2); }
+.social-card.xiaohongshu:hover .icon-box { background: #fe2c55; box-shadow: 0 0 20px rgba(254, 44, 85, 0.4); }
+
+.social-card.douyin { --glow-color: rgba(0, 0, 0, 0.2); }
+.social-card.douyin:hover .icon-box { background: #000; box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
+
+/* 页脚 */
+.main-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 60px 20px 30px;
+    background: #050508;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.footer-logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 30px;
+    letter-spacing: 5px;
+}
+
+.footer-logo span {
+    color: #fff;
+}
+
+.author-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.author-socials a {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.2rem;
+    margin-left: 15px;
+    transition: color 0.3s ease;
+}
+
+.author-socials a:hover {
+    color: var(--primary);
+}
+
+.copyright {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.3);
+    line-height: 1.6;
+}
+
+/* 动画关键帧 */
+@keyframes glitch-anim {
+    0% { clip: rect(30px, 9999px, 10px, 0); }
+    20% { clip: rect(85px, 9999px, 90px, 0); }
+    40% { clip: rect(10px, 9999px, 60px, 0); }
+    60% { clip: rect(60px, 9999px, 20px, 0); }
+    80% { clip: rect(20px, 9999px, 80px, 0); }
+    100% { clip: rect(50px, 9999px, 40px, 0); }
+}
+
+@keyframes glitch-anim2 {
+    0% { clip: rect(60px, 9999px, 20px, 0); }
+    20% { clip: rect(10px, 9999px, 50px, 0); }
+    40% { clip: rect(90px, 9999px, 10px, 0); }
+    60% { clip: rect(30px, 9999px, 70px, 0); }
+    80% { clip: rect(50px, 9999px, 90px, 0); }
+    100% { clip: rect(20px, 9999px, 30px, 0); }
+}
+
+@keyframes glitch-skew {
+    0% { transform: skew(2deg); }
+    20% { transform: skew(-2deg); }
+    40% { transform: skew(0deg); }
+    60% { transform: skew(1deg); }
+    80% { transform: skew(-1deg); }
+    100% { transform: skew(0deg); }
 }
 
 @keyframes fadeInUp {
@@ -698,396 +956,26 @@ const handleKeydown = (event) => {
     }
 }
 
-/* 添加新的动画效果 */
-@keyframes gradientBG {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
+@keyframes scrollWheel {
+    0% { top: 6px; opacity: 1; }
+    100% { top: 20px; opacity: 0; }
 }
 
-@keyframes shimmer {
-    0% {
-        opacity: 0.5;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0.5;
-    }
-}
-
-/* 添加页脚样式 */
-.footer-container {
-    width: 100%;
-    margin-top: 50px;
-    padding: 30px 20px;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footer-content {
-    max-width: 900px;
-    margin: 0 auto;
-    color: rgba(255, 255, 255, 0.8);
-    text-align: center;
-}
-
-.footer-content h3 {
-    font-size: 28px;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #ff69b4, #eb07ee);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    display: inline-block;
-}
-
-.contact-info {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.contact-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px 20px;
-    border-radius: 30px;
-    transition: all 0.3s ease;
-}
-
-.contact-item:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.contact-item i {
-    font-size: 20px;
-    color: #eb07ee;
-}
-
-.contact-item a {
-    color: rgba(255, 255, 255, 0.9);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.contact-item a:hover {
-    color: #fff;
-    text-decoration: underline;
-}
-
-.disclaimer {
-    margin-top: 30px;
-    padding: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: center;
-}
-
-.disclaimer h4 {
-    font-size: 20px;
-    margin-bottom: 15px;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.disclaimer p {
-    font-size: 14px;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 10px;
-}
-
-.disclaimer p:last-child {
-    margin-top: 20px;
-    font-weight: 500;
-}
-
-/* 响应式设计 */
+/* 响应式适配 */
 @media (max-width: 768px) {
-    .contact-info {
-        flex-direction: column;
-        gap: 10px;
-    }
+    .glitch { font-size: 4rem; letter-spacing: 5px; }
+    .chinese-name { font-size: 2rem; letter-spacing: 0.5rem; }
+    .main-title { margin-bottom: 0.5rem; }
+    .sub-title { font-size: 0.9rem; letter-spacing: 0.2rem; margin-bottom: 2rem; }
     
-    .contact-item {
-        width: 100%;
-        justify-content: center;
-    }
+    .section { padding: 60px 20px; }
+    .section-header h2 { font-size: 2rem; }
     
-    .footer-content h3 {
-        font-size: 24px;
-    }
+    .intro-grid { grid-template-columns: 1fr; }
+    .achievements-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+    .social-grid { grid-template-columns: repeat(2, 1fr); }
     
-    .disclaimer h4 {
-        font-size: 18px;
-    }
-    
-    .disclaimer p {
-        font-size: 12px;
-    }
-}
-
-/* 成就部分样式 */
-.achievements-section {
-    max-width: 900px;
-    margin: 50px auto;
-    padding: 40px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    animation: fadeInUp 1s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.achievements-section h2 {
-    margin-bottom: 30px;
-    font-size: 32px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    background: linear-gradient(135deg, #ff69b4, #eb07ee);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    position: relative;
-    display: inline-block;
-}
-
-.achievements-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-top: 30px;
-}
-
-.achievement-card {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 15px;
-    padding: 25px;
-    text-align: center;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.achievement-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.achievement-icon {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #ff69b4, #eb07ee);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 15px;
-}
-
-.achievement-icon i {
-    font-size: 28px;
-    color: white;
-}
-
-.achievement-card h3 {
-    font-size: 20px;
-    margin-bottom: 15px;
-    color: white;
-}
-
-.achievement-card p {
-    font-size: 14px;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-/* 社交媒体部分样式 */
-.social-media-section {
-    max-width: 900px;
-    margin: 50px auto;
-    padding: 40px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    animation: fadeInUp 1s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.social-media-section h2 {
-    margin-bottom: 15px;
-    font-size: 32px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    background: linear-gradient(135deg, #ff69b4, #eb07ee);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    position: relative;
-    display: inline-block;
-}
-
-.social-intro {
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 25px;
-    text-align: center;
-}
-
-.social-links {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px;
-}
-
-.social-link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    padding: 15px;
-    border-radius: 15px;
-    background: rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-}
-
-.social-link:hover {
-    transform: translateY(-5px);
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.social-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-}
-
-.social-icon i {
-    font-size: 30px;
-    color: white;
-}
-
-.social-link span {
-    font-size: 16px;
-    font-weight: 500;
-    color: white;
-    margin-bottom: 5px;
-}
-
-.social-link small {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-/* 社交媒体图标颜色 */
-.weibo {
-    background: linear-gradient(45deg, #ff3c4a, #ff9eb5);
-}
-
-.youtube {
-    background: linear-gradient(45deg, #ff0000, #ff5e5e);
-}
-
-.netease {
-    background: linear-gradient(45deg, #d43c33, #ff7875);
-}
-
-.qqmusic {
-    background: linear-gradient(45deg, #31c27c, #5cdeae);
-}
-
-.bilibili {
-    background: linear-gradient(45deg, #fb7299, #fc9ebb);
-}
-
-.xiaohongshu {
-    background: linear-gradient(45deg, #fe2c55, #ff6b81);
-}
-
-.douyin {
-    background: linear-gradient(45deg, #000000, #333333);
-}
-
-/* 响应式设计扩展 */
-@media (max-width: 768px) {
-    .achievements-grid {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 15px;
-    }
-    
-    .achievement-card {
-        padding: 15px;
-    }
-    
-    .achievement-icon {
-        width: 50px;
-        height: 50px;
-    }
-    
-    .achievement-icon i {
-        font-size: 22px;
-    }
-    
-    .achievement-card h3 {
-        font-size: 18px;
-        margin-bottom: 10px;
-    }
-    
-    .achievement-card p {
-        font-size: 13px;
-    }
-    
-    .social-links {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .contact-info {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .contact-item {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* 确保所有主要容器都有正确的盒模型设置 */
-.achievements-section,
-.social-media-section,
-.footer-container,
-.slider-container,
-.content-item {
-    box-sizing: border-box;
-    max-width: 100%;
-    overflow-x: hidden;
+    .scroll-hint { display: none; }
+    .nav-btn { display: none; } /* 移动端隐藏左右箭头，靠滑动或自动播放 */
 }
 </style>

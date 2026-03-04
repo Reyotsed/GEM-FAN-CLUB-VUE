@@ -10,7 +10,6 @@ const app = createApp(App);
 // 创建 Pinia 实例并安装到应用中
 const pinia = createPinia();
 app.use(pinia);
-app.use(store);
 app.use(router);
 
 app.mount('#app');

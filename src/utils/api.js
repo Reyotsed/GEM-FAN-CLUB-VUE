@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getCachedImage, cacheImage } from './imageCache';
+import { showToast } from './toast';
 
 // 创建axios实例，使用环境变量中的配置
 const apiClient = axios.create({
@@ -21,13 +22,22 @@ apiClient.interceptors.request.use(
   }
 );
 
-// 响应拦截器
+// Response interceptor
 apiClient.interceptors.response.use(
   response => {
     return response;
   },
   error => {
-    // 处理错误情况
+    // Handle 401 Unauthorized: auto logout
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('nickName');
+      localStorage.removeItem('avatar');
+      showToast('登录已过期，请重新登录', 'warning');
+    } else if (!error.response) {
+      showToast('网络连接失败，请检查网络', 'error');
+    }
     return Promise.reject(error);
   }
 );
@@ -50,8 +60,7 @@ apiClient.getImageUrl = async function (path) {
       params: { path },
       responseType: 'blob'
     });
-    console.log(path);
-    // 创建URL并缓存
+    // Create URL and cache
     const imageUrl = URL.createObjectURL(response.data);
     cacheImage(path, imageUrl);
     return imageUrl;
