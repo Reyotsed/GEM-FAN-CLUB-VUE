@@ -946,86 +946,153 @@ body {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+    .chat-container {
+        /* 适配移动端浏览器底部导航栏 */
+        height: 100dvh; 
+        top: 0; /* 覆盖默认top */
+        padding-top: var(--nav-height, 60px); /* 给顶部导航留出空间 */
+    }
+
     .chat-header {
-        flex-direction: column;
-        gap: 15px;
-        padding: 12px 16px;
+        flex-direction: row; /* 保持水平排列 */
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        height: 60px; /* 固定高度 */
     }
     
     .header-info {
-        justify-content: center;
+        justify-content: flex-start;
+    }
+
+    .avatar-img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .user-info h2 {
+        font-size: 16px;
+    }
+    
+    .status {
+        font-size: 12px;
     }
     
     .clear-chat-btn {
         padding: 6px 10px;
         font-size: 12px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%; /* 变为圆形按钮 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .clear-chat-btn span {
+        display: none; /* 隐藏文字如果存在 */
     }
     
     .chat-body {
-        padding: 16px;
+        padding: 12px;
     }
 
     .message-content {
-        max-width: 75%;
+        max-width: 85%; /* 增加消息气泡宽度 */
     }
 
     .chat-welcome {
-        padding: 18px;
+        padding: 16px;
         margin: 10px auto;
+        width: 90%;
     }
 
     .welcome-img {
-        width: 70px;
-        height: 70px;
+        width: 60px;
+        height: 60px;
     }
 
     .welcome-text h3 {
-        font-size: 20px;
+        font-size: 18px;
     }
 
     .chat-footer {
-        padding: 15px;
+        padding: 10px 12px;
+    }
+    
+    .input-container {
+        padding: 8px 12px;
+        border-radius: 20px;
+    }
+
+    .chat-hints {
+        flex-direction: column; /* 提示标签和按钮组垂直排列 */
+        align-items: flex-start;
+        gap: 8px;
+        padding-bottom: 5px;
+    }
+    
+    .hint-label {
+        font-size: 12px;
+        margin-bottom: 4px;
+        margin-right: 0;
     }
 
     .hint-buttons {
+        display: flex;
+        flex-wrap: nowrap; /* 不换行 */
+        overflow-x: auto; /* 水平滚动 */
+        width: 100%;
         gap: 8px;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch; /* iOS顺滑滚动 */
+    }
+    
+    /* 隐藏滚动条但保留功能 */
+    .hint-buttons::-webkit-scrollbar {
+        display: none;
     }
 
     .hint-btn {
         padding: 6px 12px;
         font-size: 12px;
+        flex-shrink: 0; /* 防止按钮被压缩 */
     }
 
     .send-btn {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
+        margin-left: 8px;
+    }
+    
+    .send-btn i {
+        font-size: 16px;
     }
     
     .warning-bubble {
-        padding: 8px 16px;
-        font-size: 12px;
+        padding: 6px 12px;
+        font-size: 11px;
         gap: 6px;
     }
     
     .warning-bubble i {
-        font-size: 14px;
+        font-size: 12px;
     }
 }
 
 @media (max-width: 480px) {
-    .clear-chat-btn {
-        padding: 5px 8px;
-        font-size: 11px;
+    /* 针对更小屏幕的微调 */
+    .message-bubble {
+        padding: 10px 14px;
     }
     
-    .hint-buttons {
-        flex-wrap: wrap;
-        gap: 6px;
+    .message-bubble p {
+        font-size: 14px;
     }
     
-    .hint-btn {
-        padding: 5px 10px;
-        font-size: 11px;
+    .welcome-text p {
+        font-size: 13px;
     }
 }
 </style>

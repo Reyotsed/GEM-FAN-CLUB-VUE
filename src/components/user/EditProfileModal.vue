@@ -287,18 +287,18 @@ const saveChanges = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(5, 5, 10, 0.8);
-  backdrop-filter: blur(10px);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
 }
 
 .modal-content {
   position: relative;
   width: 90%;
   max-width: 500px;
-  background: rgba(20, 20, 35, 0.95);
+  background: rgba(25, 25, 45, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(235, 7, 238, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   z-index: 1101;
   animation: slideIn 0.3s ease;
@@ -320,22 +320,22 @@ const saveChanges = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.7rem 1.5rem;
-  background: linear-gradient(135deg, rgba(235, 7, 238, 0.3), rgba(165, 5, 222, 0.25));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(135deg, rgba(235, 7, 238, 0.5), rgba(165, 5, 222, 0.5));
   color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-size: 1.15rem;
+  font-weight: 600;
 }
 
 .close-button {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 1.6rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -351,7 +351,7 @@ const saveChanges = async () => {
   padding: 1.5rem;
 }
 
-/* Avatar section */
+/* 头像部分 */
 .avatar-section {
   display: flex;
   flex-direction: column;
@@ -369,12 +369,12 @@ const saveChanges = async () => {
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid rgba(235, 7, 238, 0.3);
-  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.2);
+  box-shadow: 0 4px 20px rgba(235, 7, 238, 0.15);
 }
 
 .avatar-upload-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   padding: 0.5rem 1.2rem;
   font-size: 0.9rem;
@@ -384,11 +384,12 @@ const saveChanges = async () => {
 }
 
 .avatar-upload-btn:hover {
-  background: rgba(235, 7, 238, 0.15);
-  border-color: rgba(235, 7, 238, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
 }
 
-/* Form section */
+/* 表单部分 */
 .form-section {
   width: 100%;
 }
@@ -420,9 +421,10 @@ const saveChanges = async () => {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   font-size: 0.95rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.9);
   transition: all 0.2s;
+  font-family: inherit;
 }
 
 .input-wrapper input::placeholder,
@@ -432,10 +434,10 @@ const saveChanges = async () => {
 
 .input-wrapper input:focus, 
 .input-wrapper textarea:focus {
-  border-color: rgba(235, 7, 238, 0.5);
+  border-color: var(--primary, #eb07ee);
   outline: none;
   box-shadow: 0 0 0 2px rgba(235, 7, 238, 0.15);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .input-wrapper textarea {
@@ -443,7 +445,12 @@ const saveChanges = async () => {
   min-height: 80px;
 }
 
-/* Footer buttons */
+/* date input 颜色适配 */
+.input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+}
+
+/* 底部按钮 */
 .modal-footer {
   display: flex;
   justify-content: space-between;
@@ -470,19 +477,20 @@ const saveChanges = async () => {
 
 .save-button {
   padding: 0.6rem 2rem;
-  background: linear-gradient(135deg, #eb07ee, #a505de);
+  background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   font-size: 0.9rem;
 }
 
 .save-button:hover:not(:disabled) {
+  filter: brightness(1.15);
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.4);
+  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.3);
 }
 
 .save-button:disabled {
@@ -490,7 +498,7 @@ const saveChanges = async () => {
   cursor: not-allowed;
 }
 
-/* Responsive */
+/* 响应式 */
 @media (max-width: 576px) {
   .form-row {
     flex-direction: column;
@@ -518,4 +526,4 @@ const saveChanges = async () => {
 .lazy-image.loaded {
   opacity: 1;
 }
-</style>
+</style> 

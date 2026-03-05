@@ -208,8 +208,8 @@ const loadUserInfo = async (userId) => {
             userInfo.value = res.data.data;
             // 判断当前登录用户是否是该用户
             isCurrentUser.value = userStore.userId === userId;
-            // 获取用户头像
-            const avatarUrl = await apiClient.getImageUrl(userInfo.value.avatar);
+            // 获取用户头像（缩略图 160px，个人主页头像较大）
+            const avatarUrl = await apiClient.getImageUrl(userInfo.value.avatar, 160);
             userInfo.value.avatar = avatarUrl;
             
             // 加载用户语录
@@ -238,7 +238,7 @@ const loadUserQuotes = async () => {
             });
             
             const pictureUrls = await Promise.all(
-                picturesRes.data.data.map(pic => apiClient.getImageUrl(pic.filePath))
+                picturesRes.data.data.map(pic => apiClient.getImageUrl(pic.filePath, 400))
             );
             
             return {
@@ -310,16 +310,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Background container */
+/* 页面背景 - 暗色主题 */
 .page-background {
     width: 100%;
     min-height: 100vh;
     background: var(--bg-dark, #0a0a12);
-    background-image:
-        radial-gradient(circle at 20% 20%, rgba(235, 7, 238, 0.08), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(0, 242, 255, 0.06), transparent 40%);
     margin: 0;
-    padding: 0;
+    padding: 2rem 0;
     display: flex;
     flex-direction: column;
     position: absolute;
@@ -336,51 +333,46 @@ onMounted(() => {
     flex-shrink: 0;
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+    border-radius: 24px;
     border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    margin: 2rem auto;
+    margin: 0 auto;
     box-sizing: border-box;
 }
 
-/* User info section */
+/* 上部分：用户基本信息 - 紫色渐变 banner */
 .user-info-section {
     display: flex;
     width: 100%;
-    background: linear-gradient(135deg, rgba(235, 7, 238, 0.25), rgba(165, 5, 222, 0.2));
-    backdrop-filter: blur(20px);
+    background: linear-gradient(135deg, rgba(235, 7, 238, 0.4), rgba(165, 5, 222, 0.5));
     color: white;
     padding: 2.5rem 0;
     position: relative;
     overflow: hidden;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Decorative elements */
+/* 装饰元素 */
 .user-info-section::before {
     content: '';
     position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    background: rgba(235, 7, 238, 0.15);
+    top: -80px;
+    right: -80px;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
     border-radius: 50%;
-    filter: blur(40px);
 }
 
 .user-info-section::after {
     content: '';
     position: absolute;
-    bottom: -30px;
-    left: -30px;
-    width: 150px;
-    height: 150px;
-    background: rgba(0, 242, 255, 0.1);
+    bottom: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(235, 7, 238, 0.15) 0%, transparent 70%);
     border-radius: 50%;
-    filter: blur(30px);
 }
 
 .user-info-container {
@@ -400,20 +392,19 @@ onMounted(() => {
 }
 
 .user-avatar {
-    width: 160px;
-    height: 160px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
-    border: 4px solid rgba(255, 255, 255, 0.2);
+    border: 4px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 8px 30px rgba(235, 7, 238, 0.3);
     object-fit: cover;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
 }
 
-/* Avatar hover effect */
 .user-avatar-container:hover .user-avatar {
     transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.5);
     box-shadow: 0 12px 40px rgba(235, 7, 238, 0.5);
-    border-color: rgba(235, 7, 238, 0.5);
 }
 
 .user-details {
@@ -421,86 +412,84 @@ onMounted(() => {
 }
 
 .user-details h1 {
-    font-size: 2.8rem;
+    font-size: 2.6rem;
     margin-bottom: 1rem;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     font-weight: 700;
-    background: linear-gradient(to right, #fff, var(--primary-light, #f3caff));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #fff;
 }
 
 .user-meta {
     display: flex;
     flex-wrap: wrap;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
 }
 
 .user-meta span {
-    margin-right: 1.2rem;
+    margin-right: 1rem;
     font-size: 0.95rem;
     opacity: 0.9;
-    padding: 0.3rem 0.8rem;
-    background-color: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.3rem 0.9rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     display: inline-flex;
     align-items: center;
-    margin-bottom: 0.5rem;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(4px);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .user-bio {
-    background: rgba(255, 255, 255, 0.06);
-    padding: 1.5rem;
-    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.2rem 1.5rem;
+    border-radius: 12px;
     max-width: 800px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
 }
 
 .user-bio p {
     margin: 0;
     font-size: 1.1rem;
-    line-height: 1.6;
+    line-height: 1.7;
     color: rgba(255, 255, 255, 0.85);
 }
 
-/* Content section */
+/* 下部分：导航和内容区域 */
 .content-section {
     display: flex;
     width: 100%;
-    padding: 2rem;
-    gap: 2rem;
+    padding: 1.5rem;
+    gap: 1.5rem;
     box-sizing: border-box;
     flex-shrink: 0;
     flex-grow: 0;
 }
 
-/* Sidebar */
+/* 左侧导航 - 暗色毛玻璃 */
 .sidebar {
-    width: 250px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 16px;
+    width: 220px;
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
     overflow: hidden;
     padding: 1.5rem 0;
     flex-shrink: 0;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
 }
 
 .sidebar:hover {
+    background: rgba(255, 255, 255, 0.06);
     border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .nav-title {
     text-align: center;
-    font-size: 1.3rem;
-    font-weight: bold;
-    margin-bottom: 1.5rem;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+    color: rgba(255, 255, 255, 0.8);
     padding: 0 1rem;
     position: relative;
 }
@@ -508,10 +497,10 @@ onMounted(() => {
 .nav-title::after {
     content: '';
     display: block;
-    width: 50px;
-    height: 3px;
+    width: 40px;
+    height: 2px;
     background: linear-gradient(to right, var(--primary, #eb07ee), var(--primary-dark, #a505de));
-    margin: 0.8rem auto 0;
+    margin: 0.7rem auto 0;
     border-radius: 2px;
 }
 
@@ -519,61 +508,60 @@ onMounted(() => {
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 0.9rem 1.5rem;
+    padding: 0.85rem 1.5rem;
     background-color: transparent;
     border: none;
     cursor: pointer;
-    font-size: 1.1rem;
+    font-size: 1rem;
     text-align: left;
     color: rgba(255, 255, 255, 0.6);
-    transition: all 0.2s ease;
-    margin-bottom: 0.2rem;
+    transition: all 0.25s ease;
+    margin-bottom: 0.15rem;
 }
 
 .nav-button:hover {
-    background-color: rgba(235, 7, 238, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     color: var(--primary-light, #f3caff);
     padding-left: 1.8rem;
 }
 
 .nav-button.active {
-    background-color: rgba(235, 7, 238, 0.12);
-    color: var(--primary, #eb07ee);
-    font-weight: bold;
-    border-left: 4px solid var(--primary, #eb07ee);
+    background: rgba(235, 7, 238, 0.12);
+    color: var(--primary-light, #f3caff);
+    font-weight: 600;
+    border-left: 3px solid var(--primary, #eb07ee);
     box-shadow: inset 0 0 20px rgba(235, 7, 238, 0.05);
 }
 
 .nav-icon {
     margin-right: 0.8rem;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
 }
 
-/* Content area */
+/* 右侧内容区域 - 暗色毛玻璃 */
 .content-area {
     flex: 1;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
     padding: 2rem;
     min-height: 600px;
     min-width: 800px;
     overflow: hidden;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
 }
 
 .content-area:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .content-title {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     color: rgba(255, 255, 255, 0.9);
-    padding-bottom: 1.2rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 1.5rem;
     position: relative;
 }
 
@@ -582,24 +570,24 @@ onMounted(() => {
     position: absolute;
     bottom: -1px;
     left: 0;
-    width: 100px;
-    height: 3px;
+    width: 80px;
+    height: 2px;
     background: linear-gradient(to right, var(--primary, #eb07ee), var(--primary-dark, #a505de));
     border-radius: 2px;
 }
 
-/* Empty content */
+/* 空内容提示 */
 .empty-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 500px;
+    min-height: 400px;
     width: 100%;
     color: rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.02);
-    border-radius: 14px;
     border: 1px dashed rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
     transition: all 0.3s ease;
     margin-top: 1rem;
 }
@@ -610,17 +598,18 @@ onMounted(() => {
 }
 
 .empty-icon {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
+    font-size: 3.5rem;
+    margin-bottom: 1.2rem;
     opacity: 0.5;
 }
 
 .empty-content p {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
 }
 
-/* Responsive design */
+/* 响应式设计 */
 @media (max-width: 1300px) {
     .user-page {
         width: 1000px;
@@ -629,7 +618,7 @@ onMounted(() => {
 
 @media (max-width: 1100px) {
     .user-page {
-        width: 900px;
+        width: 95%;
     }
 }
 
@@ -644,7 +633,6 @@ onMounted(() => {
         min-height: 100vh;
         border-radius: 0;
         border: none;
-        margin: 0 auto;
     }
 
     .content-section {
@@ -654,35 +642,69 @@ onMounted(() => {
 
     .sidebar {
         width: 100%;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
         border-radius: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 0.8rem;
+        gap: 0.5rem;
+    }
+
+    .nav-title {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .nav-title::after {
+        display: none;
+    }
+
+    .nav-button {
+        flex: 1;
+        justify-content: center;
+        padding: 0.7rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+    }
+
+    .nav-button.active {
+        border-left: none;
+        background: rgba(235, 7, 238, 0.2);
+        border: 1px solid rgba(235, 7, 238, 0.3);
     }
 
     .content-area {
         width: 100%;
         padding: 1rem;
         min-width: unset;
+        min-height: 400px;
     }
 
     .quote-list {
         grid-template-columns: 1fr;
         gap: 15px;
-        padding: 10px;
+        padding: 5px;
     }
 
     .quote-item {
         width: 100%;
-        margin-bottom: 1rem;
     }
 
     .user-info-container {
         flex-direction: column;
         align-items: center;
-        padding: 1rem;
+        padding: 1.5rem 1rem;
     }
 
     .user-avatar-container {
         margin: 0 0 1rem 0;
+    }
+
+    .user-avatar {
+        width: 100px;
+        height: 100px;
     }
 
     .user-details {
@@ -691,7 +713,7 @@ onMounted(() => {
     }
 
     .user-details h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     .user-meta {
@@ -700,20 +722,34 @@ onMounted(() => {
     }
 
     .user-meta span {
-        margin: 0.25rem;
+        margin: 0.2rem;
+        font-size: 0.85rem;
+        padding: 0.2rem 0.7rem;
     }
 
     .user-bio {
         width: 100%;
     }
 
-    .nav-button {
-        padding: 0.8rem 1rem;
-        font-size: 1rem;
+    .user-bio p {
+        font-size: 0.95rem;
+    }
+
+    .user-header {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .user-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .content-title {
+        font-size: 1.3rem;
     }
 }
 
-/* Tablet optimization */
+/* 平板端样式优化 */
 @media (min-width: 769px) and (max-width: 1024px) {
     .user-page {
         width: 95%;
@@ -724,48 +760,49 @@ onMounted(() => {
     }
 
     .user-avatar {
-        width: 140px;
-        height: 140px;
+        width: 130px;
+        height: 130px;
     }
 }
 
-/* Upload container */
+/* 上传容器 */
 .upload-container {
     width: 100%;
     padding: 1rem;
     background: rgba(255, 255, 255, 0.03);
-    border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
 }
 
-/* Edit profile button */
+/* 编辑按钮 */
 .edit-profile-button {
     display: inline-flex;
     align-items: center;
-    padding: 0.6rem 1.2rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 0.5rem 1.2rem;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
     cursor: pointer;
     color: white;
     font-weight: 500;
-    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
     backdrop-filter: blur(5px);
 }
 
 .edit-profile-button:hover {
-    background-color: rgba(235, 7, 238, 0.2);
-    border-color: rgba(235, 7, 238, 0.4);
+    background: rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(235, 7, 238, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .edit-icon {
     margin-right: 0.5rem;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
-/* User header */
+/* 用户标题行 */
 .user-header {
     display: flex;
     justify-content: space-between;
@@ -776,25 +813,25 @@ onMounted(() => {
 
 .user-header h1 {
     margin: 0;
-    font-size: 2.8rem;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    font-size: 2.6rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     font-weight: 700;
 }
 
-/* Quote list */
+/* 语录列表 - 暗色卡片 */
 .quote-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
-    padding: 10px;
+    padding: 5px;
     width: 100%;
     box-sizing: border-box;
 }
 
 .quote-item {
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
     overflow: hidden;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -803,17 +840,17 @@ onMounted(() => {
 }
 
 .quote-item:hover {
-    transform: translateY(-8px);
-    border-color: rgba(235, 7, 238, 0.3);
-    box-shadow: 0 15px 40px rgba(235, 7, 238, 0.15);
-    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(235, 7, 238, 0.2);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(235, 7, 238, 0.08);
 }
 
 .quote-item-content-picture {
     width: 100%;
     aspect-ratio: 16/9;
     overflow: hidden;
-    background-color: rgba(10, 10, 20, 0.5);
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .quote-item-content-picture-item {
@@ -825,11 +862,11 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: transform 0.4s ease;
 }
 
 .quote-item:hover .quote-item-content-picture-item img {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .quote-item-content {
@@ -837,10 +874,10 @@ onMounted(() => {
 }
 
 .quote-item-content-text {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.8);
     line-height: 1.6;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -859,29 +896,29 @@ onMounted(() => {
 
 .quote-meta {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     color: rgba(255, 255, 255, 0.5);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .delete-btn {
     background: none;
     border: none;
-    color: #ff6b6b;
+    color: rgba(255, 68, 68, 0.7);
     cursor: pointer;
-    padding: 8px;
+    padding: 6px 8px;
     border-radius: 8px;
     transition: all 0.2s;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .delete-btn:hover {
     background: rgba(255, 68, 68, 0.15);
-    transform: scale(1.1);
+    color: #ff4444;
 }
 
 .quote-content {
     width: 100%;
-    min-height: 500px;
+    min-height: 400px;
 }
 </style>

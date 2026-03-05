@@ -1,11 +1,29 @@
 <template>
     <div class="quote-page">
         <div class="quote-list">
-            <div class="quote-item" v-for="(quote, index) in quoteList" :key="index">
+            <!-- 骨架屏：首次加载时显示 -->
+            <template v-if="loading && quoteList.length === 0">
+                <div class="quote-item skeleton-item" v-for="n in 6" :key="'skeleton-' + n">
+                    <div class="skeleton-picture skeleton-pulse"></div>
+                    <div class="skeleton-text">
+                        <div class="skeleton-line skeleton-pulse" style="width: 90%"></div>
+                        <div class="skeleton-line skeleton-pulse" style="width: 70%"></div>
+                        <div class="skeleton-line skeleton-pulse" style="width: 50%"></div>
+                    </div>
+                    <div class="skeleton-user">
+                        <div class="skeleton-avatar skeleton-pulse"></div>
+                        <div class="skeleton-name skeleton-pulse"></div>
+                    </div>
+                </div>
+            </template>
+
+            <div class="quote-item" v-for="(quote, index) in quoteList" :key="quote.quoteInfo.quoteId">
                 <div class="quote-item-content-picture" @click="goToQuoteDetail(quote.quoteInfo.quoteId)">
                     <div class="quote-item-content-picture-item" v-for="(picture, pictureIndex) in quote.pictureList" :key="pictureIndex">
-                        <img :src="picture" alt="quote-picture">
+                        <img :src="picture" alt="quote-picture" loading="lazy">
                     </div>
+                    <!-- 图片加载占位 -->
+                    <div v-if="quote.pictureList.length === 0 && !quote._pictureLoaded" class="picture-placeholder skeleton-pulse"></div>
                 </div>  
                 <div class="quote-item-content" @click="goToQuoteDetail(quote.quoteInfo.quoteId)">
                     <div class="quote-item-content-text">
@@ -16,10 +34,11 @@
                 </div>
                 <div class="quote-item-content-user">
                     <div class="quote-item-content-user-avatar" @click="goToUserPage(quote.quoteInfo.userId)">
-                        <img :src="quote.userAvatar" alt="user-avatar">
+                        <img v-if="quote.userAvatar" :src="quote.userAvatar" alt="user-avatar" loading="lazy">
+                        <div v-else class="avatar-placeholder skeleton-pulse"></div>
                     </div>
                     <div class="quote-item-content-user-nickname">
-                        {{ quote.userNickName }}
+                        {{ quote.userNickName || '加载中...' }}
                     </div>
                     <div class="quote-item-content-like" @click.stop="addlike(quote)">
                         <span :class="['like-icon', { 'liked': quote.isliked }]">
@@ -33,8 +52,6 @@
                 </div>
             </div>
         </div>
-        
-        
 
         <!-- Quote 详情弹窗 -->
         <QuoteInfoPage
@@ -86,8 +103,9 @@ interface Quote {
     quoteInfo: QuoteInfo;
     userNickName: string;
     userAvatar: string;
-    pictureList: string[]; // 假设这是一个图片 URL 数组
+    pictureList: string[];
     isliked: boolean;
+    _pictureLoaded?: boolean;
 }
 
 const quoteList = ref<Quote[]>([]);
@@ -95,89 +113,89 @@ const showQuoteModal = ref(false);
 const selectedQuoteId = ref('');
 const loading = ref(false);
 const noMoreQuotes = ref(false);
-const batchSize = 6; // 每次加载的数量
+const batchSize = 6;
 
 // 获取已显示的 Quote IDs
 const getDisplayedQuoteIds = () => {
     return quoteList.value.map(quote => quote.quoteInfo.quoteId);
 };
 
-// 加载 Quote 数据的通用函数
-const loadQuoteData = async (quote: Quote) => {
-    try {
-        // 并行请求图片、用户信息、点赞状态
-        const [pictureRes, userRes, likeRes] = await Promise.all([
-            apiClient.get('/quote/quotePicture', { params: { quoteId: quote.quoteInfo.quoteId } }),
-            apiClient.get('/user/getUserInfo', { params: { userId: quote.quoteInfo.userId } }),
-            userStore.isLoggedIn ? apiClient.get('/quote/isLiked', { params: { quoteId: quote.quoteInfo.quoteId, userId: userStore.userId } }) : Promise.resolve(null)
-        ]);
-
-        if (!isMounted.value) return;
-
-        // 处理图片
-        if (pictureRes.data.data.length > 0) {
-            const imageUrl = await apiClient.getImageUrl(pictureRes.data.data[0].filePath);
-            quote.pictureList = [imageUrl];
-        }
-
-        // 处理用户信息
-        quote.userNickName = userRes.data.data.nickName;
-        quote.userAvatar = await apiClient.getImageUrl(userRes.data.data.avatar);
-
-        // 处理点赞
-        if (likeRes) {
-            quote.isliked = likeRes.data.data;
-        }
-    } catch (error) {
-        console.error('加载 Quote 数据失败:', error);
-    }
-};
-
-// 加载更多 Quotes
+// 加载更多 Quotes — 使用后端聚合接口，1 次请求拿到所有数据
 const loadMoreQuotes = async () => {
     if (loading.value || noMoreQuotes.value) return;
     
     loading.value = true;
     try {
         const displayedIds = getDisplayedQuoteIds();
-        const response = await apiClient.post('/quote/getMoreQuotes', {
+        // 调用聚合接口：一次性返回语录 + 用户信息 + 图片路径 + 点赞状态
+        const response = await apiClient.post('/quote/getMoreQuoteCards', {
             displayedIds: displayedIds,
-            count: batchSize
+            count: batchSize,
+            currentUserId: userStore.isLoggedIn ? userStore.userId : null
         });
 
         if (!isMounted.value) return;
 
-        const newQuotes = response.data.data;
+        const cards = response.data.data;
         
-        // 如果返回的数量小于请求的数量，说明没有更多了
-        if (newQuotes.length < batchSize) {
+        if (cards.length < batchSize) {
             noMoreQuotes.value = true;
         }
 
-        // 并行处理所有新 quote 的数据加载
-        const quotePromises = newQuotes.map(async (quoteInfo) => {
-            const quote: Quote = {
-                quoteInfo: quoteInfo,
-                userNickName: '',
-                userAvatar: '',
-                pictureList: [],
-                isliked: false
-            };
-            await loadQuoteData(quote);
-            return quote;
-        });
+        // 先将卡片数据（文字+昵称）渲染到页面
+        const quotes: Quote[] = cards.map((card: any) => ({
+            quoteInfo: card.quoteInfo,
+            userNickName: card.userNickName,
+            userAvatar: '',       // 图片稍后异步加载
+            pictureList: [],      // 图片稍后异步加载
+            isliked: card.liked,
+            _pictureLoaded: card.picturePaths.length === 0,
+            _picturePaths: card.picturePaths,
+            _userAvatarPath: card.userAvatarPath
+        }));
 
-        const processedQuotes = await Promise.all(quotePromises);
-        
-        if (!isMounted.value) return;
+        const startIndex = quoteList.value.length;
+        quoteList.value.push(...quotes);
+        loading.value = false;
 
-        quoteList.value.push(...processedQuotes);
+        // 异步并行加载所有图片 blob（头像 + 语录图片）
+        // 关键：必须从 quoteList.value 中取响应式代理对象来修改，否则 Vue 无法检测变更
+        await Promise.all(quotes.map(async (rawQuote: any, i: number) => {
+            const reactiveQuote = quoteList.value[startIndex + i];
+            if (!reactiveQuote) return;
+            try {
+                const imagePromises: Promise<void>[] = [];
+
+                // 用户头像（缩略图 80px）
+                if (rawQuote._userAvatarPath) {
+                    imagePromises.push(
+                        apiClient.getImageUrl(rawQuote._userAvatarPath, 80).then((url: string) => {
+                            if (isMounted.value) reactiveQuote.userAvatar = url;
+                        }).catch(() => {})
+                    );
+                }
+
+                // 语录图片（列表只加载第一张，缩略图 400px）
+                if (rawQuote._picturePaths && rawQuote._picturePaths.length > 0) {
+                    imagePromises.push(
+                        apiClient.getImageUrl(rawQuote._picturePaths[0], 400).then((url: string) => {
+                            if (isMounted.value) {
+                                reactiveQuote.pictureList = [url];
+                                reactiveQuote._pictureLoaded = true;
+                            }
+                        }).catch(() => { reactiveQuote._pictureLoaded = true; })
+                    );
+                }
+
+                await Promise.all(imagePromises);
+            } catch (e) {
+                reactiveQuote._pictureLoaded = true;
+            }
+        }));
+
     } catch (error) {
         console.error('加载更多 Quotes 失败:', error);
-    } finally {
-        if (isMounted.value) {
-            loading.value = false;
-        }
+        loading.value = false;
     }
 };
 
@@ -192,43 +210,32 @@ onUnmounted(() => {
     isMounted.value = false;
 });
 
-// 添加点赞功能
-const addlike = (quote) => {
-    if (userStore.isLoggedIn == false){
-        return;
-    }
-    quote.isliked = !quote.isliked; // 切换点赞状态
-    if(quote.isliked){      
-        // 这里可以添加其他逻辑，例如更新后端的点赞状态
+// 点赞
+const addlike = (quote: Quote) => {
+    if (!userStore.isLoggedIn) return;
+
+    quote.isliked = !quote.isliked;
+    if (quote.isliked) {
         apiClient.get('/quote/addLike', {
-            params: {
-                quoteId: quote.quoteInfo.quoteId,
-                userId: quote.quoteInfo.userId
-            }
+            params: { quoteId: quote.quoteInfo.quoteId, userId: userStore.userId }
         });
         quote.quoteInfo.likesCount++;
-    }else{
+    } else {
         apiClient.get('/quote/eraseLike', {
-            params: {
-                quoteId: quote.quoteInfo.quoteId,
-                userId: quote.quoteInfo.userId
-            }
+            params: { quoteId: quote.quoteInfo.quoteId, userId: userStore.userId }
         });
         quote.quoteInfo.likesCount--;
     }
 };
 
-// 跳转到用户页面
-const goToUserPage = (userId) => {
+const goToUserPage = (userId: string) => {
     router.push({ path: `/user`, query: { id: userId } });
 };
 
-// 添加跳转到详情页的方法
-const goToQuoteDetail = (quoteId) => {
+const goToQuoteDetail = (quoteId: number) => {
     selectedQuoteId.value = String(quoteId);
     showQuoteModal.value = true;
 };
-
 </script>
 
 <style scoped>
@@ -514,5 +521,75 @@ const goToQuoteDetail = (quoteId) => {
     .quote-item {
         padding: 1.2rem;
     }
+}
+
+/* 骨架屏动画 */
+@keyframes skeletonPulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 0.15; }
+    100% { opacity: 0.4; }
+}
+
+.skeleton-pulse {
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.skeleton-item {
+    pointer-events: none;
+}
+
+.skeleton-picture {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-text {
+    padding: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.skeleton-line {
+    height: 14px;
+    border-radius: 6px;
+}
+
+.skeleton-user {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.5rem;
+}
+
+.skeleton-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.skeleton-name {
+    height: 14px;
+    width: 80px;
+    border-radius: 6px;
+}
+
+/* 图片加载占位 */
+.picture-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
 }
 </style>

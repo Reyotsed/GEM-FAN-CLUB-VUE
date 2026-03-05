@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps } from 'vue'
+import { ref, watch } from 'vue'
 const props = defineProps({ src: String })
 
 const audio = ref(null)

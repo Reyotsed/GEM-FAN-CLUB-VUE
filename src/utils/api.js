@@ -45,24 +45,32 @@ apiClient.interceptors.response.use(
 /**
  * 获取图片URL，优先从缓存中获取
  * @param {string} path - 图片路径
+ * @param {number} [width] - 可选，指定缩略图宽度（如 400、800）。不传则返回原图。
  * @returns {Promise<string>} - 图片URL
  */
-apiClient.getImageUrl = async function (path) {
+apiClient.getImageUrl = async function (path, width) {
+  // 带宽度参数的使用不同的缓存 key
+  const cacheKey = width ? `${path}?w=${width}` : path;
+
   // 检查缓存中是否已有该图片
-  const cachedUrl = getCachedImage(path);
+  const cachedUrl = getCachedImage(cacheKey);
   if (cachedUrl) {
     return cachedUrl;
   }
 
   // 缓存中没有，则请求图片
   try {
+    const params = { path };
+    if (width) {
+      params.w = width;
+    }
     const response = await this.get("/image/getImageByPath", {
-      params: { path },
+      params,
       responseType: 'blob'
     });
     // Create URL and cache
     const imageUrl = URL.createObjectURL(response.data);
-    cacheImage(path, imageUrl);
+    cacheImage(cacheKey, imageUrl);
     return imageUrl;
   } catch (error) {
     console.error('Error fetching image:', error);

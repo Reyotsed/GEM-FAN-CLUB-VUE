@@ -95,7 +95,7 @@ onUnmounted(() => {
     margin-bottom: 16px;
     border-radius: 12px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -109,14 +109,11 @@ textarea {
     outline: none;
     background: transparent;
     color: rgba(255, 255, 255, 0.9);
+    font-family: inherit;
 }
 
 textarea::placeholder {
     color: rgba(255, 255, 255, 0.35);
-}
-
-textarea:focus {
-    background: rgba(255, 255, 255, 0.02);
 }
 
 .comment-tools {
@@ -137,30 +134,30 @@ textarea:focus {
     font-size: 18px;
     cursor: pointer;
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: background-color 0.2s;
 }
 
 .emoji-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
-/* Emoji dropdown */
+/* 表情选择器样式 */
 .emoji-dropdown {
     position: absolute;
     bottom: 100%;
     left: 0;
     margin-bottom: 8px;
-    background: rgba(25, 25, 45, 0.98);
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    background: rgba(30, 30, 50, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
     z-index: 1000;
     animation: fadeIn 0.2s;
     width: 320px;
     height: 280px;
     overflow: hidden;
-    backdrop-filter: blur(20px);
 }
 
 .emoji-scroll-container {
@@ -193,43 +190,44 @@ textarea:focus {
 }
 
 .emoji-item:hover {
-    background-color: rgba(235, 7, 238, 0.15);
-    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.15);
 }
 
-/* Custom scrollbar */
+/* 自定义滚动条 */
 .emoji-scroll-container::-webkit-scrollbar {
     width: 6px;
 }
 
 .emoji-scroll-container::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 3px;
 }
 
 .emoji-scroll-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
 }
 
 .emoji-scroll-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(235, 7, 238, 0.3);
+    background: rgba(255, 255, 255, 0.25);
 }
 
 .submit-comment {
-    background: linear-gradient(135deg, #eb07ee, #a505de);
+    background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
     color: white;
     border: none;
     padding: 8px 16px;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
     border-radius: 8px;
     font-weight: 500;
 }
 
 .submit-comment:hover {
+    filter: brightness(1.15);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(235, 7, 238, 0.3);
 }
-</style>
+</style> 

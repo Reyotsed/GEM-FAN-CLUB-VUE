@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, defineProps, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import apiClient from '@/utils/api';
 

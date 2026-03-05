@@ -5,7 +5,7 @@
 
 // 图片缓存对象，使用 Map 保持插入顺序
 const imageCache = new Map();
-const MAX_CACHE_SIZE = 50; // 最大缓存数量
+const MAX_CACHE_SIZE = 200; // 最大缓存数量
 
 /**
  * 获取图片URL，如果缓存中有则直接返回，否则返回null

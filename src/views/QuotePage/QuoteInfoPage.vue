@@ -196,48 +196,33 @@ const loadQuoteData = async () => {
     if (!props.quoteId) return;
     
     try {
-        // 获取quote详情
-        const quoteRes = await apiClient.get(`/quote/quoteDetail/${props.quoteId}`);
-        quoteData.value.quoteInfo = quoteRes.data.data;
+        // 单次聚合请求：获取语录详情 + 用户信息 + 图片路径 + 点赞状态
+        const userId = userStore.isLoggedIn ? userStore.userId : '';
+        const [cardRes] = await Promise.all([
+            apiClient.get(`/quote/quoteCardDetail/${props.quoteId}`, {
+                params: { userId }
+            }),
+            // 同时启动评论加载
+            loadComments()
+        ]);
 
-        // 获取图片列表
-        const picturesRes = await apiClient.get('/quote/quotePicture', {
-            params: { quoteId: props.quoteId }
-        });
-        
-        // 清空之前的图片列表
-        quoteData.value.pictureList = [];
-        
-        // 获取每张图片
-        for (const pic of picturesRes.data.data) {
-            // 使用缓存获取图片URL
-            const imageUrl = await apiClient.getImageUrl(pic.filePath);
-            quoteData.value.pictureList.push(imageUrl);
-        }
+        const card = cardRes.data.data;
+        quoteData.value.quoteInfo = card.quoteInfo;
+        quoteData.value.userNickName = card.userNickName;
+        quoteData.value.isliked = card.liked;
 
-        // 获取作者信息
-        const userRes = await apiClient.get('/user/getUserInfo', {
-            params: { userId: quoteData.value.quoteInfo.userId }
-        });
-        quoteData.value.userNickName = userRes.data.data.nickName;
-        
-        // 获取作者头像
-        const avatarUrl = await apiClient.getImageUrl(userRes.data.data.avatar);
+        // 并行加载所有图片 blob + 用户头像（详情页用 1200px 宽图，头像 80px）
+        const imagePromises = (card.picturePaths || []).map((path: string) =>
+            apiClient.getImageUrl(path, 1200)
+        );
+        const avatarPromise = card.userAvatarPath
+            ? apiClient.getImageUrl(card.userAvatarPath, 80)
+            : Promise.resolve('');
+
+        const [avatarUrl, ...imageUrls] = await Promise.all([avatarPromise, ...imagePromises]);
         quoteData.value.userAvatar = avatarUrl;
+        quoteData.value.pictureList = imageUrls;
 
-        // 如果用户已登录，检查是否已点赞
-        if (userStore.isLoggedIn) {
-            const likeRes = await apiClient.get('/quote/isLiked', {
-                params: {
-                    quoteId: props.quoteId,
-                    userId: userStore.userId
-                }
-            });
-            quoteData.value.isliked = likeRes.data.data;
-        }
-
-        // 获取评论列表
-        loadComments();
     } catch (error) {
         console.error('Error loading quote details:', error);
     }
@@ -335,7 +320,7 @@ const enrichCommentWithUserInfo = async (comment) => {
         const userRes = await apiClient.get('/user/getUserInfo', {
             params: { userId: comment.userId }
         });
-        const avatarUrl = await apiClient.getImageUrl(userRes.data.data.avatar);
+        const avatarUrl = await apiClient.getImageUrl(userRes.data.data.avatar, 80);
         return {
             ...comment,
             userNickName: userRes.data.data.nickName,
@@ -510,26 +495,26 @@ const loadMoreReplies = (comment) => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(5, 5, 10, 0.85);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
 }
 
 .quote-info-modal {
     position: relative;
     width: 60%;
     height: 80vh;
-    background: rgba(20, 20, 35, 0.95);
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(235, 7, 238, 0.08);
+    background: rgba(20, 20, 40, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(235, 7, 238, 0.08);
     animation: modalFadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     display: flex;
+    backdrop-filter: blur(20px);
 }
 
 @keyframes modalFadeIn {
@@ -552,7 +537,7 @@ const loadMoreReplies = (comment) => {
 .left-section {
     width: 60%;
     height: 100%;
-    background: rgba(10, 10, 20, 0.8);
+    background: rgba(0, 0, 0, 0.3);
     position: relative;
     display: flex;
     align-items: center;
@@ -566,7 +551,7 @@ const loadMoreReplies = (comment) => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: rgba(20, 20, 35, 0.95);
+    background: transparent;
 }
 
 .carousel-container {
@@ -576,7 +561,7 @@ const loadMoreReplies = (comment) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(10, 10, 20, 0.8);
+    background: transparent;
 }
 
 .image-container {
@@ -596,12 +581,12 @@ const loadMoreReplies = (comment) => {
     min-width: 70%;
     min-height: 70%;
     transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
 }
 
 .image-container:hover img {
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
 .close-button {
@@ -628,17 +613,15 @@ const loadMoreReplies = (comment) => {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
     transform: rotate(90deg);
-    border-color: rgba(235, 7, 238, 0.4);
-    box-shadow: 0 0 15px rgba(235, 7, 238, 0.2);
 }
 
 .carousel-button {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.12);
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -653,10 +636,9 @@ const loadMoreReplies = (comment) => {
 }
 
 .carousel-button:hover {
-    background: rgba(235, 7, 238, 0.2);
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
     transform: translateY(-50%) scale(1.1);
-    border-color: rgba(235, 7, 238, 0.4);
-    box-shadow: 0 0 15px rgba(235, 7, 238, 0.2);
 }
 
 .carousel-button.prev {
@@ -692,9 +674,9 @@ const loadMoreReplies = (comment) => {
 }
 
 .indicator.active {
-    background: var(--primary, #eb07ee);
+    background: var(--primary-light, #f3caff);
     transform: scale(1.2);
-    box-shadow: 0 0 8px rgba(235, 7, 238, 0.5);
+    box-shadow: 0 0 6px rgba(235, 7, 238, 0.4);
 }
 
 .quote-content-wrapper {
@@ -703,17 +685,16 @@ const loadMoreReplies = (comment) => {
     justify-content: center;
     align-items: center;
     margin-bottom: 10px;
-    padding: 1.2rem 1.2rem 0;
 }
 
 .quote-content {
     text-align: center;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.7;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.85);
     margin: 0 auto 10px auto;
     word-break: break-word;
-    padding: 0 4px;
+    padding: 12px 16px;
     letter-spacing: 0.02em;
 }
 
@@ -722,7 +703,9 @@ const loadMoreReplies = (comment) => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 6px;
-    padding: 0 1.2rem;
+    padding: 8px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     min-height: unset;
     gap: 0;
 }
@@ -732,11 +715,11 @@ const loadMoreReplies = (comment) => {
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .author-info:hover {
-    transform: translateX(2px);
+    opacity: 0.8;
 }
 
 .author-avatar {
@@ -744,14 +727,13 @@ const loadMoreReplies = (comment) => {
     height: 28px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(235, 7, 238, 0.3);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
 }
 
 .author-info:hover .author-avatar {
     border-color: var(--primary, #eb07ee);
-    box-shadow: 0 0 12px rgba(235, 7, 238, 0.3);
 }
 
 .author-name {
@@ -759,10 +741,6 @@ const loadMoreReplies = (comment) => {
     color: var(--primary-light, #f3caff);
     font-size: 13px;
     transition: color 0.2s ease;
-}
-
-.author-info:hover .author-name {
-    color: #fff;
 }
 
 .interaction {
@@ -776,15 +754,15 @@ const loadMoreReplies = (comment) => {
     gap: 0.3rem;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0.3rem 0.8rem;
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
     transition: all 0.3s ease;
 }
 
 .like-button:hover {
-    background: rgba(235, 7, 238, 0.15);
-    border-color: rgba(235, 7, 238, 0.3);
+    background: rgba(235, 7, 238, 0.1);
+    border-color: rgba(235, 7, 238, 0.2);
 }
 
 .like-icon {
@@ -793,23 +771,23 @@ const loadMoreReplies = (comment) => {
 
 .like-count {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.6);
     font-weight: 500;
 }
 
+/* 评论区 */
 .comments-section {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 16px;
     -webkit-overflow-scrolling: touch;
-    background: rgba(10, 10, 22, 0.5);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .comments-section h3 {
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0 0 16px 0;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0 0 14px 0;
     font-weight: 600;
     position: relative;
     display: inline-block;
@@ -820,14 +798,14 @@ const loadMoreReplies = (comment) => {
     position: absolute;
     bottom: -6px;
     left: 0;
-    width: 40px;
-    height: 3px;
+    width: 36px;
+    height: 2px;
     background: linear-gradient(to right, var(--primary, #eb07ee), var(--primary-dark, #a505de));
     border-radius: 2px;
 }
 
 .login-prompt {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.4);
     text-align: center;
     padding: 20px 0;
     font-size: 14px;
@@ -838,23 +816,21 @@ const loadMoreReplies = (comment) => {
 }
 
 .comments-list {
-    margin-top: 16px;
+    margin-top: 14px;
 }
 
 .comment-item {
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
     background: rgba(255, 255, 255, 0.04);
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
     transition: all 0.2s ease;
 }
 
 .comment-item:hover {
-    transform: translateY(-2px);
     background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .comment-header {
@@ -865,24 +841,24 @@ const loadMoreReplies = (comment) => {
 }
 
 .commenter-avatar {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.2s ease;
 }
 
 .comment-header:hover .commenter-avatar {
     transform: scale(1.05);
-    border-color: rgba(235, 7, 238, 0.4);
+    border-color: rgba(235, 7, 238, 0.3);
 }
 
 .commenter-name {
     font-weight: 600;
     color: var(--primary-light, #f3caff);
-    font-size: 14px;
+    font-size: 13px;
     transition: color 0.2s ease;
 }
 
@@ -897,16 +873,16 @@ const loadMoreReplies = (comment) => {
 }
 
 .comment-content {
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1.5;
-    margin-left: 46px;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.6;
+    margin-left: 44px;
     font-size: 14px;
     padding: 4px 0;
 }
 
-/* Custom scrollbar for comments */
+/* 评论区滚动条 */
 .comments-section::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 
 .comments-section::-webkit-scrollbar-track {
@@ -915,15 +891,15 @@ const loadMoreReplies = (comment) => {
 }
 
 .comments-section::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 3px;
 }
 
 .comments-section::-webkit-scrollbar-thumb:hover {
-    background: rgba(235, 7, 238, 0.3);
+    background: rgba(255, 255, 255, 0.2);
 }
 
-/* Mobile styles */
+/* 移动端 */
 @media (max-width: 768px) {
     .quote-info-modal {
         width: 100%;
@@ -940,7 +916,7 @@ const loadMoreReplies = (comment) => {
     .left-section {
         width: 100%;
         height: 40%;
-        min-height: 300px;
+        min-height: 280px;
     }
 
     .right-section {
@@ -955,18 +931,14 @@ const loadMoreReplies = (comment) => {
     }
 
     .comments-section {
-        padding: 16px;
+        padding: 14px;
         height: 100%;
         overflow-y: auto;
     }
 
-    .quote-content-wrapper {
-        padding: 1rem 1rem 0;
-    }
-
     .author-like-row {
         margin-bottom: 4px;
-        padding: 0 1rem;
+        padding: 6px 12px;
     }
 
     .author-avatar {
@@ -979,11 +951,12 @@ const loadMoreReplies = (comment) => {
     }
 
     .quote-content {
-        font-size: 15px;
+        font-size: 14px;
+        padding: 8px 12px;
     }
 
     .like-button {
-        padding: 0.18rem 0.5rem;
+        padding: 0.2rem 0.6rem;
         border-radius: 12px;
     }
 
@@ -997,13 +970,13 @@ const loadMoreReplies = (comment) => {
 
     .comment-item {
         padding: 12px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     .comment-content {
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1.5;
-        margin-left: 42px;
+        margin-left: 40px;
     }
 
     .reply-item {
@@ -1023,8 +996,8 @@ const loadMoreReplies = (comment) => {
     }
 
     .carousel-button {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         font-size: 16px;
     }
 
@@ -1039,11 +1012,11 @@ const loadMoreReplies = (comment) => {
     }
 }
 
-/* Small phone optimization */
+/* 小屏手机 */
 @media (max-width: 360px) {
     .left-section {
         height: 35%;
-        min-height: 250px;
+        min-height: 230px;
     }
 
     .right-section {
@@ -1051,7 +1024,7 @@ const loadMoreReplies = (comment) => {
     }
 
     .comments-section {
-        padding: 12px;
+        padding: 10px;
     }
 
     .comment-item {
@@ -1060,7 +1033,7 @@ const loadMoreReplies = (comment) => {
 
     .comment-content {
         font-size: 13px;
-        margin-left: 38px;
+        margin-left: 36px;
     }
 
     .reply-item {
@@ -1068,14 +1041,14 @@ const loadMoreReplies = (comment) => {
     }
 }
 
-/* Tablet styles */
+/* 平板 */
 @media (min-width: 769px) and (max-width: 1024px) {
     .quote-info-modal {
-        width: 80%;
+        width: 85%;
     }
 }
 
-/* Global modal styles */
+/* 全局 body 锁定 */
 :global(body.modal-open) {
     overflow: hidden;
     padding-right: 15px;
@@ -1085,24 +1058,23 @@ const loadMoreReplies = (comment) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
-    padding-left: 46px;
+    margin-top: 8px;
+    padding-left: 44px;
 }
 
 .reply-btn {
-    background: none;
+    background: rgba(235, 7, 238, 0.08);
     border: none;
     color: var(--primary-light, #f3caff);
     font-size: 13px;
     cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 20px;
+    padding: 5px 12px;
+    border-radius: 16px;
     transition: all 0.2s ease;
-    background: rgba(235, 7, 238, 0.08);
 }
 
 .reply-btn:hover {
-    background-color: rgba(235, 7, 238, 0.18);
+    background: rgba(235, 7, 238, 0.15);
     color: #fff;
 }
 
@@ -1111,7 +1083,7 @@ const loadMoreReplies = (comment) => {
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .like-icon {
@@ -1124,50 +1096,48 @@ const loadMoreReplies = (comment) => {
 }
 
 .reply-input {
-    margin-left: 46px;
-    margin-top: 12px;
+    margin-left: 44px;
+    margin-top: 10px;
 }
 
 .replies-list {
-    margin-left: 46px;
-    margin-top: 12px;
+    margin-left: 44px;
+    margin-top: 10px;
 }
 
 .reply-item {
     background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 10px;
     padding: 12px;
-    margin-top: 10px;
+    margin-top: 8px;
     transition: all 0.2s ease;
-    border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .reply-item:hover {
-    transform: translateY(-2px);
     background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .load-more-replies {
-    margin-top: 12px;
-    margin-left: 46px;
+    margin-top: 10px;
+    margin-left: 44px;
     text-align: left;
 }
 
 .load-more-btn {
-    background: none;
+    background: rgba(235, 7, 238, 0.08);
     border: none;
     color: var(--primary-light, #f3caff);
     font-size: 13px;
     cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 20px;
+    padding: 5px 14px;
+    border-radius: 16px;
     transition: all 0.2s ease;
-    background: rgba(235, 7, 238, 0.08);
 }
 
 .load-more-btn:hover {
-    background-color: rgba(235, 7, 238, 0.18);
+    background: rgba(235, 7, 238, 0.15);
     color: #fff;
 }
 </style>
