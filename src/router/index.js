@@ -31,7 +31,7 @@ const routes = [
             { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage, meta: { title: 'GEM Fan Club - 语录详情' } },
             { path: 'picture', name: "picture", component: PicturePage, meta: { title: 'GEM Fan Club - 图片' } },
             { path: 'shop', name: "shop", component: ShopPage, meta: { title: 'GEM Fan Club - 商店' } },
-            { path: 'AI', name: "AI", component: AIPage, meta: { title: 'GEM Fan Club - AI 对话' } },
+            { path: 'ai', name: "AI", component: AIPage, meta: { title: 'GEM Fan Club - AI 对话' } },
             { path: 'info', name: "info", component: InfoPage, meta: { title: 'GEM Fan Club - 信息' } },
             { path: 'user', name: "user", component: UserPage, meta: { requestAuth: true, title: 'GEM Fan Club - 个人中心' } },
             { path: 'upload', name: "upload", component: UploadModal, meta: { requestAuth: true, title: 'GEM Fan Club - 上传' } },

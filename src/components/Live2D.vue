@@ -156,7 +156,7 @@ const handleAnimationEnd = (event) => {
   transform: translateY(-50%);
   width: 30px;
   height: 30px;
-  background: linear-gradient(135deg, #4a90e2, #8e54e9);
+  background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -167,11 +167,12 @@ const handleAnimationEnd = (event) => {
   opacity: 0.6;
   transition: opacity 0.3s ease;
   z-index: 10001;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(235, 7, 238, 0.3);
 }
 
 .toggle-button:hover {
   opacity: 1;
+  box-shadow: 0 4px 12px rgba(235, 7, 238, 0.5);
 }
 
 .live2d-character {
@@ -182,20 +183,22 @@ const handleAnimationEnd = (event) => {
 .character-image {
   width: 100px;
   height: 100px;
-  background: linear-gradient(135deg, #4a90e2, #8e54e9);
+  background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.3);
   color: white;
   font-size: 38px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .character-image:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 25px rgba(235, 7, 238, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .character-image.active {
@@ -207,14 +210,17 @@ const handleAnimationEnd = (event) => {
   bottom: 120px;
   left: 0;
   width: 280px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(20, 20, 35, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 18px;
   padding: 18px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(235, 7, 238, 0.1);
   animation: fadeIn 0.3s ease;
   z-index: 10000;
-  color: #333;
-  border-left: 5px solid #4a90e2;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid var(--primary, #eb07ee);
 }
 
 .lyric-bubble.fade-out {
@@ -230,19 +236,21 @@ const handleAnimationEnd = (event) => {
   height: 0;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-top: 10px solid rgba(255, 255, 255, 0.95);
+  border-top: 10px solid rgba(20, 20, 35, 0.95);
 }
 
 .song-title {
   font-weight: bold;
   margin-bottom: 10px;
   font-size: 16px;
-  color: #4a90e2;
+  color: var(--primary-light, #f3caff);
+  text-shadow: 0 0 10px rgba(235, 7, 238, 0.3);
 }
 
 .lyric-text {
   font-size: 18px;
   line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 @keyframes pulse {
@@ -261,7 +269,7 @@ const handleAnimationEnd = (event) => {
   to { opacity: 0; transform: translateY(-10px); }
 }
 
-/* 响应式设计 */
+/* Responsive */
 @media (max-width: 768px) {
   .character-image {
     width: 80px;
@@ -279,4 +287,4 @@ const handleAnimationEnd = (event) => {
     transform: translateX(-90px);
   }
 }
-</style> 
+</style>

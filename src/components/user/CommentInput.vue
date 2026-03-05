@@ -93,27 +93,37 @@ onUnmounted(() => {
 <style scoped>
 .comment-input {
     margin-bottom: 16px;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
-    background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 textarea {
     width: 100%;
     padding: 12px;
     border: none;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     resize: none;
     font-size: 14px;
     outline: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+textarea::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+textarea:focus {
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .comment-tools {
     display: flex;
     padding: 8px;
     align-items: center;
-    background-color: #f9f9f9;
+    background: rgba(0, 0, 0, 0.15);
 }
 
 .emoji-picker {
@@ -132,29 +142,31 @@ textarea {
 }
 
 .emoji-button:hover {
-    background-color: #eee;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 表情选择器样式 */
+/* Emoji dropdown */
 .emoji-dropdown {
     position: absolute;
     bottom: 100%;
     left: 0;
     margin-bottom: 8px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: rgba(25, 25, 45, 0.98);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 1000;
     animation: fadeIn 0.2s;
     width: 320px;
     height: 280px;
-    overflow: hidden; /* 隐藏外部容器的滚动条 */
+    overflow: hidden;
+    backdrop-filter: blur(20px);
 }
 
 .emoji-scroll-container {
     width: 100%;
     height: 100%;
-    overflow-y: auto; /* 内部容器可滚动 */
+    overflow-y: auto;
     padding: 12px;
 }
 
@@ -176,46 +188,48 @@ textarea {
     border: none;
     padding: 0;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: all 0.2s;
 }
 
 .emoji-item:hover {
-    background-color: #f0f0f0;
+    background-color: rgba(235, 7, 238, 0.15);
     transform: scale(1.1);
 }
 
-/* 自定义滚动条 */
+/* Custom scrollbar */
 .emoji-scroll-container::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .emoji-scroll-container::-webkit-scrollbar-track {
-    background: #f5f5f5;
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 3px;
 }
 
 .emoji-scroll-container::-webkit-scrollbar-thumb {
-    background: #ddd;
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
 }
 
 .emoji-scroll-container::-webkit-scrollbar-thumb:hover {
-    background: #ccc;
+    background: rgba(235, 7, 238, 0.3);
 }
 
 .submit-comment {
-    background: #ff2442;
+    background: linear-gradient(135deg, #eb07ee, #a505de);
     color: white;
     border: none;
     padding: 8px 16px;
     font-size: 14px;
     cursor: pointer;
-    transition: background-color 0.2s;
-    border-radius: 4px;
+    transition: all 0.2s;
+    border-radius: 8px;
+    font-weight: 500;
 }
 
 .submit-comment:hover {
-    background: #e6213c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(235, 7, 238, 0.3);
 }
-</style> 
+</style>

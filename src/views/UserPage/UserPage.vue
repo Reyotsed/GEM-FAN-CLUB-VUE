@@ -310,11 +310,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 新增加的背景容器 */
+/* Background container */
 .page-background {
     width: 100%;
     min-height: 100vh;
-    background: linear-gradient(135deg, #fff6fe 0%, #f8f0ff 100%);
+    background: var(--bg-dark, #0a0a12);
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(235, 7, 238, 0.08), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(0, 242, 255, 0.06), transparent 40%);
     margin: 0;
     padding: 0;
     display: flex;
@@ -331,27 +334,31 @@ onMounted(() => {
     flex-direction: column;
     width: 1200px;
     flex-shrink: 0;
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     overflow: hidden;
-    margin: 0 auto;
+    margin: 2rem auto;
     box-sizing: border-box;
 }
 
-/* 上部分：用户基本信息 */
+/* User info section */
 .user-info-section {
     display: flex;
     width: 100%;
-    background: linear-gradient(135deg, #eb07ee, #a505de);
+    background: linear-gradient(135deg, rgba(235, 7, 238, 0.25), rgba(165, 5, 222, 0.2));
+    backdrop-filter: blur(20px);
     color: white;
     padding: 2.5rem 0;
     position: relative;
     overflow: hidden;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* 添加装饰元素 */
+/* Decorative elements */
 .user-info-section::before {
     content: '';
     position: absolute;
@@ -359,8 +366,9 @@ onMounted(() => {
     right: -50px;
     width: 200px;
     height: 200px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(235, 7, 238, 0.15);
     border-radius: 50%;
+    filter: blur(40px);
 }
 
 .user-info-section::after {
@@ -370,8 +378,9 @@ onMounted(() => {
     left: -30px;
     width: 150px;
     height: 150px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 242, 255, 0.1);
     border-radius: 50%;
+    filter: blur(30px);
 }
 
 .user-info-container {
@@ -394,16 +403,17 @@ onMounted(() => {
     width: 160px;
     height: 160px;
     border-radius: 50%;
-    border: 5px solid white;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 30px rgba(235, 7, 238, 0.3);
     object-fit: cover;
     transition: all 0.3s ease;
 }
 
-/* 添加头像悬停效果 */
+/* Avatar hover effect */
 .user-avatar-container:hover .user-avatar {
     transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 40px rgba(235, 7, 238, 0.5);
+    border-color: rgba(235, 7, 238, 0.5);
 }
 
 .user-details {
@@ -413,8 +423,11 @@ onMounted(() => {
 .user-details h1 {
     font-size: 2.8rem;
     margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
     font-weight: 700;
+    background: linear-gradient(to right, #fff, var(--primary-light, #f3caff));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .user-meta {
@@ -424,33 +437,36 @@ onMounted(() => {
 }
 
 .user-meta span {
-    margin-right: 2rem;
-    font-size: 1.1rem;
+    margin-right: 1.2rem;
+    font-size: 0.95rem;
     opacity: 0.9;
     padding: 0.3rem 0.8rem;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     display: inline-flex;
     align-items: center;
     margin-bottom: 0.5rem;
+    backdrop-filter: blur(5px);
 }
 
 .user-bio {
-    background-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
     padding: 1.5rem;
-    border-radius: 10px;
+    border-radius: 14px;
     max-width: 800px;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .user-bio p {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85);
 }
 
-/* 下部分：导航和内容区域 */
+/* Content section */
 .content-section {
     display: flex;
     width: 100%;
@@ -461,20 +477,22 @@ onMounted(() => {
     flex-grow: 0;
 }
 
-/* 左侧导航 */
+/* Sidebar */
 .sidebar {
     width: 250px;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     overflow: hidden;
     padding: 1.5rem 0;
     flex-shrink: 0;
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
 .sidebar:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .nav-title {
@@ -482,7 +500,7 @@ onMounted(() => {
     font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 1.5rem;
-    color: #444;
+    color: rgba(255, 255, 255, 0.9);
     padding: 0 1rem;
     position: relative;
 }
@@ -492,7 +510,7 @@ onMounted(() => {
     display: block;
     width: 50px;
     height: 3px;
-    background: linear-gradient(to right, #eb07ee, #a505de);
+    background: linear-gradient(to right, var(--primary, #eb07ee), var(--primary-dark, #a505de));
     margin: 0.8rem auto 0;
     border-radius: 2px;
 }
@@ -507,22 +525,23 @@ onMounted(() => {
     cursor: pointer;
     font-size: 1.1rem;
     text-align: left;
-    color: #555;
+    color: rgba(255, 255, 255, 0.6);
     transition: all 0.2s ease;
     margin-bottom: 0.2rem;
 }
 
 .nav-button:hover {
-    background-color: #f8f8f8;
-    color: #eb07ee;
+    background-color: rgba(235, 7, 238, 0.08);
+    color: var(--primary-light, #f3caff);
     padding-left: 1.8rem;
 }
 
 .nav-button.active {
-    background-color: #f0f0f0;
-    color: #eb07ee;
+    background-color: rgba(235, 7, 238, 0.12);
+    color: var(--primary, #eb07ee);
     font-weight: bold;
-    border-left: 4px solid #eb07ee;
+    border-left: 4px solid var(--primary, #eb07ee);
+    box-shadow: inset 0 0 20px rgba(235, 7, 238, 0.05);
 }
 
 .nav-icon {
@@ -530,28 +549,30 @@ onMounted(() => {
     font-size: 1.3rem;
 }
 
-/* 右侧内容区域 */
+/* Content area */
 .content-area {
     flex: 1;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     padding: 2rem;
     min-height: 600px;
     min-width: 800px;
     overflow: hidden;
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
 .content-area:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .content-title {
     font-size: 1.8rem;
-    color: #333;
+    color: rgba(255, 255, 255, 0.9);
     padding-bottom: 1.2rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     margin-bottom: 2rem;
     position: relative;
 }
@@ -563,11 +584,11 @@ onMounted(() => {
     left: 0;
     width: 100px;
     height: 3px;
-    background: linear-gradient(to right, #eb07ee, #a505de);
+    background: linear-gradient(to right, var(--primary, #eb07ee), var(--primary-dark, #a505de));
     border-radius: 2px;
 }
 
-/* 空内容提示 */
+/* Empty content */
 .empty-content {
     display: flex;
     flex-direction: column;
@@ -575,21 +596,23 @@ onMounted(() => {
     justify-content: center;
     min-height: 500px;
     width: 100%;
-    color: #999;
-    background-color: #f9f9f9;
-    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 14px;
+    border: 1px dashed rgba(255, 255, 255, 0.08);
     transition: all 0.3s ease;
     margin-top: 1rem;
 }
 
 .empty-content:hover {
-    background-color: #f5f5f5;
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .empty-icon {
     font-size: 4rem;
     margin-bottom: 1.5rem;
-    opacity: 0.7;
+    opacity: 0.5;
 }
 
 .empty-content p {
@@ -597,7 +620,7 @@ onMounted(() => {
     font-weight: 500;
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (max-width: 1300px) {
     .user-page {
         width: 1000px;
@@ -620,6 +643,8 @@ onMounted(() => {
         width: 100%;
         min-height: 100vh;
         border-radius: 0;
+        border: none;
+        margin: 0 auto;
     }
 
     .content-section {
@@ -630,7 +655,7 @@ onMounted(() => {
     .sidebar {
         width: 100%;
         margin-bottom: 1rem;
-        border-radius: 8px;
+        border-radius: 12px;
     }
 
     .content-area {
@@ -665,6 +690,10 @@ onMounted(() => {
         text-align: center;
     }
 
+    .user-details h1 {
+        font-size: 2rem;
+    }
+
     .user-meta {
         justify-content: center;
         flex-wrap: wrap;
@@ -684,7 +713,7 @@ onMounted(() => {
     }
 }
 
-/* 平板端样式优化 */
+/* Tablet optimization */
 @media (min-width: 769px) and (max-width: 1024px) {
     .user-page {
         width: 95%;
@@ -700,22 +729,22 @@ onMounted(() => {
     }
 }
 
-/* 添加上传容器样式 */
+/* Upload container */
 .upload-container {
     width: 100%;
     padding: 1rem;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* 添加编辑按钮样式 */
+/* Edit profile button */
 .edit-profile-button {
     display: inline-flex;
     align-items: center;
     padding: 0.6rem 1.2rem;
-    background-color: rgba(255, 255, 255, 0.3);
-    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
     cursor: pointer;
     color: white;
@@ -725,9 +754,10 @@ onMounted(() => {
 }
 
 .edit-profile-button:hover {
-    background-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(235, 7, 238, 0.2);
+    border-color: rgba(235, 7, 238, 0.4);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(235, 7, 238, 0.2);
 }
 
 .edit-icon {
@@ -735,7 +765,7 @@ onMounted(() => {
     font-size: 1.1rem;
 }
 
-/* 添加用户标题行样式 */
+/* User header */
 .user-header {
     display: flex;
     justify-content: space-between;
@@ -747,10 +777,11 @@ onMounted(() => {
 .user-header h1 {
     margin: 0;
     font-size: 2.8rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
     font-weight: 700;
 }
 
+/* Quote list */
 .quote-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -761,25 +792,28 @@ onMounted(() => {
 }
 
 .quote-item {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
     width: 100%;
     box-sizing: border-box;
 }
 
 .quote-item:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
+    border-color: rgba(235, 7, 238, 0.3);
+    box-shadow: 0 15px 40px rgba(235, 7, 238, 0.15);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .quote-item-content-picture {
     width: 100%;
     aspect-ratio: 16/9;
     overflow: hidden;
-    background-color: #f5f5f5;
+    background-color: rgba(10, 10, 20, 0.5);
 }
 
 .quote-item-content-picture-item {
@@ -791,7 +825,11 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.quote-item:hover .quote-item-content-picture-item img {
+    transform: scale(1.1);
 }
 
 .quote-item-content {
@@ -800,8 +838,8 @@ onMounted(() => {
 
 .quote-item-content-text {
     font-size: 1rem;
-    color: #333;
-    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
     margin-bottom: 10px;
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -815,30 +853,31 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 10px 15px;
-    border-top: 1px solid #eee;
-    background-color: #f9f9f9;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.15);
 }
 
 .quote-meta {
     display: flex;
     gap: 15px;
-    color: #666;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
 .delete-btn {
     background: none;
     border: none;
-    color: #ff4444;
+    color: #ff6b6b;
     cursor: pointer;
     padding: 8px;
-    border-radius: 4px;
+    border-radius: 8px;
     transition: all 0.2s;
     font-size: 1.2rem;
 }
 
 .delete-btn:hover {
-    background: #ffebee;
+    background: rgba(255, 68, 68, 0.15);
+    transform: scale(1.1);
 }
 
 .quote-content {

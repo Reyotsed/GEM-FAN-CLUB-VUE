@@ -510,22 +510,24 @@ const loadMoreReplies = (comment) => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(5, 5, 10, 0.85);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .quote-info-modal {
     position: relative;
     width: 60%;
     height: 80vh;
-    background: white;
-    border-radius: 16px;
+    background: rgba(20, 20, 35, 0.95);
+    border-radius: 24px;
     overflow: hidden;
-    box-shadow: 0 15px 40px rgba(111, 134, 214, 0.25);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(235, 7, 238, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     animation: modalFadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     display: flex;
 }
@@ -550,12 +552,12 @@ const loadMoreReplies = (comment) => {
 .left-section {
     width: 60%;
     height: 100%;
-    background: #fafafa;
+    background: rgba(10, 10, 20, 0.8);
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .right-section {
@@ -564,7 +566,7 @@ const loadMoreReplies = (comment) => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: #fff;
+    background: rgba(20, 20, 35, 0.95);
 }
 
 .carousel-container {
@@ -574,7 +576,7 @@ const loadMoreReplies = (comment) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fafafa;
+    background-color: rgba(10, 10, 20, 0.8);
 }
 
 .image-container {
@@ -594,8 +596,8 @@ const loadMoreReplies = (comment) => {
     min-width: 70%;
     min-height: 70%;
     transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: 0 8px 25px rgba(111, 134, 214, 0.2);
-    border-radius: 4px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
 }
 
 .image-container:hover img {
@@ -606,9 +608,9 @@ const loadMoreReplies = (comment) => {
     position: absolute;
     top: 16px;
     left: 16px;
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    color: #333;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
     font-size: 20px;
     width: 36px;
     height: 36px;
@@ -619,22 +621,24 @@ const loadMoreReplies = (comment) => {
     cursor: pointer;
     z-index: 1001;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .close-button:hover {
-    background: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
     transform: rotate(90deg);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    border-color: rgba(235, 7, 238, 0.4);
+    box-shadow: 0 0 15px rgba(235, 7, 238, 0.2);
 }
 
 .carousel-button {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -645,13 +649,14 @@ const loadMoreReplies = (comment) => {
     transition: all 0.3s ease;
     z-index: 2;
     font-size: 18px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .carousel-button:hover {
-    background: #fff;
+    background: rgba(235, 7, 238, 0.2);
     transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: rgba(235, 7, 238, 0.4);
+    box-shadow: 0 0 15px rgba(235, 7, 238, 0.2);
 }
 
 .carousel-button.prev {
@@ -670,24 +675,26 @@ const loadMoreReplies = (comment) => {
     display: flex;
     gap: 0.5rem;
     z-index: 2;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.4);
     padding: 0.5rem 0.8rem;
     border-radius: 20px;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .indicator {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.25);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .indicator.active {
-    background: #333;
+    background: var(--primary, #eb07ee);
     transform: scale(1.2);
+    box-shadow: 0 0 8px rgba(235, 7, 238, 0.5);
 }
 
 .quote-content-wrapper {
@@ -696,17 +703,18 @@ const loadMoreReplies = (comment) => {
     justify-content: center;
     align-items: center;
     margin-bottom: 10px;
+    padding: 1.2rem 1.2rem 0;
 }
 
 .quote-content {
     text-align: center;
     font-size: 16px;
-    line-height: 1.6;
-    color: #333;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.9);
     margin: 0 auto 10px auto;
     word-break: break-word;
     padding: 0 4px;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.02em;
 }
 
 .author-like-row {
@@ -714,7 +722,7 @@ const loadMoreReplies = (comment) => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 6px;
-    padding: 0 2px;
+    padding: 0 1.2rem;
     min-height: unset;
     gap: 0;
 }
@@ -722,26 +730,39 @@ const loadMoreReplies = (comment) => {
 .author-info {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     cursor: pointer;
     transition: transform 0.2s ease;
 }
 
+.author-info:hover {
+    transform: translateX(2px);
+}
+
 .author-avatar {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1.5px solid #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease;
+    border: 2px solid rgba(235, 7, 238, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.author-info:hover .author-avatar {
+    border-color: var(--primary, #eb07ee);
+    box-shadow: 0 0 12px rgba(235, 7, 238, 0.3);
 }
 
 .author-name {
     font-weight: 500;
-    color: #5b6f9d;
+    color: var(--primary-light, #f3caff);
     font-size: 13px;
     transition: color 0.2s ease;
+}
+
+.author-info:hover .author-name {
+    color: #fff;
 }
 
 .interaction {
@@ -754,11 +775,16 @@ const loadMoreReplies = (comment) => {
     align-items: center;
     gap: 0.3rem;
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.25rem 0.7rem;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 0.3rem 0.8rem;
     border-radius: 14px;
-    box-shadow: 0 1px 3px rgba(111, 134, 214, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     transition: all 0.3s ease;
+}
+
+.like-button:hover {
+    background: rgba(235, 7, 238, 0.15);
+    border-color: rgba(235, 7, 238, 0.3);
 }
 
 .like-icon {
@@ -767,7 +793,7 @@ const loadMoreReplies = (comment) => {
 
 .like-count {
     font-size: 12px;
-    color: #555;
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 500;
 }
 
@@ -776,12 +802,13 @@ const loadMoreReplies = (comment) => {
     overflow-y: auto;
     padding: 20px;
     -webkit-overflow-scrolling: touch;
-    background-color: #f6f8ff;
+    background: rgba(10, 10, 22, 0.5);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .comments-section h3 {
     font-size: 16px;
-    color: #5b6f9d;
+    color: rgba(255, 255, 255, 0.9);
     margin: 0 0 16px 0;
     font-weight: 600;
     position: relative;
@@ -795,19 +822,19 @@ const loadMoreReplies = (comment) => {
     left: 0;
     width: 40px;
     height: 3px;
-    background: #9567b1;
+    background: linear-gradient(to right, var(--primary, #eb07ee), var(--primary-dark, #a505de));
     border-radius: 2px;
 }
 
 .login-prompt {
-    color: #999;
+    color: rgba(255, 255, 255, 0.5);
     text-align: center;
     padding: 20px 0;
     font-size: 14px;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
     margin: 10px 0;
-    border: 1px dashed #ddd;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 .comments-list {
@@ -817,15 +844,17 @@ const loadMoreReplies = (comment) => {
 .comment-item {
     padding: 16px;
     margin-bottom: 12px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
 }
 
 .comment-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .comment-header {
@@ -840,66 +869,68 @@ const loadMoreReplies = (comment) => {
     height: 36px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
 }
 
 .comment-header:hover .commenter-avatar {
     transform: scale(1.05);
+    border-color: rgba(235, 7, 238, 0.4);
 }
 
 .commenter-name {
     font-weight: 600;
-    color: #5b6f9d;
+    color: var(--primary-light, #f3caff);
     font-size: 14px;
     transition: color 0.2s ease;
 }
 
 .comment-header:hover .commenter-name {
-    color: #9567b1;
+    color: #fff;
 }
 
 .comment-time {
-    color: #999;
+    color: rgba(255, 255, 255, 0.35);
     font-size: 12px;
     margin-left: auto;
 }
 
 .comment-content {
-    color: #333;
+    color: rgba(255, 255, 255, 0.8);
     line-height: 1.5;
     margin-left: 46px;
     font-size: 14px;
     padding: 4px 0;
 }
 
-/* 自定义评论区滚动条 */
+/* Custom scrollbar for comments */
 .comments-section::-webkit-scrollbar {
     width: 6px;
 }
 
 .comments-section::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: rgba(255, 255, 255, 0.02);
     border-radius: 3px;
 }
 
 .comments-section::-webkit-scrollbar-thumb {
-    background: #ddd;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 3px;
 }
 
 .comments-section::-webkit-scrollbar-thumb:hover {
-    background: #ccc;
+    background: rgba(235, 7, 238, 0.3);
 }
 
-/* 移动端样式 */
+/* Mobile styles */
 @media (max-width: 768px) {
     .quote-info-modal {
         width: 100%;
         height: 100vh;
         border-radius: 0;
         margin: 0;
+        border: none;
     }
 
     .modal-content {
@@ -908,14 +939,14 @@ const loadMoreReplies = (comment) => {
 
     .left-section {
         width: 100%;
-        height: 40%; /* 减小图片区域高度 */
-        min-height: 300px; /* 设置最小高度 */
+        height: 40%;
+        min-height: 300px;
     }
 
     .right-section {
         width: 100%;
-        height: 60%; /* 增加评论区高度 */
-        overflow-y: auto; /* 允许评论区滚动 */
+        height: 60%;
+        overflow-y: auto;
     }
 
     .close-button {
@@ -925,13 +956,17 @@ const loadMoreReplies = (comment) => {
 
     .comments-section {
         padding: 16px;
-        height: 100%; /* 让评论区占满整个右侧区域 */
-        overflow-y: auto; /* 允许评论区滚动 */
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .quote-content-wrapper {
+        padding: 1rem 1rem 0;
     }
 
     .author-like-row {
         margin-bottom: 4px;
-        padding: 0 1px;
+        padding: 0 1rem;
     }
 
     .author-avatar {
@@ -1004,7 +1039,7 @@ const loadMoreReplies = (comment) => {
     }
 }
 
-/* 小屏幕手机优化 */
+/* Small phone optimization */
 @media (max-width: 360px) {
     .left-section {
         height: 35%;
@@ -1033,17 +1068,17 @@ const loadMoreReplies = (comment) => {
     }
 }
 
-/* 平板设备样式 */
+/* Tablet styles */
 @media (min-width: 769px) and (max-width: 1024px) {
     .quote-info-modal {
         width: 80%;
     }
 }
 
-/* 添加全局样式 */
+/* Global modal styles */
 :global(body.modal-open) {
     overflow: hidden;
-    padding-right: 15px; /* 防止滚动条消失导致页面抖动 */
+    padding-right: 15px;
 }
 
 .comment-actions {
@@ -1057,18 +1092,18 @@ const loadMoreReplies = (comment) => {
 .reply-btn {
     background: none;
     border: none;
-    color: #6f86d6;
+    color: var(--primary-light, #f3caff);
     font-size: 13px;
     cursor: pointer;
     padding: 6px 12px;
     border-radius: 20px;
     transition: all 0.2s ease;
-    background: rgba(111, 134, 214, 0.05);
+    background: rgba(235, 7, 238, 0.08);
 }
 
 .reply-btn:hover {
-    background-color: rgba(111, 134, 214, 0.1);
-    color: #5b6f9d;
+    background-color: rgba(235, 7, 238, 0.18);
+    color: #fff;
 }
 
 .like-count {
@@ -1076,7 +1111,7 @@ const loadMoreReplies = (comment) => {
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: #666;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .like-icon {
@@ -1099,17 +1134,18 @@ const loadMoreReplies = (comment) => {
 }
 
 .reply-item {
-    background: #f9f9f9;
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 10px;
     padding: 12px;
     margin-top: 10px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .reply-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .load-more-replies {
@@ -1121,17 +1157,17 @@ const loadMoreReplies = (comment) => {
 .load-more-btn {
     background: none;
     border: none;
-    color: #6f86d6;
+    color: var(--primary-light, #f3caff);
     font-size: 13px;
     cursor: pointer;
     padding: 6px 12px;
     border-radius: 20px;
     transition: all 0.2s ease;
-    background: rgba(111, 134, 214, 0.05);
+    background: rgba(235, 7, 238, 0.08);
 }
 
 .load-more-btn:hover {
-    background-color: rgba(111, 134, 214, 0.1);
-    color: #5b6f9d;
+    background-color: rgba(235, 7, 238, 0.18);
+    color: #fff;
 }
 </style>

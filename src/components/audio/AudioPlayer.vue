@@ -148,7 +148,7 @@ watch(() => props.src, () => {
 .progress-time {
   min-width: 70px;
   font-size: 1rem;
-  color: #7a3fa7;
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
   text-align: right;
 }

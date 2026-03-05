@@ -586,8 +586,8 @@ const initChart = async () => {
     chartInstance.showLoading({
       text: '地图数据加载中...',
       color: '#eb07ee',
-      textColor: '#333',
-      maskColor: 'rgba(255, 255, 255, 0.8)',
+textColor: 'rgba(255, 255, 255, 0.8)',
+      maskColor: 'rgba(10, 10, 20, 0.8)',
     });
     
     // 只有在第一次加载或数据不存在时才请求数据
@@ -627,7 +627,7 @@ const initChart = async () => {
             subtext: '暂无演出数据',
             left: 'center',
             textStyle: {
-              color: '#333'
+color: '#fff'
             }
           },
           series: [{
@@ -635,8 +635,8 @@ const initChart = async () => {
             map: 'china',
             roam: true,
             itemStyle: {
-              areaColor: '#f8f0ff',
-              borderColor: '#999',
+              areaColor: 'rgba(30, 30, 50, 0.6)',
+              borderColor: 'rgba(255, 255, 255, 0.15)',
               borderWidth: 0.5
             }
           }]
@@ -708,8 +708,8 @@ const initChart = async () => {
         subtext: `数据来源：官方演出信息（已覆盖${domesticProvinces.length}个省份/地区，${totalCities}个城市，共计${domesticShows.toFixed(0)}场国内演出）`,
         left: 'center',
         textStyle: {
-          color: '#333'
-        }
+color: '#fff'
+            }
       },
       tooltip: {
         trigger: 'item',
@@ -736,12 +736,13 @@ const initChart = async () => {
         left: 'left',
         top: 'bottom',
         text: ['高', '低'],
+        textStyle: { color: 'rgba(255, 255, 255, 0.8)' },
         calculable: true,
         inRange: {
-          color: ['#f8f0ff', '#f373f9', '#eb07ee', '#a505de']
+          color: ['rgba(30, 30, 50, 0.8)', '#f373f9', '#eb07ee', '#a505de']
         },
         outOfRange: {
-          color: ['#f8f0ff']
+          color: ['rgba(30, 30, 50, 0.6)']
         },
         formatter: (value) => value.toFixed(1)
       },
@@ -780,8 +781,8 @@ const initChart = async () => {
         scaleLimit: { min: 0.8, max: 10 },
         animationDurationUpdate: 0,
         itemStyle: {
-          areaColor: '#f8f0ff',
-          borderColor: '#999',
+          areaColor: 'rgba(30, 30, 50, 0.6)',
+          borderColor: 'rgba(255, 255, 255, 0.15)',
           borderWidth: 0.5
         },
         emphasis: {
@@ -848,8 +849,8 @@ const backToChina = () => {
       subtext: `数据来源：官方演出信息（已覆盖${domesticProvinces.length}个省份/地区，${totalCities}个城市，共计${domesticShows.toFixed(0)}场国内演出）`,
       left: 'center',
       textStyle: {
-        color: '#333'
-      }
+color: '#fff'
+            }
     },
     tooltip: {
       trigger: 'item',
@@ -876,12 +877,13 @@ const backToChina = () => {
       left: 'left',
       top: 'bottom',
       text: ['高', '低'],
+        textStyle: { color: 'rgba(255, 255, 255, 0.8)' },
       calculable: true,
       inRange: {
-        color: ['#f8f0ff', '#f373f9', '#eb07ee', '#a505de']
+        color: ['rgba(30, 30, 50, 0.8)', '#f373f9', '#eb07ee', '#a505de']
       },
       outOfRange: {
-        color: ['#f8f0ff']
+        color: ['rgba(30, 30, 50, 0.6)']
       },
       formatter: (value) => value.toFixed(1)
     },
@@ -934,8 +936,8 @@ const backToChina = () => {
           max: 5
         },
         itemStyle: {
-          areaColor: '#f8f0ff',
-          borderColor: '#999',
+          areaColor: 'rgba(30, 30, 50, 0.6)',
+          borderColor: 'rgba(255, 255, 255, 0.15)',
           borderWidth: 0.5
         },
         emphasis: {
@@ -985,18 +987,18 @@ const showCityTableFallback = (provinceName, currentProvince) => {
   
   if (currentProvince && currentProvince.cities && currentProvince.cities.length > 0) {
     // 使用表格显示城市数据作为备用方案
-    let cityList = '<div style="max-height: 500px; overflow-y: auto; padding: 20px;">';
-    cityList += `<h3 style="text-align:center;">${provinceName}巡演城市列表</h3>`;
-    cityList += `<p style="text-align:center;">共计${currentProvince.value.toFixed(0)}场演出，覆盖${currentProvince.cities.length}个城市</p>`;
+    let cityList = '<div style="max-height: 500px; overflow-y: auto; padding: 20px; color: rgba(255,255,255,0.9);">';
+    cityList += `<h3 style="text-align:center; color: #fff;">${provinceName}巡演城市列表</h3>`;
+    cityList += `<p style="text-align:center; color: rgba(255,255,255,0.7);">共计${currentProvince.value.toFixed(0)}场演出，覆盖${currentProvince.cities.length}个城市</p>`;
     cityList += '<table style="width:100%; border-collapse: collapse; margin-top: 15px;">';
-    cityList += '<tr style="background-color: #f8f0ff;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">城市</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">演出场次</th></tr>';
+    cityList += '<tr style="background-color: rgba(235,7,238,0.15);"><th style="padding: 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff;">城市</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff;">演出场次</th></tr>';
     
     // 按场次数量排序
     const sortedCities = [...currentProvince.cities].sort((a, b) => b.value - a.value);
     
     sortedCities.forEach((city, index) => {
-      const bgColor = index % 2 === 0 ? '#fff' : '#f8f0ff';
-      cityList += `<tr style="background-color: ${bgColor};"><td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">${city.name}</td><td style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">${city.value.toFixed(0)}场</td></tr>`;
+      const bgColor = index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)';
+      cityList += `<tr style="background-color: ${bgColor};"><td style="padding: 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.85);">${city.name}</td><td style="padding: 8px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.85);">${city.value.toFixed(0)}场</td></tr>`;
     });
     
     cityList += '</table>';
@@ -1070,8 +1072,8 @@ const loadProvinceMap = async (provinceName) => {
   chartInstance.showLoading({
     text: `${normalizedProvinceName}地图数据加载中...`,
     color: '#eb07ee',
-    textColor: '#333',
-    maskColor: 'rgba(255, 255, 255, 0.8)',
+textColor: 'rgba(255, 255, 255, 0.8)',
+      maskColor: 'rgba(10, 10, 20, 0.8)',
   });
   
   // 从mapData中找到当前省份的数据，考虑不同的名称形式
@@ -1160,8 +1162,8 @@ const loadProvinceMap = async (provinceName) => {
         subtext: `${currentProvince.name}共计${currentProvince.value.toFixed(0)}场演出，覆盖${currentProvince.cities.length}个城市`,
         left: 'center',
         textStyle: {
-          color: '#333'
-        }
+color: '#fff'
+            }
       },
       tooltip: {
         trigger: 'item',
@@ -1183,12 +1185,13 @@ const loadProvinceMap = async (provinceName) => {
         left: 'left',
         top: 'bottom',
         text: ['高', '低'],
+        textStyle: { color: 'rgba(255, 255, 255, 0.8)' },
         calculable: true,
         inRange: {
-          color: ['#f8f0ff', '#f373f9', '#eb07ee', '#a505de']
+          color: ['rgba(30, 30, 50, 0.8)', '#f373f9', '#eb07ee', '#a505de']
         },
         outOfRange: {
-          color: ['#f8f0ff']
+          color: ['rgba(30, 30, 50, 0.6)']
         },
         formatter: (value) => value.toFixed(1)
       },
@@ -1227,8 +1230,8 @@ const loadProvinceMap = async (provinceName) => {
           data: cityMapData,
           zoom: initialZoom,
           itemStyle: {
-            areaColor: '#f8f0ff',
-            borderColor: '#999',
+            areaColor: 'rgba(30, 30, 50, 0.6)',
+            borderColor: 'rgba(255, 255, 255, 0.15)',
             borderWidth: 0.5
           },
           emphasis: {
@@ -1432,50 +1435,62 @@ const updateMapData = () => {
 <style scoped>
 .map-container {
   margin-bottom: 3rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(235, 7, 238, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
   position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* 移除可能阻挡触摸的背景效果 */
+.map-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Remove potentially blocking background effects */
 .map-container::before {
   display: none;
 }
 
 .section-title {
-  padding: 1.5rem;
+  padding: 1.5rem 2rem;
   margin: 0;
-  border-bottom: 1px solid rgba(240, 240, 240, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
-  font-size: 1.5rem;
-  color: #333;
-  background: rgba(255,255,255,0.95);
+  font-size: 1.4rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.02);
   position: relative;
   z-index: 2;
+  font-weight: 700;
 }
 
 .icon {
-  margin-right: 0.5rem;
-  font-size: 1.4rem;
+  margin-right: 1rem;
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 10px rgba(235, 7, 238, 0.5));
 }
 
 .map-content {
-  padding: 1rem;
+  padding: 1.5rem;
   position: relative;
   z-index: 1;
 }
 
 .map-instructions {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
   padding: 0.8rem 1.5rem;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
-  color: #555;
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.95rem;
   display: flex;
   flex-direction: column;
@@ -1504,21 +1519,22 @@ const updateMapData = () => {
   width: 100%;
   height: 600px;
   margin: 0 auto;
-  border-radius: 10px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  background-color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background-color: rgba(15, 15, 30, 0.9);
   padding: 0;
   position: relative;
   z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .map-footer {
   margin-top: 1rem;
   padding: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
   position: relative;
   z-index: 2;
@@ -1527,7 +1543,7 @@ const updateMapData = () => {
 .data-note {
   margin: 0;
   font-size: 0.9rem;
-  color: #555;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 @media (max-width: 768px) {
@@ -1549,7 +1565,8 @@ const updateMapData = () => {
 .selected-province {
   font-size: 1.2rem;
   margin-left: 0.5rem;
-  color: #eb07ee;
+  color: var(--primary, #eb07ee);
   font-weight: normal;
+  text-shadow: 0 0 10px rgba(235, 7, 238, 0.4);
 }
 </style>

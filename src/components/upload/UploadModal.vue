@@ -368,9 +368,10 @@ const triggerVideoUpload = () => {
 .type-btn {
     flex: 1;
     padding: 15px;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    background: #f5f5f5;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
     font-size: 16px;
     transition: all 0.3s;
@@ -384,18 +385,26 @@ const triggerVideoUpload = () => {
     font-size: 18px;
 }
 
+.type-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+}
+
 .type-btn.active {
     background: linear-gradient(135deg, #eb07ee, #a505de);
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(235, 7, 238, 0.3);
+    border-color: transparent;
 }
 
 .form-card {
-    background: white;
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 16px;
     padding: 30px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
 }
 
 .input-group {
@@ -408,7 +417,7 @@ const triggerVideoUpload = () => {
     left: 15px;
     top: 50%;
     transform: translateY(-50%);
-    color: #666;
+    color: rgba(255, 255, 255, 0.4);
     font-size: 18px;
 }
 
@@ -416,11 +425,17 @@ const triggerVideoUpload = () => {
 .input-group textarea {
     width: 100%;
     padding: 15px 15px 15px 45px;
-    border: 1px solid #eee;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     font-size: 15px;
     transition: all 0.3s;
-    background: #f8f8f8;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.input-group input::placeholder,
+.input-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.3);
 }
 
 .input-group textarea {
@@ -431,8 +446,8 @@ const triggerVideoUpload = () => {
 .input-group input:focus,
 .input-group textarea:focus {
     outline: none;
-    border-color: #eb07ee;
-    background: white;
+    border-color: rgba(235, 7, 238, 0.5);
+    background: rgba(255, 255, 255, 0.06);
     box-shadow: 0 0 0 3px rgba(235, 7, 238, 0.1);
 }
 
@@ -452,7 +467,8 @@ const triggerVideoUpload = () => {
     aspect-ratio: 1;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .image-item img {
@@ -467,7 +483,7 @@ const triggerVideoUpload = () => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -500,7 +516,7 @@ const triggerVideoUpload = () => {
 
 .upload-area {
     aspect-ratio: 1;
-    border: 2px dashed #ddd;
+    border: 2px dashed rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -510,19 +526,19 @@ const triggerVideoUpload = () => {
 }
 
 .upload-area:hover {
-    border-color: #eb07ee;
-    background: rgba(235, 7, 238, 0.02);
+    border-color: rgba(235, 7, 238, 0.5);
+    background: rgba(235, 7, 238, 0.05);
 }
 
 .upload-placeholder {
     text-align: center;
-    color: #666;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .upload-placeholder i {
     font-size: 24px;
     margin-bottom: 8px;
-    color: #eb07ee;
+    color: var(--primary, #eb07ee);
 }
 
 .upload-placeholder p {
@@ -532,7 +548,7 @@ const triggerVideoUpload = () => {
 
 .upload-placeholder span {
     font-size: 12px;
-    color: #999;
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .hidden-input {
@@ -555,7 +571,7 @@ const triggerVideoUpload = () => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -569,17 +585,20 @@ const triggerVideoUpload = () => {
 }
 
 .change-btn {
-    background: white;
-    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
     padding: 10px 20px;
     border-radius: 20px;
     cursor: pointer;
     font-size: 14px;
     transition: all 0.3s;
+    backdrop-filter: blur(5px);
 }
 
 .change-btn:hover {
     transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .tags-section {
@@ -599,7 +618,7 @@ const triggerVideoUpload = () => {
 }
 
 .tag {
-    background: linear-gradient(135deg, #eb07ee20, #a505de20);
+    background: rgba(235, 7, 238, 0.1);
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 14px;
@@ -607,21 +626,21 @@ const triggerVideoUpload = () => {
     align-items: center;
     gap: 8px;
     transition: all 0.3s;
-    border: 1px solid #eb07ee40;
+    border: 1px solid rgba(235, 7, 238, 0.2);
 }
 
 .tag:hover {
-    background: linear-gradient(135deg, #eb07ee30, #a505de30);
+    background: rgba(235, 7, 238, 0.18);
     transform: translateY(-1px);
 }
 
 .tag-text {
-    color: #333;
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .remove-tag {
     cursor: pointer;
-    color: #666;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 16px;
     font-weight: bold;
     width: 18px;
@@ -641,17 +660,22 @@ const triggerVideoUpload = () => {
 .tag-input {
     width: 100%;
     padding: 15px 15px 15px 45px;
-    border: 1px solid #eee;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     font-size: 15px;
     transition: all 0.3s;
-    background: #f8f8f8;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.tag-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
 }
 
 .tag-input:focus {
     outline: none;
-    border-color: #eb07ee;
-    background: white;
+    border-color: rgba(235, 7, 238, 0.5);
+    background: rgba(255, 255, 255, 0.06);
     box-shadow: 0 0 0 3px rgba(235, 7, 238, 0.1);
 }
 
@@ -674,7 +698,7 @@ const triggerVideoUpload = () => {
 
 .submit-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(235, 7, 238, 0.3);
+    box-shadow: 0 8px 25px rgba(235, 7, 238, 0.4);
 }
 
 @media (max-width: 768px) {

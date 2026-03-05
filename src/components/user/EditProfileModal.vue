@@ -287,20 +287,22 @@ const saveChanges = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
+  background-color: rgba(5, 5, 10, 0.8);
+  backdrop-filter: blur(10px);
 }
 
 .modal-content {
   position: relative;
   width: 90%;
   max-width: 500px;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  background: rgba(20, 20, 35, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(235, 7, 238, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
   z-index: 1101;
   animation: slideIn 0.3s ease;
+  backdrop-filter: blur(20px);
 }
 
 @keyframes slideIn {
@@ -319,7 +321,8 @@ const saveChanges = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.7rem 1.5rem;
-  background: linear-gradient(135deg, #eb07ee, #a505de);
+  background: linear-gradient(135deg, rgba(235, 7, 238, 0.3), rgba(165, 5, 222, 0.25));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: white;
 }
 
@@ -332,7 +335,7 @@ const saveChanges = async () => {
 .close-button {
   background: none;
   border: none;
-  color: white;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 1.6rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -341,13 +344,14 @@ const saveChanges = async () => {
 
 .close-button:hover {
   transform: scale(1.1);
+  color: #fff;
 }
 
 .modal-body {
   padding: 1.5rem;
 }
 
-/* 头像部分样式 */
+/* Avatar section */
 .avatar-section {
   display: flex;
   flex-direction: column;
@@ -364,26 +368,27 @@ const saveChanges = async () => {
   height: 90px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #f0f0f0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 3px solid rgba(235, 7, 238, 0.3);
+  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.2);
 }
 
 .avatar-upload-btn {
-  background-color: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
   padding: 0.5rem 1.2rem;
   font-size: 0.9rem;
-  color: #333;
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .avatar-upload-btn:hover {
-  background-color: #e8e8e8;
+  background: rgba(235, 7, 238, 0.15);
+  border-color: rgba(235, 7, 238, 0.3);
 }
 
-/* 表单部分样式 */
+/* Form section */
 .form-section {
   width: 100%;
 }
@@ -398,7 +403,7 @@ const saveChanges = async () => {
 .form-row label {
   flex: 0 0 20%;
   font-weight: 500;
-  color: #333;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.95rem;
   margin-right: 1rem;
 }
@@ -412,19 +417,25 @@ const saveChanges = async () => {
 .input-wrapper textarea {
   width: 100%;
   padding: 0.7rem 0.9rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   font-size: 0.95rem;
-  background-color: #f9f9f9;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.9);
   transition: all 0.2s;
+}
+
+.input-wrapper input::placeholder,
+.input-wrapper textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .input-wrapper input:focus, 
 .input-wrapper textarea:focus {
-  border-color: #eb07ee;
+  border-color: rgba(235, 7, 238, 0.5);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(235, 7, 238, 0.1);
-  background-color: #fff;
+  box-shadow: 0 0 0 2px rgba(235, 7, 238, 0.15);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .input-wrapper textarea {
@@ -432,27 +443,29 @@ const saveChanges = async () => {
   min-height: 80px;
 }
 
-/* 底部按钮样式 */
+/* Footer buttons */
 .modal-footer {
   display: flex;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .cancel-button {
   padding: 0.6rem 2rem;
-  background-color: #f5f5f5;
-  border: none;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
   font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .cancel-button:hover {
-  background-color: #e8e8e8;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .save-button {
@@ -460,7 +473,7 @@ const saveChanges = async () => {
   background: linear-gradient(135deg, #eb07ee, #a505de);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
@@ -468,15 +481,16 @@ const saveChanges = async () => {
 }
 
 .save-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #d007d3, #9405c7);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.4);
 }
 
 .save-button:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* 响应式调整 */
+/* Responsive */
 @media (max-width: 576px) {
   .form-row {
     flex-direction: column;
@@ -504,4 +518,4 @@ const saveChanges = async () => {
 .lazy-image.loaded {
   opacity: 1;
 }
-</style> 
+</style>
