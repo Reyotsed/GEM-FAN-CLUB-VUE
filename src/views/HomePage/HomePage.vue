@@ -230,13 +230,27 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 
-// 图片路径
-const images = [
-  '/img/homepage/001.jpg',
-  '/img/homepage/002.jpg',
-  '/img/homepage/003.jpg',
-  '/img/homepage/004.jpg'
+// Image paths with WebP support (fallback to JPEG for older browsers)
+const supportsWebP = ref(true);
+
+// Check WebP support
+if (typeof document !== 'undefined') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  supportsWebP.value = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+}
+
+const imageBase = [
+  '/img/homepage/001',
+  '/img/homepage/002',
+  '/img/homepage/003',
+  '/img/homepage/004'
 ];
+
+const images = imageBase.map(base => 
+  supportsWebP.value ? `${base}.webp` : `${base}.jpg`
+);
 
 const currentIndex = ref(0);
 let isAnimating = false;

@@ -1,5 +1,5 @@
 /* ========== Design Tokens ========== */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+/* Google Fonts moved to index.html for non-blocking async load */
 
 :root {
   /* Primary palette */
