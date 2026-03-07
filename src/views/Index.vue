@@ -1,7 +1,7 @@
 <template>
     <TopNav />
     <router-view v-slot="{ Component, route }">
-        <transition name="page-fade" mode="out-in">
+        <transition name="page-fade">
             <component :is="Component" :key="route.path" />
         </transition>
     </router-view>

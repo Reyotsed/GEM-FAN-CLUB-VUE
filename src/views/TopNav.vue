@@ -15,7 +15,7 @@
 
             <!-- Nav links -->
             <ul class="nav-links" :class="{ 'mobile-nav': isMobileMenuOpen }">
-                <router-link to="/" exact @click="closeMenu">
+                <router-link to="/" @click="closeMenu">
                     <i class="fas fa-home"></i> 首页
                 </router-link>
                 <router-link to="/song" @click="closeMenu">

@@ -1,8 +1,9 @@
 <template>
     <div class="comment-input">
         <textarea 
+            ref="textareaRef"
             v-model="comment" 
-            placeholder="写下你的评论..."
+            :placeholder="placeholder"
             rows="3"
         ></textarea>
         <div class="comment-tools">
@@ -31,10 +32,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 
 const props = defineProps({
     isLoggedIn: {
+        type: Boolean,
+        default: false
+    },
+    placeholder: {
+        type: String,
+        default: '写下你的评论...'
+    },
+    autoFocus: {
         type: Boolean,
         default: false
     }
@@ -44,6 +53,7 @@ const emit = defineEmits(['submit']);
 
 const comment = ref('');
 const showEmojiPicker = ref(false);
+const textareaRef = ref(null);
 
 const emojis = [
     '🌺', '🌸', '🌼', '🌻', '🍀', '🌿', '🌱', '🌳',
@@ -65,6 +75,10 @@ const toggleEmojiPicker = () => {
 const addEmoji = (emoji) => {
     comment.value += emoji;
     showEmojiPicker.value = false;
+    // Insert emoji and focus back
+    nextTick(() => {
+        textareaRef.value?.focus();
+    });
 };
 
 const submitComment = () => {
@@ -83,10 +97,20 @@ const closeEmojiPicker = (event) => {
 
 onMounted(() => {
     document.addEventListener('click', closeEmojiPicker);
+    if (props.autoFocus && textareaRef.value) {
+        textareaRef.value.focus();
+    }
 });
 
 onUnmounted(() => {
     document.removeEventListener('click', closeEmojiPicker);
+});
+
+// Watch for autoFocus prop change if component is kept alive but props change (less likely here but good practice)
+watch(() => props.autoFocus, (val) => {
+    if (val && textareaRef.value) {
+        textareaRef.value.focus();
+    }
 });
 </script>
 
@@ -97,6 +121,12 @@ onUnmounted(() => {
     overflow: hidden;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+.comment-input:focus-within {
+    border-color: rgba(235, 7, 238, 0.4);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 textarea {
@@ -110,6 +140,7 @@ textarea {
     background: transparent;
     color: rgba(255, 255, 255, 0.9);
     font-family: inherit;
+    transition: background-color 0.3s;
 }
 
 textarea::placeholder {
@@ -158,6 +189,11 @@ textarea::placeholder {
     width: 320px;
     height: 280px;
     overflow: hidden;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .emoji-scroll-container {
@@ -230,4 +266,4 @@ textarea::placeholder {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(235, 7, 238, 0.3);
 }
-</style> 
+</style>

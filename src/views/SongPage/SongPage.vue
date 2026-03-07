@@ -1,14 +1,15 @@
 <template>
     <div class="song-page">
         <div class="song-player">
-            <audio
+        <!-- 由于版权原因，移除了音频播放元素 -->
+        <!-- <audio
                 ref="audio"
                 @timeupdate="updateProgress"
                 @loadedmetadata="duration = formatTime(audio.duration)"
                 @ended="isPlaying = false"
                 @error="handleAudioError"
                 @canplay="handleCanPlay"
-            ></audio>
+            ></audio> -->
             <div class="song-container">
                 <div class="record-player">
                     <div class="record-disc" :class="{ 'is-playing': isPlaying }">
@@ -30,7 +31,7 @@
                     <div class="song-meta">
                         <div class="meta-item">
                             <span class="label">专辑</span>
-                            <span class="value">{{ shownSong.albumId }}</span>
+                            <span class="value">摩天动物园</span>
                         </div>
                         <div class="meta-item">
                             <span class="label">歌手</span>
@@ -53,34 +54,10 @@
                 </div>
             </div>
             
-            <div class="player-controls">
-                <div class="control-buttons">
-                    <button class="control-btn prev" @click="playPrev">
-                        <i class="prev-icon"></i>
-                    </button>
-                    <button class="control-btn play-pause" @click="togglePlay">
-                        <i :class="isPlaying ? 'pause-icon' : 'play-icon'"></i>
-                    </button>
-                    <button class="control-btn next" @click="playNext">
-                        <i class="next-icon"></i>
-                    </button>
-                </div>
-                
-                <div class="progress-container">
-                    <span class="time current">{{ currentTime }}</span>
-                    <div class="progress-bar" @click="setProgress">
-                        <div class="progress-fill" :style="{ width: progress + '%' }"></div>
-                        <div class="progress-handle" :style="{ left: progress + '%' }"></div>
-                    </div>
-                    <span class="time total">{{ duration }}</span>
-                </div>
-                
-                <div class="volume-control">
-                    <i class="volume-icon"></i>
-                    <div class="volume-slider" @click="setVolume">
-                        <div class="volume-fill" :style="{ width: volume * 100 + '%' }"></div>
-                        <div class="volume-handle" :style="{ left: volume * 100 + '%' }"></div>
-                    </div>
+            <div class="player-controls copyright-notice-container">
+                <div class="copyright-notice">
+                    <i class="copyright-icon">⚠️</i>
+                    <span>由于版权原因，暂不支持在线播放</span>
                 </div>
             </div>
         </div>
@@ -97,12 +74,12 @@ import { useSongStore } from '@/stores/song';
 import SongListModal from '@/components/song/SongListModal.vue';
 
 const songStore = useSongStore(); // 使用歌曲存储
-const audio = ref(null);
-const isPlaying = ref(false);
-const currentTime = ref('00:00');
-const duration = ref('00:00');
-const progress = ref(0);
-const volume = ref(0.7);
+const isPlaying = ref(false); // 始终为false
+// const audio = ref(null); // 已移除
+// const currentTime = ref('00:00'); // 已移除
+// const duration = ref('00:00'); // 已移除
+// const progress = ref(0); // 已移除
+// const volume = ref(0.7); // 已移除
 const parsedLyrics = ref([]);
 const currentLyricIndex = ref(0);
 
@@ -189,16 +166,11 @@ const highlightIndex = computed(() => {
     return currentLyricIndex.value - start;
 });
 
-// 简化监听函数，但确保在组件挂载时立即设置音频
+// 监听歌曲变化，只解析歌词，不处理音频
 watch(() => songStore.currentSong?.songId, (newSongId, oldSongId) => {
   if (!songStore.currentSong) return;
   
-  // 设置音频源 - 始终设置，无论是否更新了 songId
-  if (audio.value && songStore.currentSong.audioPath) {
-    console.log('设置音频源:', songStore.currentSong.audioPath);
-    audio.value.src = songStore.currentSong.audioPath;
-    audio.value.load(); // 重要：加载音频
-  }
+  // 由于版权原因，不再请求音频资源
   
     // 解析歌词
   if (songStore.currentSong.lyrics) {
@@ -209,20 +181,7 @@ watch(() => songStore.currentSong?.songId, (newSongId, oldSongId) => {
   }
 }, { immediate: true });
 
-// 添加对音频加载的处理
 onMounted(() => {
-  // 设置初始音量
-  if (audio.value) {
-    audio.value.volume = volume.value;
-    
-    // 如果已有缓存的歌曲，立即设置
-    if (songStore.currentSong && songStore.currentSong.audioPath) {
-      console.log('mounted: 设置音频源:', songStore.currentSong.audioPath);
-      audio.value.src = songStore.currentSong.audioPath;
-      audio.value.load();
-    }
-  }
-
   // 确保页面滚动到顶部
   window.scrollTo(0, 0);
 });
@@ -331,10 +290,7 @@ onBeforeMount(() => {
 
 // 在组件卸载时清理资源
 onUnmounted(() => {
-  if (audio.value) {
-    audio.value.pause();
-    audio.value.src = '';
-  }
+  // 清理逻辑
 });
 
 // 添加音频错误处理
@@ -639,6 +595,26 @@ const handleCanPlay = () => {
     font-weight: 700;
     text-shadow: 0 0 20px rgba(235, 7, 238, 0.6);
     transform: scale(1.05);
+}
+
+.copyright-notice-container {
+    justify-content: center;
+    background: rgba(255, 50, 50, 0.15);
+    border-top: 1px solid rgba(255, 100, 100, 0.2);
+}
+
+.copyright-notice {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: rgba(255, 200, 200, 0.9);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.copyright-icon {
+    font-style: normal;
+    font-size: 1.2rem;
 }
 
 /* 播放控制栏 */
