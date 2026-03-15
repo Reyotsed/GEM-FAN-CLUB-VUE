@@ -75,7 +75,7 @@
                     <div class="typing-dot"></div>
                     <div class="typing-dot"></div>
                 </div>
-                <span>姐姐正在输入...</span>
+                <span>{{ streamStatus || '姐姐正在输入...' }}</span>
             </div>
             
             <div class="context-warning" v-if="contextWarning">
@@ -123,8 +123,8 @@
 
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue';
-import apiClient from '@/utils/api';
 import { useUserStore } from '@/stores/user';
+import { trackEvent, EVENTS } from '@/utils/stats';
 
 // 获取用户状态
 const userStore = useUserStore();
@@ -136,6 +136,7 @@ const isTyping = ref(false);
 const chatBodyRef = ref(null);
 const inputRef = ref(null);
 const inputFocused = ref(false);
+const streamStatus = ref('');  // 流式状态提示文字
 
 // 背景粒子样式生成
 function particleStyle(n) {
@@ -203,9 +204,10 @@ function useHint(hint) {
     });
 }
 
-// 发送消息逻辑
+// 发送消息逻辑（流式响应版）
 async function sendMessage() {
     if (!userInput.value.trim() || isTyping.value) return;
+    trackEvent(EVENTS.AI_CHAT);
     
     const messageText = userInput.value;
     userInput.value = '';
@@ -231,33 +233,32 @@ async function sendMessage() {
     
     // 显示typing状态
     isTyping.value = true;
+    streamStatus.value = '姐姐正在输入...';
     
     try {
-        // 调用后端AI接口
-        const aiResponse = await callBackendAI(chatHistory.value);
+        // 不再提前创建空AI消息占位
+        // AI消息会在收到第一个token时由 callBackendAIStream 内部创建
+        
+        // 调用流式AI接口
+        const finalText = await callBackendAIStream(chatHistory.value);
         
         // 添加AI回复到对话历史
         chatHistory.value.push({
             role: "assistant",
-            content: aiResponse
+            content: finalText
         });
         
         // 再次管理上下文长度
         manageContext();
         
-        // Add AI response to display
-        messages.value.push({
-            text: aiResponse,
-            sender: 'ai',
-            time: formatTime(new Date())
-        });
-        
         isTyping.value = false;
+        streamStatus.value = '';
         await scrollToBottom();
         
     } catch (error) {
         console.error('聊天出错:', error);
         isTyping.value = false;
+        streamStatus.value = '';
         
         // 发生错误时添加错误消息
         messages.value.push({
@@ -296,77 +297,156 @@ watch(userInput, () => {
     });
 });
 
-// 调用后端AI接口的函数
-async function callBackendAI(messageHistory) {
-    // 调用后端AI接口
-    try {
-        
-        console.log('当前上下文长度:', messageHistory.length);
-        
-        // Convert message history to the format required by backend API
-        // Skip welcome message (index 0) and current question (last message)
-        // Send all intermediate user/assistant messages as history
-        const history = [];
-        for (let i = 1; i < messageHistory.length - 1; i++) {
-            const msg = messageHistory[i];
-            if (msg && msg.role && msg.content) {
-                history.push({
-                    role: msg.role,
-                    content: msg.content
-                });
-            }
+// 流式调用后端AI接口
+async function callBackendAIStream(messageHistory) {
+    const history = [];
+    for (let i = 1; i < messageHistory.length - 1; i++) {
+        const msg = messageHistory[i];
+        if (msg && msg.role && msg.content) {
+            history.push({ role: msg.role, content: msg.content });
         }
-        console.log('发送到后端AI接口的消息历史:', history);
-        // 获取当前用户的问题（最后一条用户消息）
-        const currentQuestion = messageHistory[messageHistory.length - 1].content;
-        
-        const payload = {
-            question: currentQuestion,
-            history: history // history本身就是JS对象数组，直接使用
-        };
-        
-        const response = await apiClient.post('/ai/answer', payload);
-        
-        // 检查响应状态
-        if (response.data.code === 200) {
-            const aiResponse = response.data.data;
-            console.log('后端AI接口响应:', response);
-            return aiResponse;
-        } else if (response.data.code === 429) {
-            // Rate limited
-            return response.data.message || '请求太频繁啦，请稍后再试～ 😅';
-        } else {
-            return response.data.message || '啊，好像遇到了一些问题...可以稍后再试吗？😥';
-        }
-        
-    } catch (error) {
-        console.error("后端AI接口调用错误:", error);
-        
-        // 根据错误类型提供不同的错误信息
-        let errorMessage = '啊，好像遇到了一些问题...可以稍后再试吗？😥';
-        
-        if (error.response) {
-            // 服务器响应了错误状态码
-            if (error.response.status === 401) {
-                errorMessage = '认证失败，请重新登录 😅';
-            } else if (error.response.status === 429) {
-                errorMessage = '请求太频繁了，请稍等一下再试 😅';
-            } else if (error.response.status >= 500) {
-                errorMessage = '服务器暂时不可用，请稍后再试 😅';
-            } else if (error.response.data && error.response.data.message) {
-                errorMessage = `请求失败: ${error.response.data.message} 😅`;
-            }
-        } else if (error.request) {
-            // 请求发送了但没有收到响应
-            errorMessage = '网络连接超时，请检查网络后重试 😅';
-        } else if (error.message) {
-            // 其他错误
-            errorMessage = `请求出错: ${error.message} 😅`;
-        }
-        
-        // 出错时返回随机回复作为后备
-        return errorMessage;
     }
+    
+    const currentQuestion = messageHistory[messageHistory.length - 1].content;
+    const payload = { question: currentQuestion, history: history };
+    
+    // Build the full URL for the stream endpoint
+    const baseUrl = import.meta.env.VITE_API_BASEURL + import.meta.env.VITE_API_PREFIX;
+    const streamUrl = `${baseUrl}/ai/stream`;
+    
+    const token = localStorage.getItem('token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    const response = await fetch(streamUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload),
+    });
+    
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';       // SSE line buffer
+    let fullText = '';     // Accumulated AI response text
+    let scrollCounter = 0; // Throttle scrolling
+    let aiMessageIndex = -1; // Will be set when first token arrives
+    
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+        
+        // Process complete SSE events (separated by double newlines)
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop(); // Keep the incomplete last part in the buffer
+        
+        for (const part of parts) {
+            if (!part.trim()) continue;
+            
+            // Parse SSE event
+            // Note: SSE spec allows optional space after colon.
+            //   FastAPI outputs "event: token\ndata: {...}"
+            //   Spring SseEmitter may output "event:token\ndata:{...}"
+            // We handle both formats.
+            let eventType = 'message';
+            let eventData = '';
+            
+            for (const line of part.split('\n')) {
+                if (line.startsWith('event:')) {
+                    eventType = line.slice(6).trim();
+                } else if (line.startsWith('data:')) {
+                    eventData = line.slice(5).trim();
+                }
+            }
+            
+            if (!eventData) continue;
+            
+            try {
+                const data = JSON.parse(eventData);
+                
+                switch (eventType) {
+                    case 'status':
+                        // Update the typing indicator status text
+                        streamStatus.value = data.message || '处理中...';
+                        break;
+                    
+                    case 'token':
+                        // Append token content to the AI message
+                        if (data.content) {
+                            // On first token: create the AI message bubble and hide typing indicator
+                            if (aiMessageIndex === -1) {
+                                aiMessageIndex = messages.value.length;
+                                messages.value.push({
+                                    text: '',
+                                    sender: 'ai',
+                                    time: formatTime(new Date())
+                                });
+                                isTyping.value = false;
+                                streamStatus.value = '';
+                            }
+                            
+                            fullText += data.content;
+                            messages.value[aiMessageIndex].text = fullText;
+                            
+                            // Throttle scrolling: scroll every 3 tokens
+                            scrollCounter++;
+                            if (scrollCounter % 3 === 0) {
+                                await scrollToBottom();
+                            }
+                        }
+                        break;
+                    
+                    case 'done':
+                        // Stream complete
+                        await scrollToBottom();
+                        break;
+                    
+                    case 'error':
+                        // Server error — create message bubble if not yet created
+                        if (aiMessageIndex === -1) {
+                            aiMessageIndex = messages.value.length;
+                            messages.value.push({
+                                text: '',
+                                sender: 'ai',
+                                time: formatTime(new Date())
+                            });
+                            isTyping.value = false;
+                            streamStatus.value = '';
+                        }
+                        if (!fullText) {
+                            fullText = `哎呀，遇到了一些问题：${data.message || '请稍后再试'} 😥`;
+                            messages.value[aiMessageIndex].text = fullText;
+                        }
+                        break;
+                }
+            } catch (parseErr) {
+                // Silently ignore malformed SSE data
+            }
+        }
+    }
+    
+    // Final scroll
+    await scrollToBottom();
+    
+    // If no text was received at all, create a fallback message
+    if (!fullText) {
+        messages.value.push({
+            text: '抱歉，AI好像没有给我回应耶...😥',
+            sender: 'ai',
+            time: formatTime(new Date())
+        });
+        fullText = '抱歉，AI好像没有给我回应耶...😥';
+    }
+    
+    return fullText;
 }
 
 // 清空对话历史的函数

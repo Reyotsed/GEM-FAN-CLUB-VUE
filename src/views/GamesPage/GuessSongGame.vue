@@ -62,6 +62,15 @@
           <h3>恭喜完成！</h3>
           <p>总得分: {{ score }}</p>
           <p>完成时间: {{ formatTime(completionTime) }}</p>
+          <div class="record-form" v-if="!hasRecorded">
+            <input 
+              v-model="nickname" 
+              placeholder="输入昵称保存记录" 
+              class="nickname-input"
+              maxlength="10"
+            />
+            <button @click="saveRecord" class="save-record-button">保存记录</button>
+          </div>
           <button @click="restartGame" class="restart-button">再来一次</button>
         </div>
         <template v-else>
@@ -121,6 +130,28 @@
             </ul>
           </div>
         </template>
+        <div v-if="showLeaderboard" class="leaderboard">
+          <h3>听歌识曲排行榜</h3>
+          <div class="leaderboard-list">
+            <div class="leaderboard-header">
+              <span class="rank">排名</span>
+              <span class="name">昵称</span>
+              <span class="difficulty">难度</span>
+              <span class="leaderboard-score">得分</span>
+              <span class="time">用时</span>
+            </div>
+            <div v-for="(record, index) in leaderboard" :key="index" class="leaderboard-item">
+              <span class="rank">{{ index + 1 }}</span>
+              <span class="name">{{ record.nickname }}</span>
+              <span class="difficulty">{{ record.diffLevel === 1 ? '路人' : '歌迷' }}</span>
+              <span class="leaderboard-score">{{ record.score }}</span>
+              <span class="time">{{ formatTime(record.completionTime) }}</span>
+            </div>
+            <div v-if="leaderboard.length === 0" class="leaderboard-empty">
+              暂无排行记录，快来成为第一名吧！
+            </div>
+          </div>
+        </div>
       </template>
     </template>
     <div v-if="showAnswerModal" class="answer-modal">
@@ -156,6 +187,8 @@
 import { ref, onMounted } from 'vue'
 import apiClient from '@/utils/api'
 import AudioPlayer from '@/components/audio/AudioPlayer.vue'
+import { showToast } from '@/utils/toast'
+import { trackEvent, EVENTS } from '@/utils/stats'
 
 const songs = ref([])
 const loading = ref(false)
@@ -177,6 +210,12 @@ const showResult = ref(false)
 const showAnswerModal = ref(false)
 const answerResult = ref('') // 'correct' or 'wrong'
 const answerSong = ref({})
+
+// 排行榜相关变量
+const nickname = ref('')
+const hasRecorded = ref(false)
+const showLeaderboard = ref(false)
+const leaderboard = ref([])
 
 const selectDifficulty = (level) => {
   selectedDifficulty.value = level
@@ -202,6 +241,7 @@ const startGame = async () => {
       songs.value = songList
       gameStarted.value = true
       startTime.value = Date.now()
+      trackEvent(EVENTS.GAME_START_GUESS_SONG)
       getNewQuestion()
     } else {
       error.value = response.data.message || '获取失败'
@@ -217,6 +257,9 @@ const getNewQuestion = () => {
   if (currentQuestion.value >= 10) {
     gameCompleted.value = true
     completionTime.value = Date.now() - startTime.value
+    showLeaderboard.value = true
+    loadLeaderboard()
+    trackEvent(EVENTS.GAME_COMPLETE_GUESS_SONG)
     return
   }
 
@@ -282,6 +325,9 @@ const restartGame = () => {
   gameCompleted.value = false
   selectedAnswer.value = null
   showResult.value = false
+  hasRecorded.value = false
+  showLeaderboard.value = false
+  nickname.value = ''
 }
 
 const formatTime = (ms) => {
@@ -294,6 +340,45 @@ const formatTime = (ms) => {
 // 关闭弹窗并进入下一题
 const closeAnswerModal = () => {
   showAnswerModal.value = false
+}
+
+const saveRecord = async () => {
+  if (!nickname.value.trim()) return
+
+  const params = {
+    nickname: nickname.value,
+    score: score.value,
+    completionTime: completionTime.value,
+    diffLevel: selectedDifficulty.value,
+    userId: (localStorage.getItem('userId') || '').replace(/"/g, '')
+  }
+  try {
+    const response = await apiClient.post('/game/guess-song/submit-score', null, { params })
+
+    if (response.data.code !== 200) {
+      throw new Error('保存失败')
+    }
+
+    hasRecorded.value = true
+    // 保存成功后刷新排行榜数据
+    loadLeaderboard()
+  } catch (err) {
+    console.error('保存排行榜失败:', err)
+    showToast('保存排行榜失败，请稍后重试', 'error')
+  }
+}
+
+const loadLeaderboard = async () => {
+  try {
+    const response = await apiClient.get('/game/guess-song/getLeaderboard')
+    if (response.data.code !== 200) {
+      throw new Error('获取排行榜失败')
+    }
+    leaderboard.value = response.data.data
+  } catch (err) {
+    console.error('加载排行榜失败:', err)
+    leaderboard.value = []
+  }
 }
 </script>
 
@@ -978,5 +1063,210 @@ const closeAnswerModal = () => {
   background: linear-gradient(90deg, #FF1744, #FF5252);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.record-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  align-items: center;
+}
+
+.nickname-input {
+  padding: 1rem 1.5rem;
+  border: 2px solid rgba(185, 128, 255, 0.3);
+  border-radius: 16px;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 300px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  text-align: center;
+}
+.nickname-input:focus {
+  border-color: #B980FF;
+  box-shadow: 0 0 0 3px rgba(185, 128, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+.nickname-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.save-record-button {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #B980FF, #8A2BE2);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 300px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 10px 30px rgba(185, 128, 255, 0.3);
+  transition: all 0.3s;
+}
+.save-record-button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(185, 128, 255, 0.5);
+}
+.save-record-button:active {
+  filter: brightness(0.98);
+  transform: scale(0.98);
+}
+
+.leaderboard {
+  margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  max-width: 800px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.leaderboard h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leaderboard-header {
+  display: grid;
+  grid-template-columns: 50px 1fr 60px 60px 80px;
+  padding: 1rem;
+  background: linear-gradient(135deg, #B980FF, #8A2BE2);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(185, 128, 255, 0.3);
+}
+
+.leaderboard-item {
+  display: grid;
+  grid-template-columns: 50px 1fr 60px 60px 80px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+.leaderboard-item:hover {
+  transform: translateX(5px);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(185, 128, 255, 0.1);
+}
+
+.rank {
+  font-weight: bold;
+  color: #B980FF;
+  text-align: center;
+}
+
+.name {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 1.5rem;
+  font-size: 1.1rem;
+}
+
+.leaderboard-score {
+  color: #e0c3fc;
+  font-weight: bold;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.difficulty {
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(185, 128, 255, 0.1);
+  font-size: 0.95rem;
+}
+
+.time {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.leaderboard-empty {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .leaderboard {
+    padding: 0.5rem;
+    border-radius: 10px;
+  }
+  .leaderboard h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .leaderboard-header,
+  .leaderboard-item {
+    grid-template-columns: 32px 1fr 38px 38px 50px;
+    padding: 0.3rem 0.2rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    gap: 0.1rem;
+  }
+  .name {
+    font-size: 0.8rem;
+    padding: 0 0.3rem;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .leaderboard-score, .difficulty, .time {
+    font-size: 0.75rem;
+    padding: 0 0.1rem;
+  }
+  .rank {
+    font-size: 0.8rem;
+    min-width: 24px;
+  }
+  .record-form {
+    margin: 1rem 0;
+  }
+  .nickname-input,
+  .save-record-button {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.9rem;
+  }
 }
 </style>

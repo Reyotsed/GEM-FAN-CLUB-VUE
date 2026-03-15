@@ -202,6 +202,7 @@
 import { ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import apiClient from '@/utils/api';
+import { trackEvent, EVENTS } from '@/utils/stats';
 
 const router = useRouter()
 
@@ -428,6 +429,7 @@ const initVirtualUsers = () => {
 // 开始游戏
 const startGame = async () => {
   try {
+    trackEvent(EVENTS.GAME_START_TICKET_RUSH)
     // 先设置后端库存
     const stockSet = await setStock("1", ticketCount.value.toString())
     if (!stockSet) {

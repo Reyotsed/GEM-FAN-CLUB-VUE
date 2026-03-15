@@ -12,7 +12,7 @@
       </div>
       <div class="game-card highlight" @click="navigateTo('guess-song')">
         <div class="game-icon">🎵</div>
-        <h3>听歌猜歌名 <span class="game-status">（测试中）</span></h3>
+        <h3>听歌猜歌名 </h3>
         <p>测试你对邓紫棋歌曲的熟悉程度，快来挑战吧！</p>
       </div>
       <div class="game-card highlight" @click="navigateTo('ticket-rush')">

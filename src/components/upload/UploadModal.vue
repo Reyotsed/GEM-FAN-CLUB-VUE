@@ -6,8 +6,8 @@
                 :class="['type-btn', { active: uploadType === 'quote' }]" 
                 @click="uploadType = 'quote'"
             >
-                <i class="fas fa-quote-right"></i>
-                语录投稿
+                <i class="fas fa-pen-nib"></i>
+                发布动态
             </button>
             <button 
                 :class="['type-btn', { active: uploadType === 'video' }]" 
@@ -26,7 +26,7 @@
                     <input 
                         v-model="quoteForm.title" 
                         type="text" 
-                        placeholder="输入语录标题..."
+                        placeholder="输入动态标题..."
                     >
                 </div>
                 
@@ -71,7 +71,7 @@
 
                 <button class="submit-btn" @click="submitQuote">
                     <i class="fas fa-paper-plane"></i>
-                    发布语录
+                    发布动态
                 </button>
             </div>
         </div>
@@ -306,7 +306,7 @@ const submitQuote = async () => {
                 'Content-Type': 'multipart/form-data'
             }
         });
-        alert('语录发布成功！');
+        alert('动态发布成功！');
         // 重置表单
         quoteForm.title = '';
         quoteForm.images.forEach(image => URL.revokeObjectURL(image.preview));

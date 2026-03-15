@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { trackPageView } from '@/utils/stats'
 const Index = () => import('@/views/Index.vue')
 const AIPage = () => import('@/views/AIPage/AIPage.vue')
 const InfoPage = () => import('@/views/InfoPage/InfoPage.vue')
@@ -27,8 +28,8 @@ const routes = [
         children: [
             { path: '', name: "home", component: HomePage, meta: { title: 'GEM Fan Club - 首页' } },
             { path: 'song', name: "song", component: SongPage, meta: { title: 'GEM Fan Club - 音乐' } },
-            { path: 'quote', name: "quote", component: QuotePage, meta: { title: 'GEM Fan Club - 语录' } },
-            { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage, meta: { title: 'GEM Fan Club - 语录详情' } },
+            { path: 'quote', name: "quote", component: QuotePage, meta: { title: 'GEM Fan Club - 动态' } },
+            { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage, meta: { title: 'GEM Fan Club - 动态详情' } },
             { path: 'picture', name: "picture", component: PicturePage, meta: { title: 'GEM Fan Club - 图片' } },
             { path: 'shop', name: "shop", component: ShopPage, meta: { title: 'GEM Fan Club - 商店' } },
             { path: 'ai', name: "AI", component: AIPage, meta: { title: 'GEM Fan Club - AI 对话' } },
@@ -76,4 +77,11 @@ router.beforeEach((to, from, next) => {
         }
     }
     next();
+});
+
+// 页面访问统计：路由切换后自动上报 PV
+router.afterEach((to) => {
+    if (to.name) {
+        trackPageView(to.name);
+    }
 });

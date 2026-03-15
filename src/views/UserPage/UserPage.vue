@@ -38,7 +38,7 @@
                         :class="{ active: currentContent === 'quote' }" 
                         @click="switchContent('quote')"
                     >
-                        <i class="nav-icon">📝</i> 语录
+                        <i class="nav-icon">📝</i> 动态
                     </button>
                     <button 
                         class="nav-button" 
@@ -69,7 +69,7 @@
                     
                     <!-- 语录内容 -->
                     <div v-if="currentContent === 'quote'" class="quote-content">
-                        <h2 class="content-title">语录</h2>
+                        <h2 class="content-title">动态</h2>
                         <div class="quote-list" v-if="userQuotes.length > 0">
                             <div v-for="quote in userQuotes" 
                                  :key="quote.quoteId" 
@@ -100,7 +100,7 @@
                         </div>
                         <div class="empty-content" v-else>
                             <div class="empty-icon">📝</div>
-                            <p>暂无语录内容</p>
+                            <p>暂无动态内容</p>
                         </div>
                     </div>
                     
@@ -261,13 +261,13 @@ const editQuote = (quote) => {
 
 // Delete quote with custom confirm dialog
 const deleteQuote = async (quote) => {
-    const confirmed = await showConfirm('确定要删除这条语录吗？', '删除确认');
+    const confirmed = await showConfirm('确定要删除这条动态吗？', '删除确认');
     if (!confirmed) return;
     
     try {
         await apiClient.delete(`/quote/delete/${quote.quoteId}`);
         userQuotes.value = userQuotes.value.filter(q => q.quoteId !== quote.quoteId);
-        showToast('语录已删除', 'success');
+        showToast('动态已删除', 'success');
     } catch (error) {
         console.error('Error deleting quote:', error);
         showToast('删除失败', 'error');

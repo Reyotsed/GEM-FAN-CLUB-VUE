@@ -125,6 +125,7 @@
   import apiClient from '@/utils/api'; // 替换成我们的API客户端
   import { useUserStore } from '@/stores/user';
   import { showToast } from '@/utils/toast';
+  import { trackEvent, EVENTS } from '@/utils/stats';
 
   // 是否显示模态窗口
   const isModalVisible = ref(false);
@@ -205,6 +206,7 @@
 
       if (response.data.code == 200) {
         console.log('登录成功:', response.data);
+        trackEvent(EVENTS.LOGIN);
 
         userStore.setToken(response.data.data.token);
         userStore.autoLogin();
@@ -239,6 +241,7 @@
 
       if (response.data.code == 200) {
         console.log('注册成功:', response.data);
+        trackEvent(EVENTS.REGISTER);
         closeModal();
         showToast('注册成功，请登录', 'success');
       } else {

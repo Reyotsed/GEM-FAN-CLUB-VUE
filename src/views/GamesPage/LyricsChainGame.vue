@@ -162,6 +162,7 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import apiClient from '@/utils/api'
 import { showToast } from '@/utils/toast'
+import { trackEvent, EVENTS } from '@/utils/stats'
 
 const currentLyric = ref({})
 const userInputs = ref([])
@@ -321,6 +322,7 @@ const startGame = () => {
     gameCompleted.value = false
     startTime.value = Date.now()
     gameStarted.value = true
+    trackEvent(EVENTS.GAME_START_LYRICS_CHAIN)
     
     // 开始第一题
     getNewLyric()
@@ -336,6 +338,7 @@ const getNewLyric = () => {
     completionTime.value = Date.now() - startTime.value
     showLeaderboard.value = true  // 游戏完成后立即显示排行榜
     loadLeaderboard()  // 加载排行榜数据
+    trackEvent(EVENTS.GAME_COMPLETE_LYRICS_CHAIN)
     return
   }
   

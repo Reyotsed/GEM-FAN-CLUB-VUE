@@ -190,6 +190,7 @@ import { useUserStore } from '@/stores/user';
 import apiClient from '@/utils/api';
 import CommentInput from '@/components/user/CommentInput.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
+import { trackEvent, EVENTS } from '@/utils/stats';
 
 const props = defineProps({
     visible: {
@@ -357,6 +358,7 @@ const formatCommentContent = async (content: string) => {
 // 交互操作
 const handleCommentSubmit = async (text: string) => {
     if (!text.trim()) return;
+    trackEvent(EVENTS.QUOTE_COMMENT);
     try {
         await apiClient.post('/quote/comment', {
             quoteId: props.quoteId,
@@ -418,6 +420,9 @@ const likeComment = async (comment: any) => {
 const addlike = async (quote: any) => {
     if (!userStore.isLoggedIn) return;
     quote.isliked = !quote.isliked;
+    if (quote.isliked) {
+        trackEvent(EVENTS.QUOTE_LIKE);
+    }
     const url = quote.isliked ? '/quote/addLike' : '/quote/eraseLike';
     const offset = quote.isliked ? 1 : -1;
     

@@ -22,7 +22,7 @@
                     <i class="fas fa-music"></i> 歌曲
                 </router-link>
                 <router-link to="/quote" @click="closeMenu">
-                    <i class="fas fa-quote-right"></i> 语录
+                    <i class="fas fa-pen-nib"></i> 动态
                 </router-link>
                 <router-link to="/games" @click="closeMenu">
                     <i class="fas fa-gamepad"></i> 游戏
