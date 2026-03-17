@@ -7,9 +7,19 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "compress-images": "node scripts/compress_images.js"
+    "compress-images": "node scripts/compress_images.js",
+    "build:app": "vite build --mode app",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android",
+    "app": "npm run build:app && npm run cap:sync"
   },
   "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/app": "^8.0.1",
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.1",
     "@yeger/vue-masonry-wall": "^5.0.18",
     "axios": "^1.8.4",
     "browser-image-compression": "^2.0.2",
@@ -25,6 +35,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "sharp": "^0.34.1",
     "svgo": "^3.3.2",
+    "terser": "^5.46.0",
     "vite": "^6.2.0",
     "vite-plugin-image-optimizer": "^1.1.8"
   }

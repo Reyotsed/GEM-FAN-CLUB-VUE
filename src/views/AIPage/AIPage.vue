@@ -1344,7 +1344,7 @@ onMounted(() => {
     .chat-container {
         height: 100dvh;
         top: 0;
-        padding-top: var(--nav-height, 60px);
+        padding-top: calc(var(--nav-height, 60px) + var(--safe-area-top, 0px));
     }
 
     .chat-header {

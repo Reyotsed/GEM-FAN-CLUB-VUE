@@ -109,7 +109,8 @@ const closeMenu = () => {
     left: 0;
     right: 0;
     z-index: 1000;
-    height: var(--nav-height, 70px);
+    height: calc(var(--nav-height, 70px) + var(--safe-area-top, 0px));
+    padding-top: var(--safe-area-top, 0px);
     background: rgba(10, 10, 18, 0.6); /* 深色半透明背景 */
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -400,7 +401,7 @@ const closeMenu = () => {
     .nav-links {
         display: none;
         position: fixed;
-        top: var(--nav-height, 70px);
+        top: calc(var(--nav-height, 70px) + var(--safe-area-top, 0px));
         left: 0;
         right: 0;
         background: rgba(10, 10, 18, 0.95);
@@ -410,7 +411,7 @@ const closeMenu = () => {
         gap: 0.5rem;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         animation: slideDown 0.4s var(--ease-bounce);
-        max-height: calc(100vh - var(--nav-height, 70px));
+        max-height: calc(100vh - var(--nav-height, 70px) - var(--safe-area-top, 0px));
         overflow-y: auto;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }

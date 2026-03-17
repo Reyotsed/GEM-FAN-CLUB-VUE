@@ -673,7 +673,7 @@ onMounted(() => {
   position: relative;
   box-sizing: border-box;
   color: #fff;
-  padding-top: var(--nav-height, 70px);
+  padding-top: calc(var(--nav-height, 70px) + var(--safe-area-top, 0px));
 }
 
 .page-header {
