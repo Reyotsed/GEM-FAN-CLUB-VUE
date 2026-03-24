@@ -17,6 +17,7 @@ const GuessSongGame = () => import('@/views/GamesPage/GuessSongGame.vue')
 const LyricsChainGame = () => import('@/views/GamesPage/LyricsChainGame.vue')
 const QuizGame = () => import('@/views/GamesPage/QuizGame.vue')
 const TicketRushGame = () => import('@/views/GamesPage/TicketRushGame.vue')
+const StoryPage = () => import('@/views/StoryPage/StoryPage.vue')
 
 const routes = [
     { path: '/', redirect: '' },
@@ -40,7 +41,8 @@ const routes = [
             { path: 'games/guess-song', name: "guess-song", component: GuessSongGame, meta: { title: 'GEM Fan Club - 猜歌游戏' } },
             { path: 'games/lyrics-chain', name: "lyrics-chain", component: LyricsChainGame, meta: { title: 'GEM Fan Club - 歌词接龙' } },
             { path: 'games/quiz', name: "quiz", component: QuizGame, meta: { title: 'GEM Fan Club - 知识问答' } },
-            { path: 'games/ticket-rush', name: "ticket-rush", component: TicketRushGame, meta: { title: 'GEM Fan Club - 抢票模拟' } }
+            { path: 'games/ticket-rush', name: "ticket-rush", component: TicketRushGame, meta: { title: 'GEM Fan Club - 抢票模拟' } },
+            { path: 'story', name: "story", component: StoryPage, meta: { title: 'GEM Fan Club - 快拍' } }
         ]
     }
 ]

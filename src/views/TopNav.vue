@@ -24,6 +24,9 @@
                 <router-link to="/quote" @click="closeMenu">
                     <i class="fas fa-pen-nib"></i> 动态
                 </router-link>
+                <router-link to="/story" @click="closeMenu">
+                    <i class="fab fa-instagram"></i> 快拍
+                </router-link>
                 <router-link to="/games" @click="closeMenu">
                     <i class="fas fa-gamepad"></i> 游戏
                 </router-link>
