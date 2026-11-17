@@ -31,7 +31,18 @@ TARGET = "gem0816"
 # Script directory (for relative paths)
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-# Session ID file — 存放从浏览器导出的 sessionid
+# ===== 硬编码配置（裸运行用）=====
+# IG sessionid（从浏览器 Cookies 导出，过期后需重新获取）
+HARDCODED_SESSION_ID = "46217330796%3AOKn7uE3lm90ITp%3A1%3AAYhXFtKDH45pbkzVer-0hhA2YKbf6zBn6SsdDikohA"
+
+# Spring Boot 后端同步 API（线上公网地址）
+HARDCODED_BACKEND_SYNC_URL = "http://gemfanclub.com/api/story/sync"
+
+# 同步鉴权密钥（与后端 --story.sync-api-key 保持一致）
+HARDCODED_SYNC_API_KEY = "donkizhang_GEMFANCLUB_9527"
+# ================================
+
+# Session ID file — 存放从浏览器导出的 sessionid（可选回退）
 SESSION_ID_FILE = SCRIPT_DIR / "ig_sessionid.txt"
 
 # Download directory
@@ -40,8 +51,14 @@ DOWNLOAD_DIR = SCRIPT_DIR / "downloads" / TARGET
 # Cached user_id file — 避免每次都查询
 USER_ID_CACHE = SCRIPT_DIR / "ig_user_cache.json"
 
-# Spring Boot 后端同步 API
-BACKEND_SYNC_URL = "http://localhost:7071/story/sync"
+# Spring Boot 后端同步 API（环境变量 > 硬编码）
+BACKEND_SYNC_URL = os.environ.get("BACKEND_SYNC_URL", HARDCODED_BACKEND_SYNC_URL)
+
+# 是否为 CI 模式（GitHub Actions 等环境自动设置）
+CI_MODE = os.environ.get("CI", "").lower() in ("true", "1")
+
+# 同步鉴权密钥（环境变量 > 硬编码）
+SYNC_API_KEY = os.environ.get("STORY_SYNC_API_KEY", HARDCODED_SYNC_API_KEY)
 # =================================================
 
 MAX_RETRIES = 3       # 最大重试次数
@@ -65,17 +82,34 @@ WEB_HEADERS = {
 
 
 def _read_sessionid() -> Optional[str]:
-    """从文件读取 sessionid 并进行 URL 解码。"""
-    if not SESSION_ID_FILE.exists():
-        return None
-    raw = SESSION_ID_FILE.read_text().strip()
-    if not raw:
-        return None
-    # 浏览器复制的 sessionid 可能是 URL 编码的（%3A → :）
-    decoded = unquote(raw)
-    if decoded != raw:
-        print("  → 已对 sessionid 进行 URL 解码", flush=True)
-    return decoded
+    """
+    读取 sessionid，优先级：
+      1. 环境变量 IG_SESSION_ID
+      2. 本地文件 ig_sessionid.txt
+      3. 硬编码 HARDCODED_SESSION_ID（兜底）
+    """
+    # 优先从环境变量读取
+    env_sid = os.environ.get("IG_SESSION_ID", "").strip()
+    if env_sid:
+        print("  → 从环境变量读取 sessionid", flush=True)
+        return unquote(env_sid)
+
+    # 其次从本地文件
+    if SESSION_ID_FILE.exists():
+        raw = SESSION_ID_FILE.read_text().strip()
+        if raw:
+            decoded = unquote(raw)
+            if decoded != raw:
+                print("  → 已对 sessionid 进行 URL 解码", flush=True)
+            print("  → 从本地文件读取 sessionid", flush=True)
+            return decoded
+
+    # 最后回退到硬编码
+    if HARDCODED_SESSION_ID:
+        print("  → 使用硬编码 sessionid", flush=True)
+        return unquote(HARDCODED_SESSION_ID)
+
+    return None
 
 
 def _get_cookies() -> Optional[Dict[str, str]]:
@@ -226,7 +260,10 @@ def _sync_to_backend(filepath: Path, ig_media_id: str, media_type: int,
             if height:
                 data["height"] = height
 
-            resp = requests.post(BACKEND_SYNC_URL, files=files, data=data, timeout=60)
+            headers = {}
+            if SYNC_API_KEY:
+                headers["X-Sync-Key"] = SYNC_API_KEY
+            resp = requests.post(BACKEND_SYNC_URL, files=files, data=data, headers=headers, timeout=60)
             result = resp.json()
             if result.get("code") == 200:
                 msg = result.get("message", "")
@@ -390,4 +427,9 @@ def run_scheduler():
 
 
 if __name__ == "__main__":
-    run_scheduler()
+    if CI_MODE:
+        # CI 环境：只运行一次，不启动定时调度
+        print("🤖 CI 模式：执行单次抓取", flush=True)
+        download_stories()
+    else:
+        run_scheduler()

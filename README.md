@@ -1,171 +1,173 @@
-# 🎵 GEM Fan Club - 前端应用
-
 <div align="center">
 
-![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D.svg?logo=vue.js)
-![Vite](https://img.shields.io/badge/Vite-6.2-646CFF.svg?logo=vite)
-![Pinia](https://img.shields.io/badge/Pinia-3.0-yellow.svg)
-![ECharts](https://img.shields.io/badge/ECharts-5.6-AA344D.svg)
-![License](https://img.shields.io/badge/License-MIT-blue.svg)
+# 🎵 GEM Fan Club · Web
 
-邓紫棋 (G.E.M.) 粉丝俱乐部的现代化前端应用，集音乐、游戏、AI聊天、图片、语录等多功能于一体。
+**邓紫棋粉丝俱乐部 — Vue 3 前端**
 
-🌐 **官网**: [www.gemfanclub.com](http://www.gemfanclub.com)
+[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D.svg?logo=vue.js)](https://vuejs.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.2-646CFF.svg?logo=vite)](https://vitejs.dev/)
+[![Pinia](https://img.shields.io/badge/Pinia-3.0-yellow.svg)](https://pinia.vuejs.org/)
+[![ECharts](https://img.shields.io/badge/ECharts-5.6-AA344D.svg)](https://echarts.apache.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](#-许可证)
+
+集音乐播放、AI 对话、互动游戏、图片瀑布流、Instagram 快拍、演唱会地图于一体的粉丝向 Web 应用。
+
+🌐 **线上地址** · [www.gemfanclub.com](http://www.gemfanclub.com)
 
 </div>
 
 ---
 
-## ✨ 功能一览
+## 🧭 项目矩阵
 
-| 模块           | 功能                                  | 说明                                        |
-| -------------- | ------------------------------------- | ------------------------------------------- |
-| 🏠 **首页**     | Hero Banner + 轮播                    | WebP 自适应 + JPEG 降级，图片已优化至 745KB |
-| 🎵 **音乐**     | 热门/冷门歌曲 + 歌词                  | 网易云 API 定时抓取，专辑封面展示           |
-| 🤖 **AI 对话**  | 智能聊天机器人                        | 对接后端 RAG Agent，模拟邓紫棋语气          |
-| 🎮 **游戏中心** | 猜歌 / 歌词接龙 / 知识问答 / 抢票模拟 | 多种互动小游戏                              |
-| 🖼️ **图片**     | 瀑布流图片墙                          | Masonry 布局，流畅浏览                      |
-| 💬 **语录**     | 经典语录收藏                          | 点赞、评论、详情页                          |
-| 🛍️ **商店**     | 周边商品展示                          | 商品详情 + 图片                             |
-| 🗺️ **地图**     | 交互式中国地图                        | ECharts 省份下钻                            |
-| 👤 **个人中心** | 用户管理                              | 登录/注册，个人信息                         |
-| 🎭 **Live2D**   | 虚拟形象                              | 页面角落 Live2D 看板娘                      |
+`GEM Fan Club` 是一个由四个独立仓库构成的全栈项目，本仓库为**前端展现层**：
+
+```
+┌─────────────────────────┐  HTTP/SSE  ┌─────────────────────────┐
+│  GEM-FAN-CLUB-VUE  🎨   │ ─────────► │  GEM-FAN-CLUB-WEB  ⚙️   │
+│  Vue 3 · Vite · Pinia   │            │  Spring Boot · MySQL    │
+│  （本仓库）              │ ◄───────── │  Redis · WebFlux        │
+└─────────────────────────┘            └────────────┬────────────┘
+                                                    │ HTTP/SSE
+                                                    ▼
+┌─────────────────────────┐    sync    ┌─────────────────────────┐
+│  GEM_FAN_CLUB_DATA_PY 📷│ ─────────► │  GEM_FAN_CLUB_RAG  🤖   │
+│  Weibo + VLM 图片流水线 │            │  RAG · Agent · GLM-4.7  │
+└─────────────────────────┘            └─────────────────────────┘
+```
+
+---
+
+## ✨ 功能模块
+
+| 模块              | 功能                                  | 关键实现                                |
+| ----------------- | ------------------------------------- | --------------------------------------- |
+| 🏠 **首页**        | Hero Banner + 自动轮播                | WebP 自适应 + JPEG 降级，首图 Preload   |
+| 🎵 **音乐**        | 热门 / 冷门歌曲 + 同步歌词            | 网易云 API 定时抓取，自定义播放器       |
+| 🤖 **AI 对话**     | 邓紫棋人设 AI 助手                    | SSE 流式输出，对接后端 RAG Agent        |
+| 🎮 **游戏中心**    | 猜歌 / 歌词接龙 / 知识问答 / 抢票模拟 | 排行榜 + Redis 秒杀                     |
+| 🖼️ **图片墙**      | 瀑布流图集                            | `vue-masonry-wall` + LRU 缓存           |
+| 💬 **语录**        | 经典语录 + 评论 + 点赞                | 富文本卡片，详情页路由                  |
+| 🛍️ **商店**        | 周边商品展示                          | 商品详情 + 图片预览                     |
+| 📸 **快拍**        | Instagram Stories 同步                | 视频/图片轮播，定时抓取                 |
+| 🗺️ **演唱会地图**  | 交互式中国地图                        | ECharts 省份下钻，历年巡演可视化        |
+| 👤 **个人中心**    | 登录注册 / 资料 / 头像                | Token 自动登录，前端图片压缩            |
+| 📊 **行为埋点**    | PV + 自定义事件                       | 路由钩子自动 PV，关键交互手动事件       |
+| 🎭 **Live2D**      | 看板娘 + 歌词气泡                     | 随机邓紫棋歌词飘字                      |
+
+---
 
 ## 🛠️ 技术栈
 
-| 类别        | 技术                    | 版本 |
-| ----------- | ----------------------- | ---- |
-| 前端框架    | Vue 3 + Composition API | 3.5  |
-| 构建工具    | Vite                    | 6.2  |
-| 状态管理    | Pinia                   | 3.0  |
-| 路由        | Vue Router              | 4.5  |
-| 图表可视化  | ECharts                 | 5.6  |
-| 瀑布流布局  | vue-masonry-wall        | 5.0  |
-| HTTP 客户端 | Axios                   | 1.8  |
-| 音频播放器  | vue3-audio-player       | 1.0  |
-| 图标        | Font Awesome (CDN)      | —    |
-| 字体        | Google Fonts (异步加载) | —    |
+| 类别        | 技术                                                  |
+| ----------- | ----------------------------------------------------- |
+| 框架        | Vue 3.5 (Composition API)                             |
+| 构建        | Vite 6.2 + Rollup `manualChunks` 代码分割             |
+| 状态管理    | Pinia 3.0（user / song / page）                       |
+| 路由        | Vue Router 4.5（懒加载）                              |
+| 可视化      | ECharts 5.6（地图、统计）                             |
+| 瀑布流      | `@yeger/vue-masonry-wall` 5.0                         |
+| HTTP        | Axios 1.8（统一拦截 + 图片代理）                      |
+| 音频        | `vue3-audio-player` 1.0                               |
+| 图片优化    | Sharp + `vite-plugin-image-optimizer`（WebP/JPEG）    |
+| 客户端压缩  | `browser-image-compression` 2.0                       |
+| 字体 / 图标 | Google Fonts + Font Awesome（异步非阻塞）             |
 
-### 构建优化
+### 构建优化要点
 
-- **图片压缩**: Sharp + vite-plugin-image-optimizer，自动生成 WebP + JPEG 降级
-- **代码分割**: Rollup manualChunks（vue-vendor / echarts-vendor / axios-vendor / layout-vendor）
-- **CSS 分割**: `cssCodeSplit: true`
-- **Tree Shaking**: Terser 压缩，生产环境自动移除 console/debugger
-- **资源预加载**: DNS prefetch + preconnect + 首图 preload
-- **字体异步**: Google Fonts & Font Awesome 非阻塞加载
+- **图片**：构建期 Sharp 压缩 → 同名 `.webp` + `.jpg` 双格式，HTML 通过 `<picture>` 自适应。
+- **代码分割**：`vue-vendor` / `echarts-vendor` / `axios-vendor` / `layout-vendor` 四个 chunk 隔离。
+- **CSS**：`cssCodeSplit: true`，按路由切片。
+- **预加载**：DNS prefetch + preconnect + 首屏 Banner `preload`。
+- **Tree Shaking**：Terser 压缩，生产环境剥离 `console` / `debugger`。
+
+---
 
 ## 🚀 快速开始
 
-### 环境要求
-
-- Node.js ≥ 16
-- npm ≥ 8
-
-### 安装与运行
-
 ```bash
-# 克隆项目
+# 1. 克隆 & 安装
 git clone https://github.com/Reyotsed/GEM-FAN-CLUB-VUE.git
 cd GEM-FAN-CLUB-VUE
-
-# 安装依赖
 npm install
 
-# 启动开发服务器
-npm run dev
+# 2. 开发
+npm run dev              # 启动 Vite Dev Server
 
-# 构建生产版本
-npm run build
+# 3. 构建
+npm run build            # Web 生产构建
+npm run build:app        # APP 模式构建（不同环境变量）
+npm run preview          # 本地预览构建产物
 
-# 预览生产版本
-npm run preview
-```
-
-### 图片压缩（可选）
-
-```bash
-# 压缩 public/img/homepage 下的图片，生成 WebP + 压缩 JPEG
+# 4. （可选）压缩 public/img/homepage 下的原图
 npm run compress-images
 ```
 
+> **环境要求**：Node.js ≥ 16，npm ≥ 8。
+
 ### 环境变量
 
-| 文件               | 说明                     |
-| ------------------ | ------------------------ |
-| `.env`             | 通用配置（DeepSeek API） |
-| `.env.development` | 开发环境 API 地址        |
-| `.env.production`  | 生产环境 API 地址        |
+| 文件               | 用途                                          |
+| ------------------ | --------------------------------------------- |
+| `.env`             | 通用变量（DeepSeek API Key 等，已 gitignore） |
+| `.env.development` | 开发：本地后端 API 地址                       |
+| `.env.production`  | 生产：通过 Nginx 反向代理                     |
+| `.env.app`         | APP 打包专用                                  |
+
+---
 
 ## 📁 项目结构
 
-```
+```text
 GEM-FAN-CLUB-VUE/
-├── index.html                  # 入口 HTML（含资源预加载优化）
-├── vite.config.js              # Vite 构建配置
-├── package.json
+├── index.html                  # 入口（含 preconnect / preload）
+├── vite.config.js              # 构建配置（chunk 分割、图片优化）
 ├── public/
-│   ├── data/                   # 静态数据 (地图 JSON, 歌曲数据)
-│   └── img/                    # 图片资源 (homepage, albumCover, icon...)
+│   ├── data/                   # 静态数据（地图 GeoJSON / 歌曲）
+│   └── img/                    # 图片资源（homepage / albumCover / icon）
 ├── scripts/
-│   ├── compress_images.js      # 图片压缩脚本 (Sharp)
+│   ├── compress_images.js      # Sharp 批量压缩
 │   ├── fetch_gem_songs.py      # 网易云热歌定时抓取
 │   └── ig_story_scraper.py     # Instagram 快拍定时抓取
 └── src/
-    ├── main.js                 # 应用入口
-    ├── App.vue                 # 根组件
-    ├── style.css               # 全局样式
-    ├── router/index.js         # 路由配置（懒加载）
-    ├── stores/                 # Pinia 状态管理
-    │   ├── user.js             # 用户状态
-    │   ├── song.js             # 歌曲状态
-    │   └── page.js             # 页面状态
-    ├── utils/
-    │   ├── api.js              # Axios 请求封装
-    │   ├── imageCache.js       # 图片缓存工具
-    │   └── toast.js            # Toast 通知工具
+    ├── main.js / App.vue / style.css
+    ├── router/                 # 懒加载路由
+    ├── stores/                 # Pinia (user / song / page)
+    ├── utils/                  # api / imageCache(LRU) / stats / toast
     ├── components/
-    │   ├── Live2D.vue          # Live2D 看板娘
-    │   ├── audio/              # 音频播放组件
-    │   ├── song/               # 歌曲相关组件
-    │   ├── info/               # 信息展示组件
-    │   ├── Login/              # 登录组件
-    │   ├── upload/             # 上传组件
-    │   └── user/               # 用户组件
+    │   ├── Live2D.vue          # 看板娘
+    │   ├── audio/              # 自定义音频播放器
+    │   ├── song/               # 歌曲列表 + 专辑
+    │   ├── info/               # 中国地图（省份下钻）
+    │   └── story/ Login/ upload/ user/
     └── views/
-        ├── TopNav.vue          # 顶部导航栏
-        ├── HomePage/           # 首页（WebP Banner）
-        ├── SongPage/           # 音乐页
-        ├── AIPage/             # AI 聊天页
-        ├── GamesPage/          # 游戏中心
-        │   ├── GuessSongGame   # 猜歌游戏
-        │   ├── LyricsChainGame # 歌词接龙
-        │   ├── QuizGame        # 知识问答
-        │   └── TicketRushGame  # 抢票模拟
-        ├── PicturePage/        # 图片墙
-        ├── QuotePage/          # 语录页
-        ├── ShopPage/           # 商店页
-        ├── InfoPage/           # 信息页（ECharts 地图）
-        └── UserPage/           # 个人中心
+        ├── TopNav.vue · Index.vue
+        ├── HomePage / SongPage / AIPage
+        ├── GamesPage/   # GuessSong / LyricsChain / Quiz / TicketRush
+        ├── PicturePage / QuotePage / StoryPage / ShopPage
+        └── InfoPage（ECharts 地图） · UserPage（个人中心）
 ```
 
-## 🔗 关联项目
+---
 
-| 项目                 | 说明                 | 仓库                                                   |
-| -------------------- | -------------------- | ------------------------------------------------------ |
-| **GEM-FAN-CLUB-WEB** | Spring Boot 后端 API | [GitHub](https://github.com/Reyotsed/GEM-FAN-CLUB-WEB) |
-| **GEM_FAN_CLUB_RAG** | RAG AI 聊天服务      | [GitHub](https://github.com/Reyotsed/GEM_FAN_CLUB_RAG) |
+## 🔗 关联仓库
+
+| 仓库                     | 角色                       | 链接                                                       |
+| ------------------------ | -------------------------- | ---------------------------------------------------------- |
+| **GEM-FAN-CLUB-WEB**     | Spring Boot 后端 API       | [GitHub](https://github.com/Reyotsed/GEM-FAN-CLUB-WEB)     |
+| **GEM_FAN_CLUB_RAG**     | RAG / Agent AI 服务        | [GitHub](https://github.com/Reyotsed/GEM_FAN_CLUB_RAG)     |
+| **GEM_FAN_CLUB_DATA_PY** | 微博图片 + VLM 打分流水线  | 同 monorepo 下 `GEM_FAN_CLUB_DATA_PY/`                     |
+
+---
 
 ## 📄 许可证
 
-MIT License
+[MIT License](LICENSE)
 
 ---
 
 <div align="center">
 
-⭐ **如果这个项目对你有帮助，请给一个 Star！**
-
-Made with ❤️ for G.E.M. fans
+⭐ 如果这个项目对你有帮助，欢迎 Star ｜ Made with ❤️ for **G.E.M.** fans
 
 </div>

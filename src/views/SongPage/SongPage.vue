@@ -70,6 +70,7 @@
 <script setup>
 import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue'; 
 import apiClient from '@/utils/api';
+import { trackEvent, EVENTS } from '@/utils/stats';
 import { useSongStore } from '@/stores/song';
 import SongListModal from '@/components/song/SongListModal.vue';
 
@@ -187,6 +188,7 @@ onMounted(() => {
 });
 
 // 修改播放/暂停函数以包含更多错误处理
+let lastTrackedSongId = null;
 const togglePlay = () => {
   if (!audio.value) {
     console.error('音频元素未初始化');
@@ -198,7 +200,6 @@ const togglePlay = () => {
     
     // 尝试重新设置源
     if (songStore.currentSong && songStore.currentSong.audioPath) {
-      console.log('重新设置音频源:', songStore.currentSong.audioPath);
       audio.value.src = songStore.currentSong.audioPath;
       audio.value.load();
     } else {
@@ -215,7 +216,10 @@ const togglePlay = () => {
         playPromise
           .then(() => {
             isPlaying.value = true;
-            console.log('开始播放');
+            if (songStore.currentSongId !== lastTrackedSongId) {
+              lastTrackedSongId = songStore.currentSongId;
+              trackEvent(EVENTS.SONG_PLAY);
+            }
           })
           .catch(error => {
             console.error('播放失败:', error);
@@ -225,7 +229,6 @@ const togglePlay = () => {
     } else {
       audio.value.pause();
       isPlaying.value = false;
-      console.log('暂停播放');
     }
   } catch (error) {
     console.error('togglePlay 错误:', error);
@@ -300,7 +303,6 @@ const handleAudioError = (event) => {
   
   // 尝试重新加载
   if (songStore.currentSong && songStore.currentSong.audioPath) {
-    console.log('尝试重新加载音频');
     audio.value.src = songStore.currentSong.audioPath;
     audio.value.load();
   }
@@ -308,7 +310,6 @@ const handleAudioError = (event) => {
 
 // 添加可以播放的处理
 const handleCanPlay = () => {
-  console.log('音频已准备好，可以播放');
 };
 </script>
 
@@ -316,10 +317,10 @@ const handleCanPlay = () => {
 .song-page {
     min-height: 100vh;
     width: 100%;
-    background: radial-gradient(circle at 50% 0%, #2a1a3a 0%, #0a0a12 100%);
-    color: white;
+    background: transparent;
+    color: var(--text-primary);
     margin: 0;
-    padding: calc(var(--nav-height, 70px) + 2rem) 2rem 2rem;
+    padding: var(--page-padding-y) var(--page-padding-x) var(--page-padding-bottom);
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -331,14 +332,14 @@ const handleCanPlay = () => {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 1200px;
+    max-width: var(--container-max);
     margin: 0 auto;
     background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: var(--card-radius);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: var(--shadow-ring), 0 0 80px rgba(200, 80, 232, 0.06);
     overflow: hidden;
     position: relative;
 }
@@ -351,21 +352,21 @@ const handleCanPlay = () => {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at 50% 50%, rgba(235, 7, 238, 0.05), transparent 60%);
+    background: radial-gradient(circle at 50% 50%, rgba(200, 80, 232, 0.05), transparent 60%);
     pointer-events: none;
     z-index: 0;
 }
 
 .song-container {
     width: 100%;
-    padding: 3rem;
+    padding: var(--space-12);
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     box-sizing: border-box;
     position: relative;
     z-index: 1;
-    gap: 3rem;
+    gap: var(--space-12);
 }
 
 .record-player {
@@ -394,9 +395,10 @@ const handleCanPlay = () => {
     background: #111;
     position: relative;
     overflow: hidden;
-    border: 4px solid #222;
+    border: 4px solid rgba(255, 255, 255, 0.08);
     animation: rotate 20s linear infinite;
     animation-play-state: paused;
+    box-shadow: 0 0 40px rgba(200, 80, 232, 0.1), inset 0 0 60px rgba(0, 0, 0, 0.5);
 }
 
 /* 唱片纹理 */
@@ -487,10 +489,10 @@ const handleCanPlay = () => {
 }
 
 .song-title h1 {
-    font-size: 3rem;
+    font-size: clamp(var(--text-3xl), 5vw, var(--text-5xl));
     font-weight: 900;
     margin: 0;
-    background: linear-gradient(to right, #fff, #f3caff);
+    background: var(--color-title-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -1px;
@@ -499,8 +501,8 @@ const handleCanPlay = () => {
 
 .song-meta {
     display: flex;
-    gap: 2rem;
-    margin-bottom: 2rem;
+    gap: var(--space-8);
+    margin-bottom: var(--space-8);
 }
 
 .meta-item {
@@ -524,10 +526,10 @@ const handleCanPlay = () => {
 
 .lyrics-section {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 20px;
-    padding: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -581,7 +583,9 @@ const handleCanPlay = () => {
     margin: 1.2rem 0;
     font-size: 1.1rem;
     color: rgba(255, 255, 255, 0.4);
-    transition: all 0.4s ease;
+    transition-property: transform, opacity;
+  transition-duration: 0.4s;
+  transition-timing-function: ease;
     cursor: pointer;
 }
 
@@ -593,7 +597,7 @@ const handleCanPlay = () => {
     color: #fff;
     font-size: 1.4rem;
     font-weight: 700;
-    text-shadow: 0 0 20px rgba(235, 7, 238, 0.6);
+    text-shadow: 0 0 20px rgba(200, 80, 232, 0.6);
     transform: scale(1.05);
 }
 
@@ -620,7 +624,7 @@ const handleCanPlay = () => {
 /* 播放控制栏 */
 .player-controls {
     width: 100%;
-    padding: 1.5rem 3rem;
+    padding: var(--space-6) var(--space-12);
     background: rgba(0, 0, 0, 0.2);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
@@ -640,7 +644,9 @@ const handleCanPlay = () => {
     border: none;
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition-property: transform, box-shadow, opacity, background, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -657,12 +663,12 @@ const handleCanPlay = () => {
     border-radius: 50%;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: #fff;
-    box-shadow: 0 10px 20px rgba(235, 7, 238, 0.3);
+    box-shadow: 0 10px 20px rgba(200, 80, 232, 0.3);
 }
 
 .play-pause:hover {
     transform: scale(1.1);
-    box-shadow: 0 15px 30px rgba(235, 7, 238, 0.5);
+    box-shadow: 0 15px 30px rgba(200, 80, 232, 0.5);
 }
 
 .play-pause i {
@@ -756,8 +762,8 @@ const handleCanPlay = () => {
 
 .song-list {
     width: 100%;
-    max-width: 1200px;
-    margin: 2rem auto;
+    max-width: var(--container-max);
+    margin: var(--space-8) auto;
 }
 
 /* 响应式 */
@@ -791,14 +797,44 @@ const handleCanPlay = () => {
 
 @media (max-width: 600px) {
     .song-page {
-        padding: calc(var(--nav-height, 70px) + 1rem) 1rem 1rem;
+        padding: var(--page-padding-y) var(--page-padding-x) var(--page-padding-bottom);
     }
+
+    .song-player { border-radius: var(--radius-lg); }
+
+    .song-container {
+        padding: var(--space-4);
+        gap: var(--space-4);
+    }
+
+    .record-player {
+        width: 100%;
+        max-width: 180px;
+    }
+
+    /* 移动端隐藏唱机臂，避免溢出 */
+    .record-arm { display: none; }
+    .song-cover { border-width: 4px; }
+
+    .song-info { min-height: 0; }
+    .song-title { margin-bottom: 0.6rem; text-align: center; }
+    .song-title h1 { font-size: 1.4rem; letter-spacing: 0; }
+    .song-meta { gap: 1.2rem; margin-bottom: 0.8rem; justify-content: center; }
+    .label { font-size: 0.7rem; letter-spacing: 0.5px; }
+    .value { font-size: 0.95rem; }
+    .lyrics-section { padding: var(--space-3); border-radius: var(--radius-md); }
+    .lyrics-title { font-size: 0.75rem; margin-bottom: 0.5rem; letter-spacing: 1px; }
+    .lyrics-line { margin: 0.6rem 0; font-size: 0.88rem; }
+    .lyrics-line.highlight { font-size: 1rem; transform: scale(1.02); }
 
     .player-controls {
         flex-direction: column;
-        padding: 1.5rem;
-        gap: 1.5rem;
+        padding: var(--space-3);
+        gap: var(--space-3);
     }
+
+    .copyright-notice { font-size: 0.8rem; gap: 0.5rem; text-align: center; }
+    .copyright-icon { font-size: 0.95rem; }
 
     .progress-container {
         width: 100%;

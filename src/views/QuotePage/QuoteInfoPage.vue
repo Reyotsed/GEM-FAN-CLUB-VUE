@@ -2,14 +2,20 @@
     <transition name="modal-fade">
         <div class="modal-overlay" v-if="visible" @click.self="closeModal">
             <div class="quote-info-modal">
-                <button class="close-button" @click="closeModal" title="关闭">
-                    <span class="close-icon">×</span>
-                </button>
-                
-                <!-- 主要内容区域 -->
+                <!-- 顶部作者栏（头像+昵称+关闭按钮） -->
+                <div class="author-bar">
+                    <div class="author-info" @click="goToUserPage(quoteData.quoteInfo.userId)">
+                        <img :src="quoteData.userAvatar" alt="user avatar" class="author-avatar">
+                        <span class="author-name">{{ quoteData.userNickName }}</span>
+                    </div>
+                    <button class="close-button" @click="closeModal" title="关闭">
+                        <span class="close-icon">×</span>
+                    </button>
+                </div>
+
+                <!-- 左侧图片区 -->
                 <div class="modal-content">
-                    <!-- 左侧图片区域 -->
-                    <div class="left-section">
+                    <div class="left-section" v-if="quoteData.pictureList.length > 0">
                         <div class="carousel-container">
                             <button class="carousel-button prev" @click="prevImage" v-if="quoteData.pictureList.length > 1">
                                 <i class="arrow-icon">❮</i>
@@ -22,6 +28,8 @@
                                         :src="quoteData.pictureList[currentImageIndex]" 
                                         alt="quote-picture"
                                         class="main-image"
+                                        loading="lazy"
+                                        decoding="async"
                                     >
                                 </transition>
                                 <div class="image-overlay-hint" v-if="quoteData.pictureList.length > 1">
@@ -43,55 +51,31 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- 右侧内容区域 -->
-                    <div class="right-section">
-                        <!-- 顶部语录内容 -->
+                <!-- 右侧内容栏（桌面端独立滚动列，移动端与图片同列） -->
+                <div class="right-pane">
+                    <div class="right-pane-scroll">
+                        <!-- 语录正文 + 发帖时间 + 点赞 -->
                         <div class="quote-header">
-                            <div class="quote-decoration">❝</div>
-                            <div class="quote-text-container">
-                                <p class="quote-content">{{ quoteData.quoteInfo.content }}</p>
-                            </div>
-                            
-                            <!-- 作者和互动栏 -->
-                            <div class="meta-row">
-                                <div class="author-info" @click="goToUserPage(quoteData.quoteInfo.userId)">
-                                    <div class="avatar-wrapper">
-                                        <img :src="quoteData.userAvatar" alt="user avatar" class="author-avatar">
-                                        <div class="avatar-ring"></div>
-                                    </div>
-                                    <div class="author-details">
-                                        <span class="author-name">{{ quoteData.userNickName }}</span>
-                                        <span class="publish-time">{{ formatTime(quoteData.quoteInfo.createdAt) }}</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="interaction-group">
-                                    <button class="like-btn" @click="addlike(quoteData)" :class="{ 'is-liked': quoteData.isliked }">
-                                        <span class="heart-icon">{{ quoteData.isliked ? '❤️' : '🤍' }}</span>
-                                        <span class="count">{{ quoteData.quoteInfo.likesCount }}</span>
-                                    </button>
-                                </div>
-                            </div>
+                        <p class="quote-content">{{ quoteData.quoteInfo.content }}</p>
+                        <div class="meta-row">
+                            <span class="publish-time">{{ formatTime(quoteData.quoteInfo.createdAt) }}</span>
+                            <button class="like-btn" @click="addlike(quoteData)" :class="{ 'is-liked': quoteData.isliked }">
+                                <span class="heart-icon">{{ quoteData.isliked ? '❤️' : '🤍' }}</span>
+                                <span class="count">{{ quoteData.quoteInfo.likesCount }}</span>
+                            </button>
                         </div>
+                    </div>
 
-                        <!-- 评论区 -->
-                        <div class="comments-container">
+                    <!-- 评论区 -->
+                    <div class="comments-container">
                             <div class="comments-header">
-                                <h3>评论 <span class="comment-count">{{ comments.length }}</span></h3>
+                                <h3>共 {{ comments.length }} 条评论</h3>
                             </div>
                             
-                            <div class="comments-scroll-area">
-                                <!-- 评论输入框 (顶部) -->
-                                <div class="main-comment-input" v-if="userStore.isLoggedIn">
-                                    <CommentInput @submit="handleCommentSubmit" placeholder="写下你的想法..." />
-                                </div>
-                                <div v-else class="login-tip" @click="goToLogin">
-                                    <span>登录后参与讨论</span>
-                                </div>
-
-                                <!-- 评论列表 -->
-                                <div class="comments-list">
+                            <!-- 评论列表 (不再独立滚动，跟随外层 modal-content 一起滚动) -->
+                            <div class="comments-list">
                                     <transition-group name="list">
                                         <div v-for="comment in comments" :key="comment.commentId" class="comment-card">
                                             <div class="comment-main">
@@ -108,21 +92,13 @@
                                                     </div>
                                                     
                                                     <div class="comment-actions">
-                                                        <button class="action-btn reply" @click="showReplyInput(comment)">
+                                                        <button class="action-btn reply" @click="startReply(comment)">
                                                             回复
                                                         </button>
                                                         <button class="action-btn like" @click="likeComment(comment)" :class="{ 'has-liked': comment.hasLiked }">
-                                                            <span class="icon">🤍</span> {{ comment.likeNum || 0 }}
+                                                            <span class="icon" :class="{ pop: comment.hasLiked }">{{ comment.hasLiked ? '❤️' : '🤍' }}</span>
+                                                            <span class="like-count">{{ comment.likeNum || 0 }}</span>
                                                         </button>
-                                                    </div>
-
-                                                    <!-- 回复输入框 -->
-                                                    <div v-if="comment.showReplyInput && userStore.isLoggedIn" class="reply-input-wrapper">
-                                                        <CommentInput 
-                                                            @submit="(content) => handleReplySubmit(content, comment.commentId)"
-                                                            :placeholder="`回复 @${comment.userNickName}`"
-                                                            :autoFocus="true"
-                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -143,20 +119,13 @@
                                                             </div>
                                                         </div>
                                                         <div class="comment-actions">
-                                                            <button class="action-btn reply" @click="showReplyInput(reply, comment.commentId)">
+                                                            <button class="action-btn reply" @click="startReply(reply, comment.commentId)">
                                                                 回复
                                                             </button>
                                                             <button class="action-btn like" @click="likeComment(reply)" :class="{ 'has-liked': reply.hasLiked }">
-                                                                <span class="icon">🤍</span> {{ reply.likeNum || 0 }}
+                                                                <span class="icon" :class="{ pop: reply.hasLiked }">{{ reply.hasLiked ? '❤️' : '🤍' }}</span>
+                                                                <span class="like-count">{{ reply.likeNum || 0 }}</span>
                                                             </button>
-                                                        </div>
-                                                        
-                                                        <div v-if="reply.showReplyInput && userStore.isLoggedIn" class="reply-input-wrapper">
-                                                            <CommentInput 
-                                                                @submit="(content) => handleReplySubmit(content, comment.commentId, reply.userId)" 
-                                                                :placeholder="`回复 @${reply.userNickName}`"
-                                                                :autoFocus="true"
-                                                            />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -173,9 +142,49 @@
                                         <p>还没有评论，快来抢沙发吧~</p>
                                     </div>
                                 </div>
-                            </div>
                         </div>
                     </div>
+
+                    <!-- 底部输入栏 -->
+                    <div class="comment-footer">
+                        <!-- 回复目标提示条 -->
+                        <div v-if="replyTarget" class="reply-target-bar">
+                            <div class="reply-target-info">
+                                <span class="reply-target-label">回复</span>
+                                <span class="reply-target-name">{{ replyTarget.nickName }}</span>
+                                <span class="reply-target-preview">：{{ replyTarget.preview }}</span>
+                            </div>
+                            <button class="reply-target-cancel" @click="cancelReply" title="取消回复">×</button>
+                        </div>
+                    <div v-if="userStore.isLoggedIn" class="xhs-input-bar" :class="{ 'is-expanded': footerExpanded || footerText.length > 0 }">
+                        <img :src="userStore.avatar || quoteData.userAvatar" class="xhs-avatar" alt="me" v-if="userStore.avatar">
+                        <div class="xhs-avatar xhs-avatar-fallback" v-else>💬</div>
+                        <div class="xhs-input-wrap">
+                            <textarea
+                                v-model="footerText"
+                                class="xhs-input"
+                                :rows="1"
+                                            :placeholder="replyTarget ? `回复 ${replyTarget.nickName}...` : '说点什么...'"
+                                            @focus="footerExpanded = true"
+                                @blur="onFooterBlur"
+                                @keydown.enter.exact.prevent="submitFooter"
+                            ></textarea>
+                            <button class="xhs-emoji" @mousedown.prevent="toggleFooterEmoji" type="button">😊</button>
+                            <div v-if="showFooterEmoji" class="xhs-emoji-panel" @mousedown.prevent>
+                                <button v-for="e in quickEmojis" :key="e" class="xhs-emoji-item" @click="appendFooterEmoji(e)">{{ e }}</button>
+                            </div>
+                        </div>
+                        <button
+                            class="xhs-send"
+                            :class="{ active: footerText.trim().length > 0 }"
+                            :disabled="!footerText.trim()"
+                            @click="submitFooter"
+                        >发送</button>
+                    </div>
+                    <div v-else class="login-tip" @click="goToLogin">
+                        <span>登录后参与讨论</span>
+                    </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -191,6 +200,7 @@ import apiClient from '@/utils/api';
 import CommentInput from '@/components/user/CommentInput.vue';
 import LoginModal from '@/components/Login/LoginModal.vue';
 import { trackEvent, EVENTS } from '@/utils/stats';
+import { showUserCard } from '@/utils/userCardStore';
 
 const props = defineProps({
     visible: {
@@ -227,6 +237,71 @@ const quoteData = ref({
 });
 
 const comments = ref<any[]>([]);
+
+// 底部小红书风格输入栏状态
+const footerText = ref('');
+const footerExpanded = ref(false);
+const showFooterEmoji = ref(false);
+const quickEmojis = [
+    '\u2764\uFE0F','\u{1F9E1}','\u{1F49B}','\u{1F49A}','\u{1F499}','\u{1F49C}','\u{1F5A4}','\u{1F90D}','\u{1F496}','\u{1F494}',
+    '\u{1F525}','\u2728','\u{1F31F}','\u2B50','\u{1F308}','\u{1F338}','\u{1F339}','\u{1F33B}','\u{1F340}','\u2600\uFE0F',
+    '\u{1F600}','\u{1F601}','\u{1F602}','\u{1F923}','\u{1F603}','\u{1F604}','\u{1F605}','\u{1F60A}','\u{1F60D}','\u{1F970}',
+    '\u{1F618}','\u{1F60E}','\u{1F914}','\u{1F609}','\u{1F60C}','\u{1F60B}','\u{1F61C}','\u{1F929}','\u{1F973}','\u{1F60F}',
+    '\u{1F62D}','\u{1F622}','\u{1F631}','\u{1F621}','\u{1F624}','\u{1F644}','\u{1F634}','\u{1F917}','\u{1F92D}','\u{1F92B}',
+    '\u{1F44D}','\u{1F44E}','\u{1F44C}','\u{1F44F}','\u{1F64C}','\u{1F64F}','\u{1F4AA}','\u270C\uFE0F','\u{1F91D}','\u{1F440}'
+];
+
+// 当前回复目标（null 表示发顶级评论）
+const replyTarget = ref<{ nickName: string; preview: string; parentId: string; replyToUserId?: string } | null>(null);
+const footerInputRef = ref<HTMLTextAreaElement | null>(null);
+
+const startReply = (item: any, parentCommentId?: string) => {
+    if (!userStore.isLoggedIn) {
+        loginModalRef.value?.openModal();
+        return;
+    }
+    const raw = item.formattedContent || item.content || '';
+    replyTarget.value = {
+        nickName: item.userNickName,
+        preview: raw.length > 30 ? raw.slice(0, 30) + '...' : raw,
+        parentId: parentCommentId || item.commentId,
+        replyToUserId: parentCommentId ? item.userId : undefined
+    };
+    footerExpanded.value = true;
+    setTimeout(() => {
+        document.querySelector<HTMLTextAreaElement>('.xhs-input')?.focus();
+    }, 0);
+};
+const cancelReply = () => {
+    replyTarget.value = null;
+};
+
+const onFooterBlur = () => {
+    setTimeout(() => {
+        if (!footerText.value && !showFooterEmoji.value) footerExpanded.value = false;
+    }, 150);
+};
+const toggleFooterEmoji = () => {
+    showFooterEmoji.value = !showFooterEmoji.value;
+    footerExpanded.value = true;
+};
+const appendFooterEmoji = (e: string) => {
+    footerText.value += e;
+    showFooterEmoji.value = false;
+};
+const submitFooter = async () => {
+    const text = footerText.value.trim();
+    if (!text) return;
+    if (replyTarget.value) {
+        await handleReplySubmit(text, replyTarget.value.parentId, replyTarget.value.replyToUserId);
+        replyTarget.value = null;
+    } else {
+        await handleCommentSubmit(text);
+    }
+    footerText.value = '';
+    showFooterEmoji.value = false;
+    footerExpanded.value = false;
+};
 
 const closeModal = () => {
     emit('update:visible', false);
@@ -281,7 +356,9 @@ const loadQuoteData = async () => {
 // 评论加载与处理
 const loadComments = async () => {
     try {
-        const res = await apiClient.get(`/quote/comments/${props.quoteId}`);
+        const res = await apiClient.get(`/quote/comments/${props.quoteId}`, {
+            params: userStore.isLoggedIn ? { userId: userStore.userId } : {}
+        });
         const rawComments = res.data.data;
         
         // 构建评论树
@@ -407,38 +484,55 @@ const showReplyInput = (item: any, parentCommentId?: string) => {
 
 const likeComment = async (comment: any) => {
     if (!userStore.isLoggedIn) return;
+    const before = !!comment.hasLiked;
+    const offset = before ? -1 : 1;
+    comment.hasLiked = !before;
+    comment.likeNum = Math.max(0, (comment.likeNum || 0) + offset);
     try {
-        await apiClient.post('/quote/comment/like', {
+        const res = await apiClient.post('/quote/comment/like', {
             commentId: comment.commentId,
             userId: userStore.userId
         });
-        comment.likeNum = (comment.likeNum || 0) + 1;
-        comment.hasLiked = true; // Visual feedback
-    } catch (e) { console.error(e); }
+        // 以服务端返回的最新状态为准，防止与本地推断不一致
+        if (typeof res?.data?.data === 'boolean') {
+            comment.hasLiked = res.data.data;
+        }
+    } catch (e) {
+        comment.hasLiked = before;
+        comment.likeNum = Math.max(0, (comment.likeNum || 0) - offset);
+        console.error(e);
+    }
 };
 
 const addlike = async (quote: any) => {
     if (!userStore.isLoggedIn) return;
-    quote.isliked = !quote.isliked;
-    if (quote.isliked) {
-        trackEvent(EVENTS.QUOTE_LIKE);
-    }
-    const url = quote.isliked ? '/quote/addLike' : '/quote/eraseLike';
-    const offset = quote.isliked ? 1 : -1;
-    
+    if (quote._likeBusy) return; // 防连点 race
+    quote._likeBusy = true;
+
+    const before = quote.isliked;
+    const url = before ? '/quote/eraseLike' : '/quote/addLike';
+
     try {
-        await apiClient.get(url, {
+        const res = await apiClient.post(url, null, {
             params: { quoteId: quote.quoteInfo.quoteId, userId: userStore.userId }
         });
-        quote.quoteInfo.likesCount += offset;
+        quote.isliked = !before;
+        if (quote.isliked) {
+            trackEvent(EVENTS.QUOTE_LIKE);
+        }
+        const latest = res?.data?.data;
+        if (typeof latest === 'number') {
+            quote.quoteInfo.likesCount = latest;
+        }
     } catch {
-        quote.isliked = !quote.isliked; // Revert
+        // 失败时不动状态
+    } finally {
+        quote._likeBusy = false;
     }
 };
 
 const goToUserPage = (userId: string) => {
-    router.push({ path: '/user', query: { id: userId } });
-    closeModal();
+    showUserCard(userId);
 };
 
 const goToLogin = () => {
@@ -449,7 +543,10 @@ const goToLogin = () => {
 
 const formatTime = (ts: string) => {
     const d = new Date(ts);
-    return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+    const now = new Date();
+    const sameYear = d.getFullYear() === now.getFullYear();
+    const yearPart = sameYear ? '' : `${d.getFullYear()}年`;
+    return `${yearPart}${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
 };
 
 const displayedReplies = (comment: any) => comment.replies.slice(0, comment.displayCount);
@@ -475,7 +572,9 @@ onUnmounted(() => {
 <style scoped>
 /* 动画定义 */
 .modal-fade-enter-active, .modal-fade-leave-active {
-    transition: all 0.3s ease;
+    transition-property: transform, box-shadow, opacity, background, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 .modal-fade-enter-from, .modal-fade-leave-to {
     opacity: 0;
@@ -491,7 +590,9 @@ onUnmounted(() => {
 }
 
 .list-enter-active, .list-leave-active {
-    transition: all 0.4s ease;
+    transition-property: transform, opacity;
+  transition-duration: 0.4s;
+  transition-timing-function: ease;
 }
 .list-enter-from, .list-leave-to {
     opacity: 0;
@@ -514,56 +615,125 @@ onUnmounted(() => {
 
 .quote-info-modal {
     width: 1100px;
-    height: 85vh;
-    max-height: 850px;
+    max-width: calc(100vw - 40px);
+    height: 90vh;
+    max-height: 900px;
     background: linear-gradient(145deg, rgba(28, 28, 45, 0.9), rgba(15, 15, 25, 0.95));
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 28px;
+    border-radius: 20px;
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
-    display: flex;
+    /* 桌面端：二列网格 (图片 | 右侧内容区) + 顶部作者栏跨列 */
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+        "author author"
+        "image  content";
     overflow: hidden;
     position: relative;
     backdrop-filter: blur(40px);
     transition: transform 0.3s ease;
 }
 
-.close-button {
-    position: absolute;
-    top: 20px; right: 20px;
+.author-bar { grid-area: author; }
+.modal-content { grid-area: image; min-height: 0; min-width: 0; overflow: hidden; }
+.right-pane {
+    grid-area: content;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    border-left: 1px solid rgba(255,255,255,0.05);
+}
+.right-pane-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+.right-pane-scroll::-webkit-scrollbar { width: 6px; }
+.right-pane-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.right-pane-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* 顶部作者栏 */
+.author-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    gap: 12px;
+}
+.author-bar .author-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 4px 10px 4px 4px;
+    border-radius: 30px;
+    transition: background .25s;
+    min-width: 0;
+    flex: 1;
+}
+.author-bar .author-info:hover { background: rgba(255,255,255,0.04); }
+.author-bar .author-avatar {
     width: 36px; height: 36px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    font-size: 20px;
+    object-fit: cover;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    transition: border-color .25s;
+    flex-shrink: 0;
+}
+.author-bar .author-info:hover .author-avatar { border-color: #eb07ee; }
+.author-bar .author-name {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.close-button {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255,255,255,0.8);
+    font-size: 18px;
     cursor: pointer;
-    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition-property: transform, box-shadow, opacity, background, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+    flex-shrink: 0;
 }
 .close-button:hover {
     background: rgba(235, 7, 238, 0.8);
     border-color: rgba(235, 7, 238, 0.8);
-    transform: rotate(90deg) scale(1.1);
+    color: #fff;
+    transform: rotate(90deg);
 }
 
 .modal-content {
     display: flex;
     width: 100%;
     height: 100%;
+    background: #000;
 }
 
-/* 左侧图片区 */
+/* 图片区 (桌面端填满左栏，移动端高度固定) */
 .left-section {
-    flex: 1.3;
+    flex: 1;
+    width: 100%;
+    height: 100%;
     background: #000;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
     overflow: hidden;
 }
 
@@ -626,7 +796,9 @@ onUnmounted(() => {
     border-radius: 50%;
     cursor: pointer;
     z-index: 10;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -652,7 +824,9 @@ onUnmounted(() => {
     background: rgba(255,255,255,0.3);
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     border: 1px solid transparent;
 }
 .indicator.active {
@@ -664,111 +838,52 @@ onUnmounted(() => {
     background: rgba(255,255,255,0.6);
 }
 
-/* 右侧内容区 */
-.right-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: rgba(255,255,255,0.01);
-    min-width: 400px;
-}
+/* 右侧内容区 (已废弃，保留以防调用) */
+.right-section { display: contents; }
 
 .quote-header {
-    padding: 30px 40px;
+    padding: 16px 20px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
-    background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
-}
-
-.quote-decoration {
-    font-size: 80px;
-    color: rgba(235, 7, 238, 0.15);
-    font-family: 'Times New Roman', serif;
-    line-height: 0.5;
-    margin-bottom: 10px;
-    margin-left: -10px;
-}
-
-.quote-text-container {
-    margin-bottom: 25px;
+    flex-shrink: 0;
 }
 
 .quote-content {
-    font-size: 1.35rem;
-    line-height: 1.6;
+    font-size: 1.05rem;
+    line-height: 1.65;
     color: rgba(255,255,255,0.95);
     font-weight: 400;
-    letter-spacing: 0.5px;
-    font-family: 'Georgia', serif; /* More elegant font for quotes */
+    letter-spacing: 0.3px;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .meta-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 20px;
+    margin-top: 14px;
+    gap: 12px;
 }
-
-.author-info {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    padding: 6px 10px;
-    border-radius: 12px;
-    transition: background 0.3s;
-    margin-left: -10px;
-}
-.author-info:hover {
-    background: rgba(255,255,255,0.05);
-}
-
-.avatar-wrapper {
-    position: relative;
-    width: 48px; height: 48px;
-}
-.author-avatar {
-    width: 100%; height: 100%;
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.2);
-    object-fit: cover;
-    transition: border-color 0.3s;
-}
-.author-info:hover .author-avatar {
-    border-color: #eb07ee;
-}
-
-.author-details {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.author-name {
-    color: #fff;
-    font-weight: 600;
-    font-size: 1rem;
-}
-.publish-time {
-    color: rgba(255,255,255,0.5);
-    font-size: 0.8rem;
-}
-
-.interaction-group {
-    display: flex;
-    align-items: center;
+.meta-row .publish-time {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.78rem;
 }
 
 .like-btn {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
     color: white;
-    padding: 8px 20px;
+    padding: 6px 14px;
     border-radius: 30px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
-    transition: all 0.3s;
-    font-size: 0.95rem;
+    gap: 6px;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+    font-size: 0.85rem;
 }
 .like-btn:hover {
     background: rgba(235, 7, 238, 0.15);
@@ -784,38 +899,211 @@ onUnmounted(() => {
     font-weight: bold;
 }
 
-/* 评论区 */
+/* 评论区 (不再独立滚动，跟随 modal-content 一起滚) */
 .comments-container {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    position: relative;
+    flex-shrink: 0;
 }
 
 .comments-header {
-    padding: 18px 40px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    background: rgba(0,0,0,0.1);
+    padding: 16px 20px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    background: transparent;
 }
 .comments-header h3 {
     margin: 0;
-    font-size: 1rem;
-    color: rgba(255,255,255,0.9);
-    font-weight: 600;
-}
-.comment-count {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.5);
-    margin-left: 6px;
-    font-weight: normal;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.55);
+    font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
-.comments-scroll-area {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 40px;
+.comments-list {
+    padding: 12px 20px 16px;
 }
+
+/* modal-content 滚动条 */
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modal-content::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* 底部输入栏 - 小红书风格（单行胶囊，所有元素36px基线对齐） */
+.comment-footer {
+    flex-shrink: 0;
+    padding: 10px 20px 12px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(10, 10, 18, 0.88);
+    backdrop-filter: blur(20px);
+}
+/* 回复目标提示条 */
+.reply-target-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 12px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.55);
+}
+.reply-target-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.reply-target-label { color: rgba(255,255,255,0.4); flex-shrink: 0; }
+.reply-target-name { color: #eb07ee; font-weight: 500; flex-shrink: 0; }
+.reply-target-preview { color: rgba(255,255,255,0.45); overflow: hidden; text-overflow: ellipsis; }
+.reply-target-cancel {
+    width: 22px; height: 22px;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.6);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background .2s;
+}
+.reply-target-cancel:hover { background: rgba(235,7,238,0.6); color: #fff; }
+.xhs-input-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.xhs-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+}
+.xhs-avatar-fallback {
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06);
+    font-size: 14px;
+}
+.xhs-input-wrap {
+    flex: 1;
+    position: relative;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    transition: border-color .25s, background .25s;
+    display: flex;
+    align-items: center;
+    padding-right: 40px;
+    min-height: 36px;
+}
+.xhs-input-bar.is-expanded .xhs-input-wrap {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(235, 7, 238, 0.35);
+}
+.xhs-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: rgba(255,255,255,0.92);
+    font-size: 0.9rem;
+    line-height: 20px;
+    padding: 8px 14px;
+    resize: none;
+    font-family: inherit;
+    max-height: 80px;
+    display: block;
+}
+.xhs-input::placeholder { color: rgba(255,255,255,0.35); }
+.xhs-emoji {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px; height: 28px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+}
+.xhs-emoji:hover { background: rgba(255,255,255,0.08); }
+.xhs-emoji-panel {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    width: 280px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: rgba(30, 30, 50, 0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(20px);
+    z-index: 20;
+    animation: fadeIn .2s;
+}
+.xhs-emoji-item {
+    width: 30px; height: 30px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 6px;
+    transition: background .2s, transform .2s;
+}
+.xhs-emoji-item:hover { background: rgba(255,255,255,0.1); transform: scale(1.15); }
+.xhs-send {
+    flex-shrink: 0;
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 18px;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: not-allowed;
+    transition-property: transform, opacity;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.xhs-send.active {
+    background: linear-gradient(135deg, #eb07ee, #a505de);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(235, 7, 238, 0.3);
+}
+.xhs-send.active:hover { filter: brightness(1.1); transform: translateY(-1px); }
 .comments-scroll-area::-webkit-scrollbar {
     width: 6px;
 }
@@ -830,25 +1118,18 @@ onUnmounted(() => {
     background: rgba(255,255,255,0.2);
 }
 
-.main-comment-input {
-    margin-bottom: 30px;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: transparent; /* CommentInput component handles its own background usually, but here just wrapper */
-}
-
 .login-tip {
     text-align: center;
-    padding: 15px;
+    padding: 12px;
     background: rgba(255,255,255,0.05);
-    border-radius: 16px;
+    border-radius: 24px;
     color: rgba(255,255,255,0.6);
     cursor: pointer;
     font-size: 0.9rem;
-    margin-bottom: 25px;
     border: 1px dashed rgba(255,255,255,0.1);
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 .login-tip:hover {
     background: rgba(255,255,255,0.08);
@@ -935,6 +1216,34 @@ onUnmounted(() => {
 .action-btn.has-liked {
     color: #eb07ee;
 }
+.action-btn.like .icon {
+    display: inline-block;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+    transform-origin: center;
+}
+.action-btn.like:hover .icon {
+    transform: scale(1.2);
+}
+.action-btn.like:active .icon {
+    transform: scale(0.85);
+}
+.action-btn.like .icon.pop {
+    animation: heartPop .45s cubic-bezier(.34,1.56,.64,1);
+}
+.action-btn.like .like-count {
+    display: inline-block;
+    min-width: 14px;
+    transition: color .2s;
+}
+.action-btn.like.has-liked .like-count {
+    font-weight: 600;
+}
+@keyframes heartPop {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(0.7); }
+    60%  { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
 
 .reply-input-wrapper {
     margin-top: 15px;
@@ -1019,43 +1328,99 @@ onUnmounted(() => {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* 移动端适配 */
+/* 移动端适配：单列垂直流 (作者栏 → 图片 → 正文 → 评论 → 输入栏) */
 @media (max-width: 900px) {
+    .modal-overlay {
+        padding: 0;
+    }
     .quote-info-modal {
-        flex-direction: column;
         width: 100%;
         height: 100%;
         max-height: none;
         border-radius: 0;
+        /* 移动端：整体单列可滚动 */
+        display: block;
+        grid-template-columns: none;
+        grid-template-rows: none;
+        grid-template-areas: none;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
-    
+    .author-bar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(15, 15, 25, 0.95);
+        backdrop-filter: blur(20px);
+    }
+    /* 图片不再固定，作为滚动内容的一部分 */
+    .modal-content {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
     .left-section {
-        flex: none;
-        height: 40vh;
-        border-right: none;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        width: 100%;
+        height: 50vh;
+        min-height: 240px;
+        background: #000;
     }
-    
-    .right-section {
-        flex: 1;
-        overflow: hidden;
-        min-width: auto;
+    .right-pane {
+        display: block;
+        border-left: none;
     }
-    
+    .right-pane-scroll {
+        overflow: visible;
+        min-height: 0;
+        border-left: none;
+    }
+    .comment-footer {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+    }
+    .comment-footer { flex-shrink: 0; }
+
+    .author-bar {
+        padding: 10px 14px;
+    }
+    .author-bar .author-avatar { width: 32px; height: 32px; }
     .quote-header {
-        padding: 20px 24px;
+        padding: 14px 16px;
     }
     .quote-content {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
-    
+    .comments-header {
+        padding: 10px 16px;
+    }
     .comments-scroll-area {
-        padding: 15px 24px;
+        padding: 12px 14px;
     }
-    
-    .close-button {
-        top: 15px; right: 15px;
-        background: rgba(0,0,0,0.5);
+    .comment-footer {
+        padding: 8px 12px 10px;
     }
+    .xhs-avatar { width: 28px; height: 28px; }
+    .xhs-input { font-size: 0.85rem; padding: 6px 10px; }
+    .xhs-send { height: 30px; padding: 0 12px; font-size: 0.8rem; border-radius: 15px; }
+
+    .comment-card { padding: 10px 0; }
+    .comment-main { gap: 10px; }
+    .comment-avatar { width: 36px; height: 36px; }
+    .replies-wrapper {
+        margin-left: 12px;
+        padding-left: 12px;
+    }
+
+    .carousel-button {
+        width: 36px; height: 36px;
+    }
+    .prev { left: 10px; }
+    .next { right: 10px; }
+}
+
+@media (max-width: 480px) {
+    .left-section { height: 45vh; min-height: 220px; }
+    .quote-content { font-size: 0.95rem; }
 }
 </style>

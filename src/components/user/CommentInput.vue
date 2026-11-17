@@ -125,7 +125,7 @@ watch(() => props.autoFocus, (val) => {
 }
 
 .comment-input:focus-within {
-    border-color: rgba(235, 7, 238, 0.4);
+    border-color: rgba(200, 80, 232, 0.4);
     background: rgba(255, 255, 255, 0.08);
 }
 
@@ -186,9 +186,22 @@ textarea::placeholder {
     backdrop-filter: blur(20px);
     z-index: 1000;
     animation: fadeIn 0.2s;
-    width: 320px;
+    width: min(320px, calc(100vw - 32px));
+    max-width: 320px;
     height: 280px;
     overflow: hidden;
+}
+
+/* 窄屏：表情面板再收窄并改为 6 列，避免被右侧裁掉 */
+@media (max-width: 480px) {
+    .emoji-dropdown {
+        width: min(280px, calc(100vw - 24px));
+        height: 240px;
+    }
+    .emoji-grid {
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 6px !important;
+    }
 }
 
 @keyframes fadeIn {
@@ -222,7 +235,9 @@ textarea::placeholder {
     padding: 0;
     cursor: pointer;
     border-radius: 6px;
-    transition: all 0.2s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }
 
 .emoji-item:hover {
@@ -250,13 +265,15 @@ textarea::placeholder {
 }
 
 .submit-comment {
-    background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
+    background: linear-gradient(135deg, var(--primary, #D946EF), var(--primary-dark, #A21CAF));
     color: white;
     border: none;
     padding: 8px 16px;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition-property: transform, box-shadow, opacity, background, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     border-radius: 8px;
     font-weight: 500;
 }
@@ -264,6 +281,6 @@ textarea::placeholder {
 .submit-comment:hover {
     filter: brightness(1.15);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(235, 7, 238, 0.3);
+    box-shadow: 0 4px 12px rgba(200, 80, 232, 0.3);
 }
 </style>

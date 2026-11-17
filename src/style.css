@@ -22,8 +22,20 @@
   --bg-light-alt: #f8f0ff;
   --text-primary: rgba(255, 255, 255, 0.95);
   --text-secondary: rgba(255, 255, 255, 0.75);
+  --text-muted: rgba(255, 255, 255, 0.48);
+  --text-faint: rgba(255, 255, 255, 0.28);
   --text-dark: #333;
   --text-dark-secondary: #666;
+
+  /* Semantic colors */
+  --color-page-bg: var(--bg-dark);
+  --color-page-bg-mid: var(--bg-dark-mid);
+  --color-surface: rgba(255, 255, 255, 0.03);
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-brand-gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  --color-title-gradient: linear-gradient(to right, #fff, var(--primary-light));
 
   /* Glass effect */
   --glass-bg: rgba(255, 255, 255, 0.05);
@@ -50,6 +62,46 @@
 
   /* Nav */
   --nav-height: 70px;
+  --tab-bar-height: 0px; /* 桌面端为 0，移动端由媒体查询覆盖 */
+
+  /* Spacing scale: 4px grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Type scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3rem;
+
+  /* Layout */
+  --container-max: 1200px;
+  --page-padding-x: var(--space-8);
+  --page-padding-y: calc(var(--nav-height, 70px) + var(--safe-area-top, 0px) + var(--space-8));
+  --page-padding-bottom: var(--space-8);
+  --section-gap: var(--space-16);
+  --card-padding: var(--space-8);
+  --card-radius: var(--radius-lg);
+  --button-height: 44px;
+  --touch-target: 44px;
+  --surface-bg: var(--color-surface);
+  --surface-bg-hover: var(--color-surface-hover);
+  --surface-border: var(--color-border);
+  --surface-border-hover: rgba(235, 7, 238, 0.3);
 
   /* Typography */
   font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
@@ -82,18 +134,33 @@ html {
 
 body {
   margin: 0;
-  padding: 0;
+  padding: 0 0 var(--tab-bar-height, 0px) 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--bg-dark);
+  background-color: var(--color-page-bg);
   /* 更丰富的深空背景 */
   background-image:
     radial-gradient(circle at 15% 50%, rgba(235, 7, 238, 0.05), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(0, 242, 255, 0.05), transparent 25%),
-    linear-gradient(to bottom, #0a0a12, #131326);
+    linear-gradient(to bottom, var(--color-page-bg), var(--color-page-bg-mid));
   background-attachment: fixed;
   overflow-x: hidden;
   color: var(--text-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 3px;
 }
 
 /* ========== Scrollbar ========== */
@@ -123,6 +190,101 @@ body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+/* ========== App Design System Utilities ========== */
+.app-page {
+  width: 100%;
+  min-height: 100vh;
+  color: var(--text-primary);
+}
+
+.app-container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding-inline: var(--page-padding-x);
+}
+
+.app-page-header {
+  padding: var(--space-8) var(--space-4) var(--space-16);
+  text-align: center;
+}
+
+.app-title {
+  font-size: clamp(var(--text-3xl), 6vw, var(--text-5xl));
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  background: var(--color-title-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(235, 7, 238, 0.3);
+}
+
+.app-subtitle {
+  color: var(--text-secondary);
+  font-size: var(--text-lg);
+}
+
+.app-section-title {
+  color: var(--text-primary);
+  font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl));
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.app-card {
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.3s var(--ease-out), border-color 0.3s var(--ease-out), background 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+
+.app-glass {
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.app-card:hover {
+  background: var(--surface-bg-hover);
+  border-color: var(--surface-border-hover);
+  box-shadow: var(--shadow-primary);
+}
+
+.app-btn {
+  min-height: var(--button-height);
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-btn-primary {
+  background: var(--color-brand-gradient);
+  color: #fff;
+  box-shadow: var(--shadow-primary);
+}
+
+.app-btn-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+@media (hover: hover) {
+  .app-btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
 /* ========== Page Transition ========== */
 .page-fade-enter-active,
 .page-fade-leave-active {
@@ -143,4 +305,22 @@ body {
 .page-fade-leave-from {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ========== Mobile Tab Bar 预留高度（移动端 ≤ 768px） ========== */
+@media screen and (max-width: 768px) {
+  :root {
+    --tab-bar-height: 60px;
+    --page-padding-x: var(--space-4);
+    --page-padding-y: calc(var(--nav-height, 70px) + var(--safe-area-top, 0px) + var(--space-3));
+    --page-padding-bottom: calc(var(--tab-bar-height, 60px) + var(--safe-area-bottom, 0px) + var(--space-4));
+    --section-gap: var(--space-8);
+    --card-padding: var(--space-5);
+    --button-height: 48px;
+    --touch-target: 48px;
+  }
+
+  body {
+    padding-bottom: calc(var(--tab-bar-height, 60px) + var(--safe-area-bottom, 0px));
+  }
 }

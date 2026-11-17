@@ -1,13 +1,13 @@
 <template>
     <div class="upload-modal">
-        <!-- 投稿类型选择 -->
-        <div class="upload-type-selector">
+        <!-- 投稿类型选择（视频投稿后端未实现，暂时隐藏） -->
+        <div class="upload-type-selector" v-if="false">
             <button 
                 :class="['type-btn', { active: uploadType === 'quote' }]" 
                 @click="uploadType = 'quote'"
             >
                 <i class="fas fa-pen-nib"></i>
-                发布动态
+                发布帖子
             </button>
             <button 
                 :class="['type-btn', { active: uploadType === 'video' }]" 
@@ -21,13 +21,29 @@
         <!-- 语录投稿表单 -->
         <div v-if="uploadType === 'quote'" class="upload-form">
             <div class="form-card">
-                <div class="input-group">
-                    <i class="fas fa-heading icon"></i>
-                    <input 
-                        v-model="quoteForm.title" 
-                        type="text" 
-                        placeholder="输入动态标题..."
-                    >
+                <div class="input-group textarea-group">
+                    <i class="fas fa-pen-nib icon"></i>
+                    <textarea
+                        ref="contentTextarea"
+                        v-model="quoteForm.title"
+                        placeholder="分享你想说的话…"
+                        rows="4"
+                    ></textarea>
+                    <div class="emoji-picker">
+                        <button type="button" class="emoji-button" @click="showEmojiPicker = !showEmojiPicker" aria-label="插入表情">
+                            <i class="far fa-smile"></i>
+                        </button>
+                        <div v-if="showEmojiPicker" class="emoji-dropdown" @click.stop>
+                            <div class="emoji-grid">
+                                <span
+                                    v-for="(e, i) in emojis"
+                                    :key="i"
+                                    class="emoji-item"
+                                    @click="insertEmoji(e)"
+                                >{{ e }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="upload-section">
@@ -71,7 +87,7 @@
 
                 <button class="submit-btn" @click="submitQuote">
                     <i class="fas fa-paper-plane"></i>
-                    发布动态
+                    发布帖子
                 </button>
             </div>
         </div>
@@ -154,14 +170,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import apiClient from '@/utils/api'; // 替换成我们的API客户端
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import apiClient from '@/utils/api';
 import { useUserStore } from '@/stores/user';
+import { showToast } from '@/utils/toast';
 
 const userStore = useUserStore();
 
 const uploadType = ref('quote');
 const newTag = ref('');
+
+// 表情选择
+const showEmojiPicker = ref(false);
+const contentTextarea = ref<HTMLTextAreaElement | null>(null);
+const emojis = [
+    '😀','😄','😁','😆','😅','😂','🤣','😊','😍','🥰',
+    '😘','😎','🤩','🥳','😏','🤔','😴','🙄','😮','😢',
+    '😭','😡','🤯','👀','💪','👍','👏','🙏','🤝','✌️',
+    '❤️','💖','💜','💙','💚','💛','🧡','🖤','✨','🔥',
+    '🎉','🎊','🎁','🌹','🌸','🌟','⭐','🏆','🎵','🎶'
+];
+const insertEmoji = (e: string) => {
+    const ta = contentTextarea.value;
+    if (ta) {
+        const start = ta.selectionStart ?? quoteForm.title.length;
+        const end = ta.selectionEnd ?? quoteForm.title.length;
+        quoteForm.title = quoteForm.title.slice(0, start) + e + quoteForm.title.slice(end);
+        // 保持光标在 emoji 后
+        requestAnimationFrame(() => {
+            ta.focus();
+            const pos = start + e.length;
+            ta.setSelectionRange(pos, pos);
+        });
+    } else {
+        quoteForm.title += e;
+    }
+};
+const handleClickOutside = (ev: MouseEvent) => {
+    if (showEmojiPicker.value && !(ev.target as HTMLElement).closest('.emoji-picker')) {
+        showEmojiPicker.value = false;
+    }
+};
+onMounted(() => document.addEventListener('click', handleClickOutside));
+onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside));
 
 // 语录表单数据
 interface ImageItem {
@@ -188,7 +239,7 @@ const handleImageUpload = (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
         if (quoteForm.images.length >= 5) {
-            alert('最多只能上传5张图片');
+            showToast('最多只能上传5张图片', 'warning');
             return;
         }
         
@@ -288,13 +339,14 @@ const removeImage = (index: number) => {
 
 // 提交语录
 const submitQuote = async () => {
-    if (!quoteForm.title || quoteForm.images.length === 0) {
-        alert('请填写标题并至少上传一张图片');
+    const text = quoteForm.title.trim();
+    if (!text && quoteForm.images.length === 0) {
+        showToast('写点内容或传张图再发帖~', 'warning');
         return;
     }
 
     const formData = new FormData();
-    formData.append('title', quoteForm.title);
+    formData.append('title', text);
     formData.append('userId', userStore.userId);
     quoteForm.images.forEach(image => {
         formData.append('images', image.file);
@@ -306,20 +358,20 @@ const submitQuote = async () => {
                 'Content-Type': 'multipart/form-data'
             }
         });
-        alert('动态发布成功！');
+        showToast('帖子发布成功！', 'success');
         // 重置表单
         quoteForm.title = '';
         quoteForm.images.forEach(image => URL.revokeObjectURL(image.preview));
         quoteForm.images = [];
     } catch (error) {
-        alert('发布失败，请重试');
+        showToast('发布失败，请重试', 'error');
     }
 };
 
 // 提交视频
 const submitVideo = async () => {
     if (!videoForm.title || !videoForm.video) {
-        alert('请填写完整信息');
+        showToast('请填写完整信息', 'warning');
         return;
     }
 
@@ -331,7 +383,7 @@ const submitVideo = async () => {
 
     try {
         await apiClient.post('/video/upload', formData);
-        alert('视频发布成功！');
+        showToast('视频发布成功！', 'success');
         // 重置表单
         videoForm.title = '';
         videoForm.description = '';
@@ -339,13 +391,11 @@ const submitVideo = async () => {
         videoForm.videoPreview = '';
         videoForm.tags = [];
     } catch (error) {
-        alert('发布失败，请重试');
+        showToast('发布失败，请重试', 'error');
     }
 };
 
-const triggerImageUpload = () => {
-    document.querySelector('input[accept="image/*"]').click();
-};
+const triggerImageUpload = () => document.querySelector('input[accept="image/*"]').click();
 
 const triggerVideoUpload = () => {
     document.querySelector('input[accept="video/*"]').click();
@@ -356,7 +406,7 @@ const triggerVideoUpload = () => {
 .upload-modal {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: calc(var(--nav-height, 70px) + var(--safe-area-top, 0px) + 20px) 20px 40px;
 }
 
 .upload-type-selector {
@@ -374,7 +424,9 @@ const triggerVideoUpload = () => {
     color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
     font-size: 16px;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -392,10 +444,10 @@ const triggerVideoUpload = () => {
 }
 
 .type-btn.active {
-    background: linear-gradient(135deg, #eb07ee, #a505de);
+    background: linear-gradient(135deg, #D946EF, #A21CAF);
     color: white;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(235, 7, 238, 0.3);
+    box-shadow: 0 4px 15px rgba(200, 80, 232, 0.3);
     border-color: transparent;
 }
 
@@ -428,9 +480,67 @@ const triggerVideoUpload = () => {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     font-size: 15px;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     background: rgba(255, 255, 255, 0.04);
     color: rgba(255, 255, 255, 0.9);
+}
+
+.textarea-group textarea {
+    padding-right: 48px;
+}
+.textarea-group .emoji-picker {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 5;
+}
+.emoji-button {
+    width: 32px; height: 32px;
+    border: none; border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+}
+.emoji-button:hover { background: rgba(200, 80, 232, 0.2); color: #fff; }
+.emoji-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 280px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 10px;
+    background: rgba(20, 20, 30, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+}
+.emoji-item {
+    text-align: center;
+    font-size: 20px;
+    line-height: 1;
+    padding: 6px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.emoji-item:hover { background: rgba(255, 255, 255, 0.08); }
+@media (max-width: 768px) {
+    .emoji-dropdown { width: 240px; }
+    .emoji-grid { grid-template-columns: repeat(7, 1fr); }
+    .emoji-item { font-size: 18px; padding: 5px 0; }
 }
 
 .input-group input::placeholder,
@@ -446,9 +556,9 @@ const triggerVideoUpload = () => {
 .input-group input:focus,
 .input-group textarea:focus {
     outline: none;
-    border-color: rgba(235, 7, 238, 0.5);
+    border-color: rgba(200, 80, 232, 0.5);
     background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 0 0 3px rgba(235, 7, 238, 0.1);
+    box-shadow: 0 0 0 3px rgba(200, 80, 232, 0.1);
 }
 
 .upload-section {
@@ -488,7 +598,9 @@ const triggerVideoUpload = () => {
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 
 .image-item:hover .image-overlay {
@@ -506,7 +618,9 @@ const triggerVideoUpload = () => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 
 .remove-btn:hover {
@@ -522,12 +636,14 @@ const triggerVideoUpload = () => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 
 .upload-area:hover {
-    border-color: rgba(235, 7, 238, 0.5);
-    background: rgba(235, 7, 238, 0.05);
+    border-color: rgba(200, 80, 232, 0.5);
+    background: rgba(200, 80, 232, 0.05);
 }
 
 .upload-placeholder {
@@ -538,7 +654,7 @@ const triggerVideoUpload = () => {
 .upload-placeholder i {
     font-size: 24px;
     margin-bottom: 8px;
-    color: var(--primary, #eb07ee);
+    color: var(--primary, #D946EF);
 }
 
 .upload-placeholder p {
@@ -576,7 +692,9 @@ const triggerVideoUpload = () => {
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     border-radius: 12px;
 }
 
@@ -592,7 +710,9 @@ const triggerVideoUpload = () => {
     border-radius: 20px;
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     backdrop-filter: blur(5px);
 }
 
@@ -618,19 +738,21 @@ const triggerVideoUpload = () => {
 }
 
 .tag {
-    background: rgba(235, 7, 238, 0.1);
+    background: rgba(200, 80, 232, 0.1);
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 14px;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.3s;
-    border: 1px solid rgba(235, 7, 238, 0.2);
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+    border: 1px solid rgba(200, 80, 232, 0.2);
 }
 
 .tag:hover {
-    background: rgba(235, 7, 238, 0.18);
+    background: rgba(200, 80, 232, 0.18);
     transform: translateY(-1px);
 }
 
@@ -649,7 +771,9 @@ const triggerVideoUpload = () => {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: all 0.2s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }
 
 .remove-tag:hover {
@@ -663,7 +787,9 @@ const triggerVideoUpload = () => {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     font-size: 15px;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     background: rgba(255, 255, 255, 0.04);
     color: rgba(255, 255, 255, 0.9);
 }
@@ -674,14 +800,14 @@ const triggerVideoUpload = () => {
 
 .tag-input:focus {
     outline: none;
-    border-color: rgba(235, 7, 238, 0.5);
+    border-color: rgba(200, 80, 232, 0.5);
     background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 0 0 3px rgba(235, 7, 238, 0.1);
+    box-shadow: 0 0 0 3px rgba(200, 80, 232, 0.1);
 }
 
 .submit-btn {
     width: 100%;
-    background: linear-gradient(135deg, #eb07ee, #a505de);
+    background: linear-gradient(135deg, #D946EF, #A21CAF);
     color: white;
     border: none;
     padding: 15px;
@@ -689,7 +815,9 @@ const triggerVideoUpload = () => {
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    transition: all 0.3s;
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -698,17 +826,49 @@ const triggerVideoUpload = () => {
 
 .submit-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(235, 7, 238, 0.4);
+    box-shadow: 0 8px 25px rgba(200, 80, 232, 0.4);
 }
 
 @media (max-width: 768px) {
     .upload-modal {
-        padding: 10px;
+        padding: calc(var(--nav-height, 70px) + var(--safe-area-top, 0px) + 12px) 10px 24px;
     }
     
     .form-card {
-        padding: 20px;
+        padding: 16px;
+        border-radius: 12px;
     }
+
+    .input-group { margin-bottom: 14px; }
+    .input-group input,
+    .input-group textarea,
+    .tag-input {
+        padding: 12px 12px 12px 40px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    .input-group textarea { min-height: 90px; }
+    .input-group .icon { left: 12px; font-size: 15px; }
+
+    .upload-section { margin: 18px 0; }
+    .images-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .upload-placeholder i { font-size: 20px; margin-bottom: 4px; }
+    .upload-placeholder p { font-size: 12px; margin: 2px 0; }
+    .upload-placeholder span { font-size: 11px; }
+
+    .submit-btn {
+        padding: 12px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .images-container { gap: 6px; }
+    .form-card { padding: 12px; }
 }
 
 .preview-image {

@@ -114,7 +114,7 @@ export function showConfirm(message, title = '确认') {
       padding: 30px;
       max-width: 400px;
       width: 90%;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(223, 13, 238, 0.2);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(200, 80, 232, 0.2);
       border: 1px solid rgba(255, 255, 255, 0.1);
       animation: confirmSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       text-align: center;
@@ -137,11 +137,11 @@ export function showConfirm(message, title = '确认') {
           font-size: 14px;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition-property: transform, box-shadow, opacity; transition-duration: 0.25s; transition-timing-function: ease;
           flex: 1;
         ">取消</button>
         <button id="confirm-ok" style="
-          background: linear-gradient(135deg, #df0dee, #a505de);
+          background: linear-gradient(135deg, #D946EF, #A21CAF);
           color: #fff;
           border: none;
           padding: 10px 24px;
@@ -149,8 +149,8 @@ export function showConfirm(message, title = '确认') {
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(223, 13, 238, 0.3);
+          transition-property: transform, box-shadow, opacity; transition-duration: 0.25s; transition-timing-function: ease;
+          box-shadow: 0 4px 15px rgba(200, 80, 232, 0.3);
           flex: 1;
         ">确定</button>
       </div>

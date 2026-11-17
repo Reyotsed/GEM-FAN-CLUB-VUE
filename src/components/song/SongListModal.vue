@@ -348,7 +348,7 @@ onMounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition-property: transform, box-shadow, background, border-color; transition-duration: 0.3s; transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
   text-decoration: none;
   color: inherit;
   position: relative;
@@ -456,7 +456,7 @@ onMounted(() => {
   border-radius: 20px;
   padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition-property: transform, box-shadow, background, border-color; transition-duration: 0.3s; transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
   text-decoration: none;
   color: inherit;
   position: relative;
@@ -545,7 +545,7 @@ onMounted(() => {
 
 .album-item {
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-property: transform, box-shadow, background; transition-duration: 0.4s; transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
   width: 100%;
   position: relative;
 }
@@ -647,41 +647,89 @@ onMounted(() => {
 /* 响应式调整 */
 @media (max-width: 768px) {
   .song-list-modal {
-    padding: 1.5rem;
+    padding: 1rem;
+    border-radius: 16px;
   }
+
+  .section-header {
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+    gap: 0.5rem;
+  }
+
+  .section-title .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .update-time { font-size: 0.7rem; }
 
   .song-list {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.6rem;
+    margin-bottom: 2rem;
   }
+
+  .song-item { padding: 0.6rem; border-radius: 12px; }
+  .song-rank { width: 24px; height: 24px; font-size: 0.95rem; margin-right: 0.6rem; }
+  .song-item:nth-child(1) .song-rank { font-size: 1.1rem; }
+  .song-item:nth-child(2) .song-rank { font-size: 1.05rem; }
+  .song-item:nth-child(3) .song-rank { font-size: 1rem; }
+
+  .song-cover {
+    width: 44px;
+    height: 44px;
+    margin-right: 0.7rem;
+    border-radius: 8px;
+  }
+
+  .song-title { font-size: 0.92rem; }
 
   .recommend-list {
-    grid-template-columns: 1fr; /* 移动端单列 */
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
   }
 
-  .recommend-item {
-    padding: 1rem;
+  .recommend-item { padding: 0.9rem; border-radius: 14px; }
+  .recommend-header { margin-bottom: 0.6rem; padding-bottom: 0.6rem; }
+  .recommend-header .song-cover { width: 48px; height: 48px; border-radius: 10px; margin-right: 0.7rem; }
+  .recommend-info .song-title { font-size: 1rem; }
+  .recommend-tag { font-size: 0.7rem; }
+  .recommend-body .song-desc { font-size: 0.85rem; line-height: 1.5; }
+  .recommend-body::before { font-size: 1.4rem; top: -6px; }
+
+  .curator-note {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    padding: 0.9rem 1rem;
+    font-size: 0.9rem;
+    border-left-width: 3px;
   }
 
   .album-list {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    padding: 0.4rem 0;
   }
-  
-  .section-title {
-    font-size: 1.5rem;
+
+  .album-cover {
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
   }
+
+  .album-title { font-size: 0.85rem; margin-bottom: 0.15rem; }
+  .album-date { font-size: 0.7rem; }
 }
 
 @media (max-width: 480px) {
   .album-list {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-  
-  .song-cover {
-    width: 48px;
-    height: 48px;
+    gap: 0.7rem;
   }
 }
 </style>

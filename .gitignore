@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (may contain API keys)
+.env
+.env.*
+!.env.example
+
+# Scraper credentials
+scripts/ig_sessionid.txt
+
 # Original uncompressed images backup (too large for git)
 public/img/homepage/originals/
 
@@ -25,3 +33,6 @@ public/img/homepage/originals/
 *.njsproj
 *.sln
 *.sw?
+
+# Scraper downloads (large media)
+scripts/downloads/

@@ -45,22 +45,3 @@ export function cacheImage(path, url) {
   imageCache.set(path, url);
 }
 
-/**
- * 清除图片缓存
- * @param {string} [path] - 可选的图片路径，如果不提供则清除所有缓存
- */
-export function clearImageCache(path) {
-  if (path) {
-    imageCache.delete(path);
-  } else {
-    imageCache.clear();
-  }
-}
-
-/**
- * 获取缓存大小
- * @returns {number} - 缓存中的图片数量
- */
-export function getCacheSize() {
-  return imageCache.size;
-} 

@@ -1,72 +1,73 @@
 // src/stores/user.js
 import { defineStore } from 'pinia';
 import apiClient from '@/utils/api';
-
+import { storage } from '@/utils/storage';
+import { logger } from '@/utils/logger';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    token: null,
-    userId: null,
-    nickName: null,
-    avatar: null,
-    isLoggedIn: false, // 用于记录用户是否已登录
+    // 乐观恢复：初始化时直接从 localStorage 读，避免刷新闪烁
+    token: storage.getToken(),
+    userId: storage.getUserId(),
+    nickName: storage.getNickName(),
+    avatar: storage.getAvatar(),
+    isLoggedIn: !!storage.getToken(),
   }),
   actions: {
     setToken(token) {
       this.token = token;
-      localStorage.setItem('token', token);
+      storage.setToken(token);
       this.isLoggedIn = true;
     },
     setUserId(userId) {
-      this.userId = userId;
-      localStorage.setItem('userId', JSON.stringify(userId));
+      this.userId = String(userId);
+      storage.setUserId(userId);
     },
     setNickName(nickName) {
       this.nickName = nickName;
-      localStorage.setItem('nickName', nickName);
+      storage.setNickName(nickName);
     },
     setAvatar(avatar) {
       this.avatar = avatar;
-      localStorage.setItem('avatar', avatar);
+      storage.setAvatar(avatar);
     },
     logout() {
       this.token = null;
       this.userId = null;
       this.nickName = null;
       this.avatar = null;
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('nickName');
-      localStorage.removeItem('avatar');
+      storage.clearAuth();
       this.isLoggedIn = false;
     },
-    autoLogin() {
-      console.log("autoLogin");
-      const token = localStorage.getItem('token');
-      if (!token || token === "null") {
+    async autoLogin() {
+      const token = storage.getToken();
+      if (!token) {
+        this.isLoggedIn = false;
         return;
-      } else {
-        apiClient.post('/account/autoLogin',
-          {},
-          { headers: { Authorization: "Bearer " + localStorage.getItem('token') } }
-        ).then(response => {
-          if (response.data.code != 200) {
-            this.logout();
-          }
-          else {
-            this.setToken(token);
-            this.setUserId(response.data.data.userId);
-            this.setNickName(response.data.data.nickName);
-            // 根据avatarUrl获取头像
-            apiClient.getImageUrl(response.data.data.avatar).then(avatarUrl => {
-              this.setAvatar(avatarUrl);
-            });
-          }
-        }).catch(error => {
-          console.log(error);
-          this.logout();
-        });
       }
-    }
+      try {
+        const response = await apiClient.post('/account/autoLogin', {}, {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        if (response.data.code !== 200) {
+          this.logout();
+          return;
+        }
+        const data = response.data.data;
+        this.setToken(token);
+        this.setUserId(data.userId);
+        this.setNickName(data.nickName);
+        // 异步加载头像 blob（失败不影响登录态）
+        try {
+          const avatarUrl = await apiClient.getImageUrl(data.avatar);
+          this.setAvatar(avatarUrl);
+        } catch (e) {
+          logger.warn('头像加载失败:', e);
+        }
+      } catch (error) {
+        logger.error('autoLogin failed:', error);
+        this.logout();
+      }
+    },
   },
 });

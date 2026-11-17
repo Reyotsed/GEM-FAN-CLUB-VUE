@@ -1,92 +1,116 @@
 <template>
-  <div class="edit-profile-modal" v-if="isVisible">
-    <div class="modal-backdrop" @click="closeModal"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>修改个人信息</h2>
-        <button class="close-button" @click="closeModal">×</button>
-      </div>
-      
-      <div class="modal-body">
-        <!-- 头像上传部分 -->
-        <div class="avatar-section">
-          <div class="current-avatar-container">
-            <img 
-              :src="previewAvatar || userInfo.avatar" 
-              alt="当前头像" 
-              class="current-avatar"
-              loading="lazy"
-            >
+  <Teleport to="body">
+    <transition name="ep-fade">
+      <div class="edit-profile-modal" v-if="isVisible" @click.self="closeModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="header-left">
+              <div class="header-title">编辑个人资料</div>
+              <div class="header-sub">让你的主页更有辨识度 ✨</div>
+            </div>
+            <button class="close-button" @click="closeModal">×</button>
           </div>
-          <button class="avatar-upload-btn" @click="triggerFileInput">
-            选择新头像
-          </button>
-          <input 
-            type="file" 
-            ref="fileInput"
-            id="avatar-upload" 
-            accept="image/*" 
-            @change="handleAvatarChange"
-            style="display: none"
-          >
+
+          <div class="modal-body">
+            <!-- 头像 -->
+            <div class="avatar-section">
+              <div class="avatar-wrap" @click="triggerFileInput">
+                <img
+                  :src="previewAvatar || userInfo.avatar"
+                  alt="当前头像"
+                  class="current-avatar"
+                  loading="lazy"
+                />
+                <div class="avatar-mask">
+                  <span>更换头像</span>
+                </div>
+              </div>
+              <input
+                type="file"
+                ref="fileInput"
+                id="avatar-upload"
+                accept="image/*"
+                @change="handleAvatarChange"
+                style="display: none"
+              />
+            </div>
+
+            <!-- 基础信息 -->
+            <div class="form-card">
+              <div class="card-title">基础信息</div>
+              <div class="form-grid">
+                <div class="field">
+                  <label>昵称</label>
+                  <input type="text" v-model="formData.nickName" placeholder="输入新昵称" maxlength="20" />
+                </div>
+                <div class="field">
+                  <label>生日</label>
+                  <input type="date" v-model="formData.birthday" />
+                </div>
+                <div class="field full">
+                  <label>个人简介</label>
+                  <textarea
+                    v-model="formData.personIntroduction"
+                    placeholder="介绍一下自己吧~"
+                    rows="3"
+                    maxlength="200"
+                  ></textarea>
+                  <div class="counter">{{ (formData.personIntroduction || '').length }}/200</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 粉丝身份 -->
+            <div class="form-card">
+              <div class="card-title">
+                粉丝身份
+                <span class="card-tip">这些信息会显示在你的粉丝档案卡上</span>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label>入坑年份</label>
+                  <input
+                    type="number"
+                    v-model.number="formData.fanSinceYear"
+                    placeholder="例如 2014"
+                    :min="1990"
+                    :max="currentYear"
+                  />
+                </div>
+                <div class="field">
+                  <label>本命金曲</label>
+                  <input type="text" v-model="formData.favoriteSong" placeholder="如：泡沫" maxlength="30" />
+                </div>
+                <div class="field full">
+                  <label>专属宣言</label>
+                  <input
+                    type="text"
+                    v-model="formData.fanBio"
+                    placeholder="一句话表达你对她的爱"
+                    maxlength="40"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="cancel-button" @click="closeModal">取消</button>
+            <button class="save-button" @click="saveChanges" :disabled="isSaving">
+              {{ isSaving ? '保存中...' : '保存修改' }}
+            </button>
+          </div>
         </div>
-        
-        <!-- 表单部分 -->
-        <div class="form-section">
-          <!-- 昵称输入行 -->
-          <div class="form-row">
-            <label for="nickname">昵称</label>
-            <div class="input-wrapper">
-              <input 
-                type="text" 
-                id="nickname" 
-                v-model="formData.nickName" 
-                placeholder="输入新昵称"
-              >
-            </div>
-          </div>
-          
-          <!-- 生日输入行 -->
-          <div class="form-row">
-            <label for="birthday">生日</label>
-            <div class="input-wrapper">
-              <input 
-                type="date" 
-                id="birthday" 
-                v-model="formData.birthday"
-              >
-            </div>
-          </div>
-          
-          <!-- 个人简介输入行 -->
-          <div class="form-row">
-            <label for="bio">个人简介</label>
-            <div class="input-wrapper">
-              <textarea 
-                id="bio" 
-                v-model="formData.personIntroduction" 
-                placeholder="介绍一下自己吧~"
-                rows="4"
-              ></textarea>
-            </div>
-          </div>
-        </div>
       </div>
-      
-      <div class="modal-footer">
-        <button class="cancel-button" @click="closeModal">取消</button>
-        <button class="save-button" @click="saveChanges" :disabled="isSaving">
-          {{ isSaving ? '保存中...' : '保存修改' }}
-        </button>
-      </div>
-    </div>
-  </div>
+    </transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, computed } from 'vue';
 import apiClient from '@/utils/api';
 import { useUserStore } from '@/stores/user';
+import { showToast } from '@/utils/toast';
 
 interface UserInfo {
   userId: string;
@@ -94,6 +118,11 @@ interface UserInfo {
   avatar: string;
   birthday: string;
   personIntroduction: string;
+  fanSinceYear?: number | null;
+  favoriteSong?: string | null;
+  fanBio?: string | null;
+  fanTag?: string | null;
+  posterBg?: string | null;
 }
 
 const props = defineProps<{
@@ -108,54 +137,61 @@ const emit = defineEmits<{
 
 const userStore = useUserStore();
 const fileInput = ref<HTMLInputElement | null>(null);
+const currentYear = new Date().getFullYear();
 
-// 表单数据
-const formData = reactive({
+const formData = reactive<{
+  nickName: string;
+  birthday: string;
+  personIntroduction: string;
+  fanSinceYear: number | null;
+  favoriteSong: string;
+  fanBio: string;
+}>({
   nickName: '',
   birthday: '',
   personIntroduction: '',
+  fanSinceYear: null,
+  favoriteSong: '',
+  fanBio: '',
 });
 
-// 头像相关
 const avatarFile = ref<File | null>(null);
 const previewAvatar = ref<string | null>(null);
 const isSaving = ref(false);
 
-// 初始化表单数据
 const initFormData = () => {
   formData.nickName = props.userInfo.nickName || '';
   formData.birthday = props.userInfo.birthday || '';
   formData.personIntroduction = props.userInfo.personIntroduction || '';
-  // 清除之前选择的头像
+  formData.fanSinceYear = (props.userInfo.fanSinceYear as number | null) ?? null;
+  formData.favoriteSong = props.userInfo.favoriteSong || '';
+  formData.fanBio = props.userInfo.fanBio || '';
   avatarFile.value = null;
   previewAvatar.value = null;
 };
 
-// 监听模态框显示状态
-watch(() => props.isVisible, (newValue) => {
-  if (newValue && props.userInfo) {
-    initFormData();
-  }
-}, { immediate: true });
+watch(
+  () => props.isVisible,
+  (v) => {
+    if (v && props.userInfo) initFormData();
+  },
+  { immediate: true },
+);
 
-// 触发文件选择
 const triggerFileInput = () => {
-  fileInput.value.click();
+  fileInput.value?.click();
 };
 
-// 处理头像选择
 const handleAvatarChange = (e: Event) => {
   const target = e.target as HTMLInputElement;
   if (target.files && target.files[0]) {
-    // 压缩头像图片
-    compressAvatar(target.files[0]).then(compressedFile => {
+    compressAvatar(target.files[0]).then((compressedFile) => {
       avatarFile.value = compressedFile;
       previewAvatar.value = URL.createObjectURL(compressedFile);
     });
   }
 };
 
-// 头像压缩函数
 const compressAvatar = (file: File): Promise<File> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -166,32 +202,31 @@ const compressAvatar = (file: File): Promise<File> => {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
-        // 头像尺寸固定为200x200
         const SIZE = 200;
         canvas.width = SIZE;
         canvas.height = SIZE;
-        
         if (ctx) {
-          // 绘制圆形头像
           ctx.beginPath();
-          ctx.arc(SIZE/2, SIZE/2, SIZE/2, 0, Math.PI * 2);
+          ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2, 0, Math.PI * 2);
           ctx.closePath();
           ctx.clip();
           ctx.drawImage(img, 0, 0, SIZE, SIZE);
-          
-          // 转换为WebP格式
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webp'), {
-                type: 'image/webp',
-                lastModified: Date.now()
-              });
-              resolve(compressedFile);
-            } else {
-              resolve(file);
-            }
-          }, 'image/webp', 0.8);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File(
+                  [blob],
+                  file.name.replace(/\.[^/.]+$/, '.webp'),
+                  { type: 'image/webp', lastModified: Date.now() },
+                );
+                resolve(compressedFile);
+              } else {
+                resolve(file);
+              }
+            },
+            'image/webp',
+            0.8,
+          );
         } else {
           resolve(file);
         }
@@ -200,68 +235,50 @@ const compressAvatar = (file: File): Promise<File> => {
   });
 };
 
-// 关闭模态框
-const closeModal = () => {
-  emit('close');
-};
+const closeModal = () => emit('close');
 
-// 保存修改
 const saveChanges = async () => {
   try {
     isSaving.value = true;
-    
-    // 使用 URL 参数发送用户信息更新请求
-    const response = await apiClient.post('/user/updateUserInfo', null, {
-      params: {
-        userId: props.userInfo.userId,
-        nickName: formData.nickName,
-        birthday: formData.birthday,
-        personIntroduction: formData.personIntroduction // 使用后端字段名
-      }
-    });
-    
-    // 如果有新头像，上传头像
+
+    const params: Record<string, any> = {
+      userId: props.userInfo.userId,
+      nickName: formData.nickName,
+      birthday: formData.birthday,
+      personIntroduction: formData.personIntroduction,
+      favoriteSong: formData.favoriteSong || '',
+      fanBio: formData.fanBio || '',
+    };
+    if (formData.fanSinceYear != null && !Number.isNaN(formData.fanSinceYear)) {
+      params.fanSinceYear = formData.fanSinceYear;
+    }
+
+    await apiClient.post('/user/updateUserInfo', null, { params });
+
     if (avatarFile.value) {
-      // 文件上传仍然需要使用 FormData
       const formDataAvatar = new FormData();
-      formDataAvatar.append('file', avatarFile.value);
-      
-      // 但是不要将 userId 放在 FormData 中，而是作为 URL 参数传递
-      const avatarResponse = await apiClient.post('/user/uploadAvatar', formDataAvatar, {
-        params: {
-          userId: props.userInfo.userId
-        },
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      formDataAvatar.append('image', avatarFile.value);
+      const avatarResponse = await apiClient.post('/user/updateAvatar', formDataAvatar, {
+        params: { userId: props.userInfo.userId },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      
-      // 更新全局头像
       if (avatarResponse.data.code === 200) {
-        // 获取新头像路径
         const avatarPath = avatarResponse.data.data;
-        
-        // 获取新头像
         const avatarUrl = await apiClient.getImageUrl(avatarPath);
-        
-        // 更新全局用户信息
         userStore.setAvatar(avatarUrl);
       }
     }
-    
-    // 如果昵称发生变化，更新全局用户信息
+
     if (formData.nickName !== props.userInfo.nickName) {
       userStore.setNickName(formData.nickName);
     }
-    
-    // 通知父组件更新成功
+
+    showToast('保存成功', 'success');
     emit('updated');
-    
-    // 关闭模态框
     closeModal();
   } catch (error) {
     console.error('保存个人信息失败', error);
-    alert('保存失败，请重试');
+    showToast('保存失败，请重试', 'error');
   } finally {
     isSaving.value = false;
   }
@@ -271,259 +288,217 @@ const saveChanges = async () => {
 <style scoped>
 .edit-profile-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1100;
-}
-
-.modal-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  padding: 20px;
 }
 
 .modal-content {
   position: relative;
-  width: 90%;
-  max-width: 500px;
-  background: rgba(25, 25, 45, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, rgba(35, 18, 55, 0.96), rgba(20, 12, 38, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
   overflow: hidden;
-  z-index: 1101;
   animation: slideIn 0.3s ease;
-  backdrop-filter: blur(20px);
 }
 
 @keyframes slideIn {
-  from {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(-16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.8rem 1.5rem;
-  background: linear-gradient(135deg, rgba(235, 7, 238, 0.5), rgba(165, 5, 222, 0.5));
-  color: white;
+  align-items: flex-start;
+  padding: 1.1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(200, 80, 232, 0.45), rgba(120, 5, 222, 0.45));
+  color: #fff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 600;
-}
+.header-title { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; }
+.header-sub { font-size: 0.78rem; color: rgba(255, 255, 255, 0.7); margin-top: 2px; }
 
 .close-button {
-  background: none;
+  background: rgba(255, 255, 255, 0.08);
   border: none;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1.6rem;
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  font-size: 18px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
   line-height: 1;
 }
-
-.close-button:hover {
-  transform: scale(1.1);
-  color: #fff;
-}
+.close-button:hover { background: rgba(255, 255, 255, 0.18); transform: rotate(90deg); }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 1.4rem 1.5rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
+.modal-body::-webkit-scrollbar { width: 6px; }
+.modal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
 
-/* 头像部分 */
+/* 头像 */
 .avatar-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5rem;
+  display: flex; justify-content: center;
+  margin-bottom: 1.4rem;
 }
-
-.current-avatar-container {
-  margin-bottom: 0.8rem;
-}
-
-.current-avatar {
-  width: 90px;
-  height: 90px;
+.avatar-wrap {
+  position: relative;
+  width: 96px; height: 96px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgba(235, 7, 238, 0.3);
-  box-shadow: 0 4px 20px rgba(235, 7, 238, 0.15);
-}
-
-.avatar-upload-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  padding: 0.5rem 1.2rem;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  transition: all 0.2s;
+  overflow: hidden;
+  border: 3px solid rgba(200, 80, 232, 0.4);
+  box-shadow: 0 6px 22px rgba(200, 80, 232, 0.25);
+  transition: transform 0.25s;
 }
-
-.avatar-upload-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+.avatar-wrap:hover { transform: scale(1.04); }
+.current-avatar { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-mask {
+  position: absolute; inset: 0;
+  background: rgba(0, 0, 0, 0.55);
   color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; letter-spacing: 1px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.avatar-wrap:hover .avatar-mask { opacity: 1; }
+
+/* 表单卡片 */
+.form-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 1rem 1.1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.card-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 0.85rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-tip {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 400;
 }
 
-/* 表单部分 */
-.form-section {
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem 0.9rem;
+}
+.field { display: flex; flex-direction: column; position: relative; }
+.field.full { grid-column: 1 / -1; }
+.field label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.3px;
+}
+.field input,
+.field textarea {
   width: 100%;
-}
-
-.form-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1.2rem;
-  padding: 0 1.5rem;
-}
-
-.form-row label {
-  flex: 0 0 20%;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.95rem;
-  margin-right: 1rem;
-}
-
-.input-wrapper {
-  flex: 1;
-  margin-right: 1.5rem;
-}
-
-.input-wrapper input, 
-.input-wrapper textarea {
-  width: 100%;
-  padding: 0.7rem 0.9rem;
+  padding: 0.62rem 0.8rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
-  transition: all 0.2s;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.9rem;
   font-family: inherit;
+  transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }
-
-.input-wrapper input::placeholder,
-.input-wrapper textarea::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.input-wrapper input:focus, 
-.input-wrapper textarea:focus {
-  border-color: var(--primary, #eb07ee);
+.field input::placeholder,
+.field textarea::placeholder { color: rgba(255, 255, 255, 0.28); }
+.field input:focus,
+.field textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(235, 7, 238, 0.15);
+  border-color: rgba(200, 80, 232, 0.6);
   background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(200, 80, 232, 0.15);
+}
+.field textarea { resize: vertical; min-height: 76px; }
+.field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+
+.counter {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
 }
 
-.input-wrapper textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-/* date input 颜色适配 */
-.input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
-}
-
-/* 底部按钮 */
+/* 底部 */
 .modal-footer {
   display: flex;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.9rem 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.18);
 }
-
 .cancel-button {
-  padding: 0.6rem 2rem;
+  padding: 0.55rem 1.4rem;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: rgba(255, 255, 255, 0.7);
+  transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }
-
-.cancel-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
+.cancel-button:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
 
 .save-button {
-  padding: 0.6rem 2rem;
-  background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
-  color: white;
+  padding: 0.55rem 1.6rem;
+  background: linear-gradient(135deg, #D946EF, #A21CAF);
+  color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
 }
-
 .save-button:hover:not(:disabled) {
-  filter: brightness(1.15);
+  filter: brightness(1.1);
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.3);
+  box-shadow: 0 6px 18px rgba(200, 80, 232, 0.4);
 }
+.save-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.save-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.ep-fade-enter-active,
+.ep-fade-leave-active { transition: opacity 0.22s; }
+.ep-fade-enter-from,
+.ep-fade-leave-to { opacity: 0; }
 
-/* 响应式 */
 @media (max-width: 576px) {
-  .form-row {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0 1rem;
-  }
-  
-  .form-row label {
-    flex: none;
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-  
-  .input-wrapper {
-    width: 100%;
-    margin-right: 0;
-  }
+  .form-grid { grid-template-columns: 1fr; }
 }
-
-.lazy-image {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.lazy-image.loaded {
-  opacity: 1;
-}
-</style> 
+</style>

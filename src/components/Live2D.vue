@@ -140,7 +140,7 @@ const handleAnimationEnd = (event) => {
 .live2d-container {
   position: fixed;
   left: 30px;
-  bottom: 30px;
+  bottom: calc(30px + var(--tab-bar-height, 0px));
   z-index: 9999;
   transition: transform 0.3s ease;
 }
@@ -156,7 +156,7 @@ const handleAnimationEnd = (event) => {
   transform: translateY(-50%);
   width: 30px;
   height: 30px;
-  background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
+  background: linear-gradient(135deg, var(--primary, #c850e8), var(--primary-dark, #8b2fc0));
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -167,12 +167,12 @@ const handleAnimationEnd = (event) => {
   opacity: 0.6;
   transition: opacity 0.3s ease;
   z-index: 10001;
-  box-shadow: 0 2px 8px rgba(235, 7, 238, 0.3);
+  box-shadow: 0 2px 8px rgba(200, 80, 232, 0.3);
 }
 
 .toggle-button:hover {
   opacity: 1;
-  box-shadow: 0 4px 12px rgba(235, 7, 238, 0.5);
+  box-shadow: 0 4px 12px rgba(200, 80, 232, 0.5);
 }
 
 .live2d-character {
@@ -183,13 +183,15 @@ const handleAnimationEnd = (event) => {
 .character-image {
   width: 100px;
   height: 100px;
-  background: linear-gradient(135deg, var(--primary, #eb07ee), var(--primary-dark, #a505de));
+  background: linear-gradient(135deg, var(--primary, #c850e8), var(--primary-dark, #8b2fc0));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(235, 7, 238, 0.3);
+  transition-property: transform, box-shadow, opacity, background, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+  box-shadow: 0 4px 15px rgba(200, 80, 232, 0.3);
   color: white;
   font-size: 38px;
   border: 2px solid rgba(255, 255, 255, 0.1);
@@ -197,7 +199,7 @@ const handleAnimationEnd = (event) => {
 
 .character-image:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 25px rgba(235, 7, 238, 0.5);
+  box-shadow: 0 6px 25px rgba(200, 80, 232, 0.5);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -215,12 +217,12 @@ const handleAnimationEnd = (event) => {
   -webkit-backdrop-filter: blur(20px);
   border-radius: 18px;
   padding: 18px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(235, 7, 238, 0.1);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(200, 80, 232, 0.1);
   animation: fadeIn 0.3s ease;
   z-index: 10000;
   color: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-left: 4px solid var(--primary, #eb07ee);
+  border-left: 4px solid var(--primary, #c850e8);
 }
 
 .lyric-bubble.fade-out {
@@ -244,7 +246,7 @@ const handleAnimationEnd = (event) => {
   margin-bottom: 10px;
   font-size: 16px;
   color: var(--primary-light, #f3caff);
-  text-shadow: 0 0 10px rgba(235, 7, 238, 0.3);
+  text-shadow: 0 0 10px rgba(200, 80, 232, 0.3);
 }
 
 .lyric-text {
@@ -271,20 +273,70 @@ const handleAnimationEnd = (event) => {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .live2d-container {
+    left: 16px;
+    bottom: calc(16px + var(--tab-bar-height, 0px));
+  }
+
   .character-image {
-    width: 80px;
-    height: 80px;
-    font-size: 32px;
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+    border-width: 1.5px;
   }
-  
+
+  .toggle-button {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    right: -26px;
+  }
+
   .lyric-bubble {
-    width: 240px;
-    bottom: 100px;
-    padding: 15px;
+    width: 200px;
+    bottom: 72px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border-left-width: 3px;
   }
-  
+
+  .lyric-bubble::after {
+    bottom: -8px;
+    left: 18px;
+    border-left-width: 8px;
+    border-right-width: 8px;
+    border-top-width: 8px;
+  }
+
+  .song-title {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .lyric-text {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
   .live2d-container.collapsed {
-    transform: translateX(-90px);
+    transform: translateX(-66px);
+  }
+}
+
+@media (max-width: 480px) {
+  .character-image {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+
+  .lyric-bubble {
+    width: 180px;
+    bottom: 62px;
+  }
+
+  .live2d-container.collapsed {
+    transform: translateX(-58px);
   }
 }
 </style>

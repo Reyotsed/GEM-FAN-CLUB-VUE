@@ -24,8 +24,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import * as echarts from 'echarts';
+let echarts = null  // lazy-loaded in initChart()
 import apiClient from '@/utils/api';
+import { logger } from '@/utils/logger';
 
 // 定义组件属性
 const props = defineProps({
@@ -286,7 +287,6 @@ const fetchConcertData = async () => {
     if (props.concerts && props.concerts.length > 0) {
       // 如果已经传入了concerts数据，则直接使用
       localConcerts.value = props.concerts;
-      console.log('使用传入的演唱会数据:', localConcerts.value.length, '条记录');
       isLoading.value = false;
       return;
     }
@@ -295,12 +295,9 @@ const fetchConcertData = async () => {
     const response = await apiClient.get('/concert/list');
     if (response.data.code === 200) {
       localConcerts.value = response.data.data || [];
-      console.log('成功获取演唱会数据:', localConcerts.value.length, '条记录');
     } else {
-      console.error('获取演唱会数据失败:', response.data.message);
     }
   } catch (error) {
-    console.error('请求演唱会数据出错:', error);
   } finally {
     isLoading.value = false;
   }
@@ -312,7 +309,6 @@ const processProvinceData = () => {
   
   // 确保数据已加载
   if (!localConcerts.value || localConcerts.value.length === 0) {
-    console.warn('没有演唱会数据可处理');
     return [];
   }
   
@@ -335,7 +331,6 @@ const processProvinceData = () => {
   localConcerts.value.forEach((concert, index) => {
     // 检查是否有省份字段 - 使用新数据结构中的字段
     if (!concert.country && !concert.province) {
-      console.warn(`[${index}] 演唱会数据缺少国家/省份信息:`, concert);
       return;
     }
     
@@ -355,7 +350,6 @@ const processProvinceData = () => {
       // 处理新的日期格式 - 可能是范围格式如"2023年12月7-9日"
       const dateStr = concert.concert_date;
       if (!dateStr) {
-        console.warn(`[${index}] 演唱会缺少日期信息:`, concert);
         return;
       }
       
@@ -378,7 +372,6 @@ const processProvinceData = () => {
           concertDate = new Date(`${year}-${month}-${day}`);
           // console.log(`[${index}] 解析范围日期:`, dateStr, '→', concertDate.toISOString().split('T')[0]);
         } else {
-          console.warn(`[${index}] 无法解析日期范围:`, dateStr);
           return;
         }
       } else {
@@ -391,14 +384,12 @@ const processProvinceData = () => {
           concertDate = new Date(`${year}-${month}-${day}`);
           // console.log(`[${index}] 解析单个日期:`, dateStr, '→', concertDate.toISOString().split('T')[0]);
         } else {
-          console.warn(`[${index}] 无法解析单个日期:`, dateStr);
           return;
         }
       }
       
       // 如果演唱会日期大于今天或无法解析日期，跳过不计入统计
       if (!concertDate || isNaN(concertDate.getTime())) {
-        console.warn(`[${index}] 日期无效:`, dateStr);
         return;
       }
       
@@ -411,7 +402,6 @@ const processProvinceData = () => {
       validConcertCount++;
       
     } catch (e) {
-      console.error(`[${index}] 日期处理错误:`, e);
       return;
     }
     
@@ -442,7 +432,6 @@ const processProvinceData = () => {
     // 5. 默认情况下，归类为"未知"
     else {
       province = '未知地区';
-      console.warn(`[${index}] 未能确定城市所属省份:`, city);
     }
     
     // 获取规范化的省份名称，用于地图匹配
@@ -463,7 +452,6 @@ const processProvinceData = () => {
         concertCount = max - min + 1;
         // console.log(`[${index}] 计算场次范围:`, concert.sequence_range, `(${min}-${max})`, '→', concertCount, '场');
       } else {
-        console.warn(`[${index}] 无效的场次范围:`, concert.sequence_range);
       }
     }
     
@@ -509,11 +497,9 @@ const fetchChinaMap = async () => {
     // console.log('地图数据加载成功，地图包含的地区:', data.features.map(f => f.properties.name));
     return data;
   } catch (error) {
-    console.error('获取中国地图数据失败:', error);
     
     // 如果本地文件不存在，尝试使用备用数据
     try {
-      console.log('尝试加载备用中国地图数据...');
       // 创建一个简化的中国地图数据，包含主要省份
       const backupData = {
         type: "FeatureCollection",
@@ -554,10 +540,8 @@ const fetchChinaMap = async () => {
           { type: "Feature", properties: { name: "澳门特别行政区" }, geometry: {} }
         ]
       };
-      console.log('备用地图数据已加载，省份数量:', backupData.features.length);
       return backupData;
     } catch (backupError) {
-      console.error('备用地图数据加载也失败:', backupError);
       return null;
     }
   }
@@ -570,6 +554,8 @@ const normalizeRegionName = (name) => {
     return '香港特别行政区';
   } else if (name === '澳门' || name === '澳门特别行政区') {
     return '澳门特别行政区';
+  } else if (name === '中国台湾' || name === '台湾') {
+    return '台湾省';
   }
   return name;
 };
@@ -577,6 +563,7 @@ const normalizeRegionName = (name) => {
 // 初始化地图
 const initChart = async () => {
   if (!chartDom.value) return;
+  if (!echarts) echarts = await import('echarts')
   
   try {
     // 创建ECharts实例
@@ -585,7 +572,7 @@ const initChart = async () => {
     // 显示加载中状态
     chartInstance.showLoading({
       text: '地图数据加载中...',
-      color: '#eb07ee',
+      color: '#D946EF',
 textColor: 'rgba(255, 255, 255, 0.8)',
       maskColor: 'rgba(10, 10, 20, 0.8)',
     });
@@ -595,7 +582,6 @@ textColor: 'rgba(255, 255, 255, 0.8)',
       // 加载中国地图数据
       chinaGeoJson = await fetchChinaMap();
       if (!chinaGeoJson) {
-        console.error('无法加载中国地图数据');
         chartInstance.hideLoading();
         // 显示一条提示信息
         if (chartDom.value) {
@@ -619,7 +605,6 @@ textColor: 'rgba(255, 255, 255, 0.8)',
       mapData = processProvinceData();
       
       if (mapData.length === 0) {
-        console.warn('省份数据为空，地图将显示空白');
         // 显示一个空白地图
         chartInstance.setOption({
           title: {
@@ -651,7 +636,7 @@ color: '#fff'
       // 检查数据是否与地图匹配
       const unmatchedProvinces = mapData.filter(item => !areaNames.includes(item.name));
       if (unmatchedProvinces.length > 0) {
-        console.warn('以下省份无法在地图上找到匹配:', unmatchedProvinces.map(p => p.name));
+        logger.warn('以下省份无法在地图上找到匹配:', unmatchedProvinces.map(p => p.name));
         
         // 尝试修复香港和澳门的映射问题
         for (const item of unmatchedProvinces) {
@@ -664,7 +649,7 @@ color: '#fff'
             );
             
             if (mapName) {
-              console.log(`修复映射: ${item.name} → ${mapName}`);
+              logger.log(`修复映射: ${item.name} → ${mapName}`);
               // 更新该项的名称以匹配地图数据
               item.name = mapName;
             }
@@ -739,7 +724,7 @@ color: '#fff'
         textStyle: { color: 'rgba(255, 255, 255, 0.8)' },
         calculable: true,
         inRange: {
-          color: ['rgba(30, 30, 50, 0.8)', '#f373f9', '#eb07ee', '#a505de']
+          color: ['rgba(30, 30, 50, 0.8)', '#E8A0F5', '#D946EF', '#A21CAF']
         },
         outOfRange: {
           color: ['rgba(30, 30, 50, 0.6)']
@@ -787,7 +772,7 @@ color: '#fff'
         },
         emphasis: {
           label: { show: true, color: '#fff', fontSize: 12 },
-          itemStyle: { areaColor: '#a505de' }
+          itemStyle: { areaColor: '#A21CAF' }
         }
       }]
     });
@@ -797,7 +782,7 @@ color: '#fff'
       if (params.name) {
         // 先检查是否已经在查看该省份
         if (selectedProvince.value === params.name) {
-          console.log('已经在查看该省份地图，不需重复加载');
+          logger.log('已经在查看该省份地图，不需重复加载');
           return;
         }
         
@@ -819,7 +804,7 @@ color: '#fff'
     }, 300);
     
   } catch (error) {
-    console.error('初始化地图失败:', error);
+    logger.error('初始化地图失败:', error);
     if (chartDom.value) {
       chartDom.value.innerHTML = '<div style="text-align:center; padding: 20px; color:#666;">初始化地图失败，请刷新页面重试</div>';
     }
@@ -880,7 +865,7 @@ color: '#fff'
         textStyle: { color: 'rgba(255, 255, 255, 0.8)' },
       calculable: true,
       inRange: {
-        color: ['rgba(30, 30, 50, 0.8)', '#f373f9', '#eb07ee', '#a505de']
+        color: ['rgba(30, 30, 50, 0.8)', '#E8A0F5', '#D946EF', '#A21CAF']
       },
       outOfRange: {
         color: ['rgba(30, 30, 50, 0.6)']
@@ -946,7 +931,7 @@ color: '#fff'
             color: '#fff'
           },
           itemStyle: {
-            areaColor: '#a505de'
+            areaColor: '#A21CAF'
           }
         }
       }
@@ -958,7 +943,7 @@ color: '#fff'
     if (params.name) {
       // 先检查是否已经在查看该省份
       if (selectedProvince.value === params.name) {
-        console.log('已经在查看该省份地图，不需重复加载');
+        logger.log('已经在查看该省份地图，不需重复加载');
         return;
       }
       
@@ -991,7 +976,7 @@ const showCityTableFallback = (provinceName, currentProvince) => {
     cityList += `<h3 style="text-align:center; color: #fff;">${provinceName}巡演城市列表</h3>`;
     cityList += `<p style="text-align:center; color: rgba(255,255,255,0.7);">共计${currentProvince.value.toFixed(0)}场演出，覆盖${currentProvince.cities.length}个城市</p>`;
     cityList += '<table style="width:100%; border-collapse: collapse; margin-top: 15px;">';
-    cityList += '<tr style="background-color: rgba(235,7,238,0.15);"><th style="padding: 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff;">城市</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff;">演出场次</th></tr>';
+    cityList += '<tr style="background-color: rgba(200,80,232,0.15);"><th style="padding: 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff;">城市</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff;">演出场次</th></tr>';
     
     // 按场次数量排序
     const sortedCities = [...currentProvince.cities].sort((a, b) => b.value - a.value);
@@ -1002,7 +987,7 @@ const showCityTableFallback = (provinceName, currentProvince) => {
     });
     
     cityList += '</table>';
-    cityList += '<div style="text-align: center; margin-top: 20px;"><button id="back-to-china-btn" style="padding: 8px 15px; background-color: #eb07ee; color: white; border: none; border-radius: 4px; cursor: pointer;">返回全国地图</button></div>';
+    cityList += '<div style="text-align: center; margin-top: 20px;"><button id="back-to-china-btn" style="padding: 8px 15px; background-color: #D946EF; color: white; border: none; border-radius: 4px; cursor: pointer;">返回全国地图</button></div>';
     cityList += '</div>';
     
     // 显示城市列表
@@ -1035,7 +1020,7 @@ const showCityTableFallback = (provinceName, currentProvince) => {
       chartInstance = null;
       chartDom.value.innerHTML = `<div style="text-align:center; padding: 20px; color:#666;">
         <p>无法加载${provinceName}的地图数据</p>
-        <button id="back-to-china-btn" style="padding: 8px 15px; background-color: #eb07ee; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px;">返回全国地图</button>
+        <button id="back-to-china-btn" style="padding: 8px 15px; background-color: #D946EF; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px;">返回全国地图</button>
       </div>`;
       
       // 添加返回全国地图的事件监听
@@ -1071,7 +1056,7 @@ const loadProvinceMap = async (provinceName) => {
   // 显示加载状态
   chartInstance.showLoading({
     text: `${normalizedProvinceName}地图数据加载中...`,
-    color: '#eb07ee',
+    color: '#D946EF',
 textColor: 'rgba(255, 255, 255, 0.8)',
       maskColor: 'rgba(10, 10, 20, 0.8)',
   });
@@ -1104,9 +1089,9 @@ textColor: 'rgba(255, 255, 255, 0.8)',
         
         // 注册省份地图
         echarts.registerMap(normalizedProvinceName, provinceMapData);
-        console.log(`成功注册${normalizedProvinceName}地图`);
+        logger.log(`成功注册${normalizedProvinceName}地图`);
       } catch (error) {
-        console.error(`加载${normalizedProvinceName}地图数据失败:`, error);
+        logger.error(`加载${normalizedProvinceName}地图数据失败:`, error);
         chartInstance.hideLoading();
         
         // 获取当前省份数据以显示城市列表
@@ -1114,7 +1099,7 @@ textColor: 'rgba(255, 255, 255, 0.8)',
         return;
       }
     } else {
-      console.log(`使用已注册的${normalizedProvinceName}地图`);
+      logger.log(`使用已注册的${normalizedProvinceName}地图`);
     }
     
     // 配置省份地图
@@ -1188,7 +1173,7 @@ color: '#fff'
         textStyle: { color: 'rgba(255, 255, 255, 0.8)' },
         calculable: true,
         inRange: {
-          color: ['rgba(30, 30, 50, 0.8)', '#f373f9', '#eb07ee', '#a505de']
+          color: ['rgba(30, 30, 50, 0.8)', '#E8A0F5', '#D946EF', '#A21CAF']
         },
         outOfRange: {
           color: ['rgba(30, 30, 50, 0.6)']
@@ -1241,7 +1226,7 @@ color: '#fff'
               fontSize: 12
             },
             itemStyle: {
-              areaColor: '#a505de'
+              areaColor: '#A21CAF'
             }
           },
           // 添加标签显示
@@ -1268,7 +1253,7 @@ color: '#fff'
           }
         }
       } catch (e) {
-        console.error('调整地图视图失败:', e);
+        logger.error('调整地图视图失败:', e);
       }
     }, 200);
 
@@ -1282,7 +1267,7 @@ color: '#fff'
       }
     });
   } else {
-    console.error(`无法找到${normalizedProvinceName}的数据`);
+    logger.error(`无法找到${normalizedProvinceName}的数据`);
     chartInstance.hideLoading();
   }
 };
@@ -1316,7 +1301,7 @@ onUnmounted(() => {
     backBtn.removeEventListener('click', () => {});
   }
   
-  console.log('地图组件已卸载，资源已释放');
+  logger.log('地图组件已卸载，资源已释放');
 });
 
 // 监听concerts属性变化
@@ -1338,71 +1323,36 @@ watch(
 
 // 更新地图数据
 const updateMapData = () => {
-  if (!chartInstance) return;
+  if (!chartInstance || !chinaGeoJson) return;
   
   try {
-    // 获取处理后的省份数据
-    const provinceData = processProvinceData();
+    mapData = processProvinceData();
+    const areaNames = chinaGeoJson.features.map(f => f.properties.name);
     
-    // 使用provinceDada作为地图数据，不需要额外的格式化
-    const mapData = provinceData;
-    
-    // 获取地图区域名称
-    const option = chartInstance.getOption();
-    const areaNames = option.series[0].map.features?.map(f => f.properties.name) || [];
-    
-    // 检查数据是否与地图匹配
-    const unmatchedProvinces = mapData.filter(item => !areaNames.includes(item.name));
-    if (unmatchedProvinces.length > 0) {
-      console.warn('以下省份无法在地图上找到匹配:', unmatchedProvinces.map(p => p.name));
+    for (const item of mapData) {
+      if (areaNames.includes(item.name)) continue;
+
+      const mapName = areaNames.find(name => 
+        (item.name === '香港特别行政区' && (name === '香港' || name === '香港特别行政区')) || 
+        (item.name === '澳门特别行政区' && (name === '澳门' || name === '澳门特别行政区'))
+      );
       
-      // 尝试修复香港和澳门的映射问题
-      for (const item of unmatchedProvinces) {
-        // 检查是否为香港或澳门
-        if (item.name === '香港特别行政区' || item.name === '澳门特别行政区') {
-          // 找到地图中的实际名称
-          const mapName = areaNames.find(name => 
-            (item.name === '香港特别行政区' && (name === '香港' || name === '香港特别行政区')) || 
-            (item.name === '澳门特别行政区' && (name === '澳门' || name === '澳门特别行政区'))
-          );
-          
-          if (mapName) {
-            console.log(`修复映射: ${item.name} → ${mapName}`);
-            // 更新该项的名称以匹配地图数据
-            item.name = mapName;
-          }
-        }
+      if (mapName) {
+        item.name = mapName;
       }
     }
     
-    // 过滤掉不在地图上的地区（如国外地区）
     validMapData = mapData.filter(item => areaNames.includes(item.name));
-    
-    // 输出调试信息，检查香港和澳门的数据
-    console.log('地图区域名称:', areaNames);
-    console.log('处理后的原始数据:', mapData.map(item => `${item.name}: ${item.value}场, ${item.cities?.length || 0}个城市`));
-    console.log('有效的地图数据:', validMapData.map(item => `${item.name}: ${item.value}场, ${item.cities?.length || 0}个城市`));
-    console.log('香港澳门数据:', mapData.filter(item => item.name.includes('香港') || item.name.includes('澳门')));
-    
-    // 计算巡演统计信息
     totalCities = [...new Set(mapData.flatMap(p => (p.cities || []).map(c => c.name)))].length;
-    const totalProvinces = mapData.length;
-    const totalShows = mapData.reduce((sum, p) => sum + p.value, 0);
-
-    // 只计算中国国内巡演的场次
-    const domesticProvinces = mapData.filter(p => 
-      // 过滤出中国省份（包括直辖市、特别行政区和自治区）
+    domesticProvinces = mapData.filter(p => 
       p.name.includes('省') || 
       p.name.includes('市') || 
       p.name.includes('自治区') || 
       p.name.includes('特别行政区')
     );
-    const domesticShows = domesticProvinces.reduce((sum, p) => sum + p.value, 0);
-
-    // 找出最大值用于设置颜色范围
-    const maxValue = Math.max(...mapData.map(item => item.value), 1);
+    domesticShows = domesticProvinces.reduce((sum, p) => sum + p.value, 0);
+    maxValue = Math.max(...mapData.map(item => item.value), 1);
     
-    // 更新配置项
     chartInstance.setOption({
       title: {
         subtext: `数据来源：官方演出信息（已覆盖${domesticProvinces.length}个省份/地区，${totalCities}个城市，共计${domesticShows.toFixed(0)}场国内演出）`,
@@ -1413,21 +1363,17 @@ const updateMapData = () => {
       series: [
         {
           data: validMapData,
-          // 确保地图缩放级别和中心点保持一致
           zoom: 1.0,
           center: [104, 36]
         }
       ]
     });
     
-    console.log('地图数据已更新');
-    
-    // 确保数据更新后调整地图大小
     setTimeout(() => {
       handleResize();
     }, 100);
   } catch (error) {
-    // console.error('更新地图数据失败:', error);
+    console.error('更新地图数据失败:', error);
   }
 };
 </script>
@@ -1474,7 +1420,7 @@ const updateMapData = () => {
 .icon {
   margin-right: 1rem;
   font-size: 1.6rem;
-  filter: drop-shadow(0 0 10px rgba(235, 7, 238, 0.5));
+  filter: drop-shadow(0 0 10px rgba(200, 80, 232, 0.5));
 }
 
 .map-content {
@@ -1565,8 +1511,8 @@ const updateMapData = () => {
 .selected-province {
   font-size: 1.2rem;
   margin-left: 0.5rem;
-  color: var(--primary, #eb07ee);
+  color: var(--primary, #D946EF);
   font-weight: normal;
-  text-shadow: 0 0 10px rgba(235, 7, 238, 0.4);
+  text-shadow: 0 0 10px rgba(200, 80, 232, 0.4);
 }
 </style>

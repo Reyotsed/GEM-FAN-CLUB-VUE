@@ -7,69 +7,93 @@
       @timeupdate="onTimeUpdate"
       @loadedmetadata="onLoadedMetadata"
       @ended="onEnded"
-      style="width: 100%;"
     ></audio>
     <div class="player-controls">
-      <button class="player-btn" @click="playPause">{{ isPlaying ? '暂停' : '播放' }}</button>
-      <div class="progress-bar">
-        <input type="range" min="0" max="100" v-model="progress" @input="setProgress" class="progress-range" />
-        <span class="progress-time">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</span>
+      <button
+        class="player-btn"
+        @click="playPause"
+        :aria-label="isPlaying ? '暂停' : '播放'"
+      >
+        <svg v-if="!isPlaying" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+        </svg>
+      </button>
+      <div class="progress-wrap">
+        <input type="range" min="0" max="100" step="0.1" v-model="progress" @input="setProgress" class="progress-range" :style="rangeStyle" />
       </div>
+      <span class="progress-time">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed, onUnmounted } from 'vue'
 const props = defineProps({ src: String })
+const emit = defineEmits(['playing-change'])
 
 const audio = ref(null)
 const currentTime = ref(0)
 const duration = ref(0)
 const progress = ref(0)
 const isPlaying = ref(false)
-const circulate = ref(false)
 
 const onTimeUpdate = () => {
+  if (!audio.value) return
   currentTime.value = audio.value.currentTime
-  progress.value = (currentTime.value / duration.value) * 100
+  progress.value = duration.value ? (currentTime.value / duration.value) * 100 : 0
 }
 const onLoadedMetadata = () => {
+  if (!audio.value) return
   duration.value = audio.value.duration
 }
 const onCanPlay = () => {
+  if (!audio.value) return
   duration.value = audio.value.duration
 }
 const playPause = () => {
-  if (isPlaying.value) {
-    audio.value.pause()
-  } else {
-    audio.value.play()
-  }
+  if (!audio.value) return
+  if (isPlaying.value) audio.value.pause()
+  else audio.value.play()
   isPlaying.value = !isPlaying.value
+  emit('playing-change', isPlaying.value)
 }
 const setProgress = () => {
+  if (!audio.value) return
   audio.value.currentTime = (progress.value / 100) * duration.value
-}
-const isCirculate = () => {
-  circulate.value = !circulate.value
-  audio.value.loop = circulate.value
 }
 const onEnded = () => {
   isPlaying.value = false
+  emit('playing-change', false)
 }
 const formatTime = (time) => {
   if (!isNaN(time)) {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    const m = Math.floor(time / 60)
+    const s = Math.floor(time % 60)
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
   }
   return '00:00'
 }
+const rangeStyle = computed(() => ({
+  background: `linear-gradient(90deg, #D946EF 0%, #A21CAF ${progress.value}%, rgba(255,255,255,0.12) ${progress.value}%, rgba(255,255,255,0.12) 100%)`
+}))
 watch(() => props.src, () => {
   isPlaying.value = false
+  emit('playing-change', false)
   currentTime.value = 0
   progress.value = 0
+})
+
+// 组件销毁时暂停音频，防止后台继续触发 timeupdate 导致 null ref 访问
+onUnmounted(() => {
+  const el = audio.value
+  if (el) {
+    el.pause()
+    el.removeAttribute('src')
+    el.load()
+  }
 })
 </script>
 
@@ -77,97 +101,84 @@ watch(() => props.src, () => {
 .audio-player {
   width: 100%;
   margin: 0 auto;
-  background: none;
-  border-radius: 12px;
-  padding: 0.5rem 0.5rem 0.7rem 0.5rem;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
+audio { display: none; }
 
 .player-controls {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  margin-top: 0.5rem;
+  gap: 0.7rem;
   width: 100%;
-  justify-content: center;
 }
 
 .player-btn {
-  background: linear-gradient(135deg, #df0dee 0%, #a505de 100%);
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #D946EF 0%, #A21CAF 100%);
   color: #fff;
   border: none;
-  border-radius: 10px;
-  padding: 0.5rem 1.2rem;
-  font-size: 1rem;
-  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(223, 13, 238, 0.10);
-  transition: all 0.2s;
-  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(200, 80, 232, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  padding: 0;
 }
-.player-btn:hover {
-  filter: brightness(1.08) saturate(1.2);
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 4px 16px rgba(223, 13, 238, 0.18);
-}
+.player-btn:hover { filter: brightness(1.08); transform: scale(1.05); }
+.player-btn:active { transform: scale(0.95); }
 
-.progress-bar {
+.progress-wrap {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  min-width: 120px;
-  max-width: 320px;
+  min-width: 0;
 }
 
 .progress-range {
-  flex: 1;
-  height: 7px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #df0dee 0%, #a505de 100%);
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
   outline: none;
-  accent-color: #df0dee;
-  transition: background 0.3s;
+  cursor: pointer;
 }
 .progress-range::-webkit-slider-thumb {
-  width: 16px;
-  height: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #df0dee;
-  box-shadow: 0 2px 8px rgba(223, 13, 238, 0.13);
+  border: 2px solid #D946EF;
+  box-shadow: 0 2px 6px rgba(200, 80, 232, 0.4);
   cursor: pointer;
-  transition: background 0.3s;
 }
-.progress-range:focus::-webkit-slider-thumb {
-  background: #df0dee;
-}
-.progress-time {
-  min-width: 70px;
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
-  text-align: right;
+.progress-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #D946EF;
+  cursor: pointer;
 }
 
-@media (max-width: 600px) {
-  .audio-player {
-    padding: 0.3rem 0.1rem 0.5rem 0.1rem;
-  }
-  .player-controls {
-    flex-direction: column;
-    gap: 0.7rem;
-    align-items: stretch;
-  }
-  .progress-bar {
-    min-width: 80px;
-    max-width: 100%;
-  }
-  .progress-time {
-    font-size: 0.95rem;
-  }
+.progress-time {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .player-controls { gap: 0.5rem; }
+  .player-btn { width: 34px; height: 34px; }
+  .progress-time { font-size: 0.7rem; }
 }
 </style>

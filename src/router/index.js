@@ -1,10 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { trackPageView } from '@/utils/stats'
+import { trackPageView, trackNavigation } from '@/utils/stats'
 const Index = () => import('@/views/Index.vue')
 const AIPage = () => import('@/views/AIPage/AIPage.vue')
 const InfoPage = () => import('@/views/InfoPage/InfoPage.vue')
-const PicturePage = () => import('@/views/PicturePage/PicturePage.vue')
 const QuotePage = () => import('@/views/QuotePage/QuotePage.vue')
 const ShopPage = () => import('@/views/ShopPage/ShopPage.vue')
 const SongPage = () => import('@/views/SongPage/SongPage.vue')
@@ -17,7 +16,11 @@ const GuessSongGame = () => import('@/views/GamesPage/GuessSongGame.vue')
 const LyricsChainGame = () => import('@/views/GamesPage/LyricsChainGame.vue')
 const QuizGame = () => import('@/views/GamesPage/QuizGame.vue')
 const TicketRushGame = () => import('@/views/GamesPage/TicketRushGame.vue')
+const HummingbirdStrikeGame = () => import('@/views/GamesPage/HummingbirdStrikeGame.vue')
+const DailyGuessGame = () => import('@/views/GamesPage/DailyGuessGame.vue')
 const StoryPage = () => import('@/views/StoryPage/StoryPage.vue')
+const FanMapPage = () => import('@/views/FanMapPage/FanMapPage.vue')
+const DashboardPage = () => import('@/views/DashboardPage/DashboardPage.vue')
 
 const routes = [
     { path: '/', redirect: '' },
@@ -29,9 +32,8 @@ const routes = [
         children: [
             { path: '', name: "home", component: HomePage, meta: { title: 'GEM Fan Club - 首页' } },
             { path: 'song', name: "song", component: SongPage, meta: { title: 'GEM Fan Club - 音乐' } },
-            { path: 'quote', name: "quote", component: QuotePage, meta: { title: 'GEM Fan Club - 动态' } },
-            { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage, meta: { title: 'GEM Fan Club - 动态详情' } },
-            { path: 'picture', name: "picture", component: PicturePage, meta: { title: 'GEM Fan Club - 图片' } },
+{ path: 'quote', name: "quote", component: QuotePage, meta: { title: 'GEM Fan Club - 广场' } },
+    { path: 'quote/:id', name: "quoteInfo", component: QuoteInfoPage, meta: { title: 'GEM Fan Club - 帖子详情' } },
             { path: 'shop', name: "shop", component: ShopPage, meta: { title: 'GEM Fan Club - 商店' } },
             { path: 'ai', name: "AI", component: AIPage, meta: { title: 'GEM Fan Club - AI 对话' } },
             { path: 'info', name: "info", component: InfoPage, meta: { title: 'GEM Fan Club - 信息' } },
@@ -42,9 +44,14 @@ const routes = [
             { path: 'games/lyrics-chain', name: "lyrics-chain", component: LyricsChainGame, meta: { title: 'GEM Fan Club - 歌词接龙' } },
             { path: 'games/quiz', name: "quiz", component: QuizGame, meta: { title: 'GEM Fan Club - 知识问答' } },
             { path: 'games/ticket-rush', name: "ticket-rush", component: TicketRushGame, meta: { title: 'GEM Fan Club - 抢票模拟' } },
-            { path: 'story', name: "story", component: StoryPage, meta: { title: 'GEM Fan Club - 快拍' } }
+            { path: 'games/hummingbird-strike', name: "hummingbird-strike", component: HummingbirdStrikeGame, meta: { title: 'GEM Fan Club - 痛击蜂鸟' } },
+            { path: 'games/daily', name: "daily-guess", component: DailyGuessGame, meta: { title: 'GEM Fan Club - 每日猜歌' } },
+            { path: 'story', name: "story", component: StoryPage, meta: { title: 'GEM Fan Club - 快拍' } },
+            { path: 'fan-map', name: "fan-map", component: FanMapPage, meta: { title: 'GEM Fan Club - 全球粉丝地图' } }
         ]
-    }
+    },
+    // 隐藏的运营看板路由（不在 PAGE_KEY_MAP 中，不会上报 PV，需账号密码登录）
+    { path: '/__ops__/dashboard', name: 'dashboard', component: DashboardPage, meta: { title: 'GEM 运营看板' } }
 ]
 
 const router = createRouter({
@@ -81,9 +88,10 @@ router.beforeEach((to, from, next) => {
     next();
 });
 
-// 页面访问统计：路由切换后自动上报 PV
-router.afterEach((to) => {
+// 页面访问统计：路由切换后自动上报 PV + 会话/落地页/首页去向/分享回流
+router.afterEach((to, from) => {
     if (to.name) {
         trackPageView(to.name);
+        trackNavigation(to, from);
     }
 });

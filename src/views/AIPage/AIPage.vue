@@ -2,7 +2,7 @@
     <div class="chat-container">
         <!-- 背景装饰粒子 -->
         <div class="bg-particles">
-            <span class="particle" v-for="n in 12" :key="n" :style="particleStyle(n)"></span>
+            <span class="particle" v-for="(style, n) in particleStyles" :key="n" :style="style"></span>
         </div>
 
         <div class="chat-header">
@@ -24,8 +24,17 @@
             </button>
         </div>
         
+        <!-- 登录弹窗 -->
+        <LoginModal ref="loginModalRef" />
+        
         <div class="chat-body" ref="chatBodyRef">
-            <div class="chat-welcome">
+            <div class="chat-welcome" v-if="showWelcome" :class="{ 'welcome-collapsed': welcomeCollapsed }">
+                <button class="welcome-close" @click="showWelcome = false" title="关闭欢迎卡">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button class="welcome-toggle" @click="welcomeCollapsed = !welcomeCollapsed" :title="welcomeCollapsed ? '展开' : '收起'">
+                    <i :class="welcomeCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'"></i>
+                </button>
                 <div class="welcome-glow"></div>
                 <div class="welcome-avatar">
                     <img src="/img/albumCover/8.jpg" alt="邓紫棋头像" class="welcome-img">
@@ -33,16 +42,16 @@
                 </div>
                 <div class="welcome-text">
                     <h3>欢迎来到姐姐虚拟聊天室</h3>
-                    <p class="welcome-main">这里是AI模拟的邓紫棋，你可以和我聊聊天，我会用紫棋的语气和你互动~</p>
-                    <div class="welcome-notice">
+                    <p class="welcome-main" v-show="!welcomeCollapsed">这里是AI模拟的邓紫棋，你可以和我聊聊天，我会用邓紫棋的语气和你互动~ <strong>NEW：</strong>现在还能让我发照片啦，试试说"来一张你的美照"📸</p>
+                    <div class="welcome-notice" v-show="!welcomeCollapsed">
                         <i class="fas fa-info-circle"></i>
                         <div>
-                            <p>后端基于 Agent + 知识库检索 + 工具调用，LLM 自主决策回答策略，持续迭代中，数据越多效果越好，欢迎粉丝们投喂语料～ 语音功能因版权原因暂未上线，感兴趣可以私信站长</p>
-                            <p>每次对话都在烧token，站长已经穷到吃土了，请温柔对待本聊天室的余额 :)</p>
+                            <p><strong>声明：</strong>本聊天室由 AI 大模型模仿邓紫棋语气生成回复，<strong>非本人言论</strong>，仅供粉丝娱乐，不代表邓紫棋本人观点。</p>
+                            <p>持续迭代中，数据越多效果越好，欢迎粉丝们投喂语料～ 语音功能因版权原因暂未上线，感兴趣可以私信站长。每次对话都在烧token，站长已经穷到吃土了，请温柔对待本聊天室的余额 :)</p>
                         </div>
                     </div>
                 </div>
-                <div class="welcome-music-notes">
+                <div class="welcome-music-notes" v-show="!welcomeCollapsed">
                     <span v-for="n in 5" :key="n" class="music-note" :style="{ animationDelay: `${n * 0.6}s` }">&#9835;</span>
                 </div>
             </div>
@@ -53,8 +62,25 @@
                     <img src="/img/albumCover/8.jpg" alt="邓紫棋头像" class="avatar-img-small">
                 </div>
                 <div class="message-content">
-                    <div class="message-bubble">
-                        <p>{{ message.text }}</p>
+                    <!-- 图片：独立卡片网格，不再嵌入彩色气泡 -->
+                    <div
+                        v-if="message.photos && message.photos.length"
+                        class="photo-grid"
+                        :class="{ 'photo-grid-single': message.photos.length === 1 }"
+                    >
+                        <button
+                            v-for="(photo, photoIndex) in message.photos"
+                            :key="photo.url || photoIndex"
+                            class="photo-card"
+                            type="button"
+                            @click="openLightbox(photo.url)"
+                        >
+                            <img :src="photo.url" alt="G.E.M. photo" loading="lazy" @error="onPhotoError">
+                        </button>
+                    </div>
+                    <!-- 文字气泡：有文字或正在流式输出时才显示 -->
+                    <div class="message-bubble" v-if="message.text || message.streaming">
+                        <p>{{ message.text }}<span v-if="message.streaming" class="stream-cursor"></span></p>
                     </div>
                     <span class="message-time">{{ message.time }}</span>
                 </div>
@@ -92,19 +118,19 @@
                 <textarea 
                     ref="inputRef"
                     v-model="userInput" 
-                    :placeholder="userStore.isLoggedIn ? `和紫棋说点什么吧...` : `发送消息给邓紫棋...`" 
-                    @keydown.enter.prevent="sendMessage" 
+                    :placeholder="inputPlaceholder"
+                    @keydown.enter.exact.prevent="sendMessage" 
                     @focus="inputFocused = true"
                     @blur="inputFocused = false"
-                    :disabled="isTyping"
+                    :disabled="isResponding"
                     rows="1"
                     class="chat-input"
                 ></textarea>
-                <button @click="sendMessage" class="send-btn" :disabled="isTyping || !userInput.trim()">
-                    <i class="fas fa-paper-plane"></i>
+                <button @click="sendMessage" class="send-btn" :disabled="isResponding || !userInput.trim()">
+                    <i :class="isResponding ? 'fas fa-circle-notch fa-spin' : 'fas fa-paper-plane'"></i>
                 </button>
             </div>
-            <div class="chat-hints">
+            <div class="chat-hints" v-if="showHints">
                 <div class="hint-label"><i class="fas fa-lightbulb"></i> 试着问问：</div>
                 <div class="hint-buttons">
                     <button 
@@ -118,25 +144,71 @@
                 </div>
             </div>
         </div>
+
+        <!-- 图片灯箱预览 -->
+        <transition name="lightbox-fade">
+            <div v-if="lightboxUrl" class="lightbox-overlay" @click="closeLightbox">
+                <img :src="lightboxUrl" class="lightbox-img" alt="图片预览" @click.stop>
+                <button class="lightbox-close" @click="closeLightbox" title="关闭">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </transition>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { trackEvent, EVENTS } from '@/utils/stats';
+import { storage } from '@/utils/storage';
+import { getFingerprint } from '@/utils/fingerprint';
+import LoginModal from '@/components/Login/LoginModal.vue';
 
 // 获取用户状态
 const userStore = useUserStore();
+
+// 登录弹窗引用
+const loginModalRef = ref(null);
 
 // 状态变量
 const userInput = ref('');
 const messages = ref([]);
 const isTyping = ref(false);
+const isResponding = ref(false);  // 整个请求期间为 true，用于锁定输入框，避免回复未完就再次提问
 const chatBodyRef = ref(null);
 const inputRef = ref(null);
 const inputFocused = ref(false);
 const streamStatus = ref('');  // 流式状态提示文字
+const showWelcome = ref(true);
+const welcomeCollapsed = ref(false);
+// Hints visible only before any user message is sent
+const showHints = computed(() => !messages.value.some(m => m.sender === 'user'));
+
+// 输入框 placeholder：根据登录态与回复状态动态变化
+const inputPlaceholder = computed(() => {
+    if (!userStore.isLoggedIn) return '登录后即可和解解聊天～';
+    if (isResponding.value) return '姐姐还在回复中，请稍候…';
+    return '和解解说点什么吧...';
+});
+
+// 图片灯箱预览
+const lightboxUrl = ref('');
+function openLightbox(url) {
+    if (!url) return;
+    lightboxUrl.value = url;
+}
+function closeLightbox() {
+    lightboxUrl.value = '';
+}
+function onPhotoError(e) {
+    // 图片加载失败：隐藏破图，避免出现裂图占位
+    const card = e?.target?.closest?.('.photo-card');
+    if (card) card.style.display = 'none';
+}
+function onEscKey(e) {
+    if (e.key === 'Escape' && lightboxUrl.value) closeLightbox();
+}
 
 // 背景粒子样式生成
 function particleStyle(n) {
@@ -151,6 +223,8 @@ function particleStyle(n) {
         opacity: 0.3 + Math.random() * 0.5,
     };
 }
+// 仅在组件初始化时计算一次粒子样式，避免流式输出（messages 变化触发重渲染）时随机值被重算导致粒子闪烁/瞬移
+const particleStyles = ref(Array.from({ length: 12 }, (_, i) => particleStyle(i + 1)));
 // 保存完整的对话历史，用于API调用
 const chatHistory = ref([
 ]);
@@ -161,6 +235,7 @@ const contextWarning = ref(false); // 上下文长度警告
 
 // 一些预设的提示问题
 const hints = [
+    '来一张你的美照',
     '你最喜欢的歌是什么？',
     '平时有什么爱好？',
     '新专辑什么时候发行？',
@@ -192,12 +267,15 @@ function manageContext() {
             contextWarning.value = false;
         }, 5000);
         
-        console.log('Context truncated, keeping recent messages');
     }
 }
 
 // 当用户使用预设提示
 function useHint(hint) {
+    if (!userStore.isLoggedIn) {
+        loginModalRef.value?.openModal();
+        return;
+    }
     userInput.value = hint;
     nextTick(() => {
         inputRef.value.focus();
@@ -206,7 +284,14 @@ function useHint(hint) {
 
 // 发送消息逻辑（流式响应版）
 async function sendMessage() {
-    if (!userInput.value.trim() || isTyping.value) return;
+    if (!userInput.value.trim() || isResponding.value) return;
+    
+    // 未登录时弹出登录弹窗
+    if (!userStore.isLoggedIn) {
+        loginModalRef.value?.openModal();
+        return;
+    }
+    
     trackEvent(EVENTS.AI_CHAT);
     
     const messageText = userInput.value;
@@ -228,10 +313,11 @@ async function sendMessage() {
     // 管理上下文长度
     manageContext();
     
-    // 自动滚动到底部
-    await scrollToBottom();
+    // 用户主动发消息：强制滚到底
+    await scrollToBottom(true);
     
-    // 显示typing状态
+    // 进入回复中状态：锁定输入框直到本次流式输出完全结束
+    isResponding.value = true;
     isTyping.value = true;
     streamStatus.value = '姐姐正在输入...';
     
@@ -251,14 +337,10 @@ async function sendMessage() {
         // 再次管理上下文长度
         manageContext();
         
-        isTyping.value = false;
-        streamStatus.value = '';
         await scrollToBottom();
         
     } catch (error) {
         console.error('聊天出错:', error);
-        isTyping.value = false;
-        streamStatus.value = '';
         
         // 发生错误时添加错误消息
         messages.value.push({
@@ -268,6 +350,13 @@ async function sendMessage() {
         });
         
         await scrollToBottom();
+    } finally {
+        // 无论成功失败，流式结束后才解锁输入框
+        isTyping.value = false;
+        isResponding.value = false;
+        streamStatus.value = '';
+        // 回复结束后自动聚焦，方便用户继续提问
+        nextTick(() => inputRef.value?.focus());
     }
 }
 
@@ -279,10 +368,14 @@ function formatTime(date) {
 }
 
 // 滚动到底部
-async function scrollToBottom() {
+// 增强：如果用户主动向上滚（距底部 > 120px），就不再强制拉回底部，避免和用户阅读冲突
+async function scrollToBottom(force = false) {
     await nextTick();
-    if (chatBodyRef.value) {
-        chatBodyRef.value.scrollTop = chatBodyRef.value.scrollHeight;
+    if (!chatBodyRef.value) return;
+    const el = chatBodyRef.value;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (force || distanceFromBottom < 120) {
+        el.scrollTop = el.scrollHeight;
     }
 }
 
@@ -299,22 +392,28 @@ watch(userInput, () => {
 
 // 流式调用后端AI接口
 async function callBackendAIStream(messageHistory) {
+    // 历史 = 除最后一条（即本次问题）外的所有消息
     const history = [];
-    for (let i = 1; i < messageHistory.length - 1; i++) {
-        const msg = messageHistory[i];
+    const prior = messageHistory.slice(0, -1);
+    for (const msg of prior) {
         if (msg && msg.role && msg.content) {
             history.push({ role: msg.role, content: msg.content });
         }
     }
+    // 丢弃开头的欢迎语（assistant），保证历史从 user 开始；不会误删真实用户消息
+    while (history.length && history[0].role === 'assistant') {
+        history.shift();
+    }
     
     const currentQuestion = messageHistory[messageHistory.length - 1].content;
-    const payload = { question: currentQuestion, history: history };
+    const _uid = storage.getUserId() || `fp_${getFingerprint()}`;
+    const payload = { question: currentQuestion, history: history, user_id: _uid };
     
     // Build the full URL for the stream endpoint
     const baseUrl = import.meta.env.VITE_API_BASEURL + import.meta.env.VITE_API_PREFIX;
     const streamUrl = `${baseUrl}/ai/stream`;
     
-    const token = localStorage.getItem('token');
+    const token = storage.getToken();
     const headers = { 'Content-Type': 'application/json' };
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -336,108 +435,140 @@ async function callBackendAIStream(messageHistory) {
     let fullText = '';     // Accumulated AI response text
     let scrollCounter = 0; // Throttle scrolling
     let aiMessageIndex = -1; // Will be set when first token arrives
-    
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-        
-        // Process complete SSE events (separated by double newlines)
-        const parts = buffer.split('\n\n');
-        buffer = parts.pop(); // Keep the incomplete last part in the buffer
-        
-        for (const part of parts) {
-            if (!part.trim()) continue;
-            
-            // Parse SSE event
-            // Note: SSE spec allows optional space after colon.
-            //   FastAPI outputs "event: token\ndata: {...}"
-            //   Spring SseEmitter may output "event:token\ndata:{...}"
-            // We handle both formats.
-            let eventType = 'message';
-            let eventData = '';
-            
-            for (const line of part.split('\n')) {
-                if (line.startsWith('event:')) {
-                    eventType = line.slice(6).trim();
-                } else if (line.startsWith('data:')) {
-                    eventData = line.slice(5).trim();
-                }
+    let hasPhotos = false;
+
+    const handleSsePart = async (part) => {
+        if (!part.trim()) return;
+
+        let eventType = 'message';
+        let eventData = '';
+
+        for (const line of part.split('\n')) {
+            if (line.startsWith('event:')) {
+                eventType = line.slice(6).trim();
+            } else if (line.startsWith('data:')) {
+                eventData += line.slice(5).trim();
             }
-            
-            if (!eventData) continue;
-            
-            try {
-                const data = JSON.parse(eventData);
-                
-                switch (eventType) {
-                    case 'status':
-                        // Update the typing indicator status text
-                        streamStatus.value = data.message || '处理中...';
-                        break;
-                    
-                    case 'token':
-                        // Append token content to the AI message
-                        if (data.content) {
-                            // On first token: create the AI message bubble and hide typing indicator
-                            if (aiMessageIndex === -1) {
-                                aiMessageIndex = messages.value.length;
-                                messages.value.push({
-                                    text: '',
-                                    sender: 'ai',
-                                    time: formatTime(new Date())
-                                });
-                                isTyping.value = false;
-                                streamStatus.value = '';
-                            }
-                            
-                            fullText += data.content;
-                            messages.value[aiMessageIndex].text = fullText;
-                            
-                            // Throttle scrolling: scroll every 3 tokens
-                            scrollCounter++;
-                            if (scrollCounter % 3 === 0) {
-                                await scrollToBottom();
-                            }
-                        }
-                        break;
-                    
-                    case 'done':
-                        // Stream complete
-                        await scrollToBottom();
-                        break;
-                    
-                    case 'error':
-                        // Server error — create message bubble if not yet created
+        }
+
+        if (!eventData) return;
+
+        try {
+            const data = JSON.parse(eventData);
+
+            switch (eventType) {
+                case 'status':
+                    streamStatus.value = data.message || '处理中...';
+                    break;
+
+                case 'token':
+                    if (data.content) {
                         if (aiMessageIndex === -1) {
                             aiMessageIndex = messages.value.length;
                             messages.value.push({
                                 text: '',
                                 sender: 'ai',
-                                time: formatTime(new Date())
+                                time: formatTime(new Date()),
+                                streaming: true
                             });
-                            isTyping.value = false;
-                            streamStatus.value = '';
+                        } else if (!messages.value[aiMessageIndex].streaming) {
+                            messages.value[aiMessageIndex].streaming = true;
                         }
-                        if (!fullText) {
-                            fullText = `哎呀，遇到了一些问题：${data.message || '请稍后再试'} 😥`;
-                            messages.value[aiMessageIndex].text = fullText;
+                        // 文字开始输出：隐藏"正在输入"气泡（但仍保持 isResponding 锁定输入框）
+                        isTyping.value = false;
+                        streamStatus.value = '';
+
+                        fullText += data.content;
+                        messages.value[aiMessageIndex].text = fullText;
+
+                        scrollCounter++;
+                        if (scrollCounter % 3 === 0) {
+                            await scrollToBottom();
                         }
-                        break;
+                    }
+                    break;
+
+                case 'photos': {
+                    const photos = Array.isArray(data.items) ? data.items : [];
+                    if (!photos.length) break;
+                    hasPhotos = true;
+                    if (aiMessageIndex === -1) {
+                        aiMessageIndex = messages.value.length;
+                        messages.value.push({
+                            text: '',
+                            sender: 'ai',
+                            time: formatTime(new Date()),
+                            photos: []
+                        });
+                    }
+                    messages.value[aiMessageIndex].photos = photos;
+                    // 图片已下发但文字尚未开始：保持"正在输入"气泡并给出提示，告知用户文字马上来
+                    if (!fullText) {
+                        isTyping.value = true;
+                        streamStatus.value = '照片先到啦，文字马上就来～';
+                    }
+                    await scrollToBottom();
+                    break;
                 }
-            } catch (parseErr) {
-                // Silently ignore malformed SSE data
+
+                case 'done':
+                    // 流式结束：去掉光标
+                    if (aiMessageIndex !== -1 && messages.value[aiMessageIndex]) {
+                        messages.value[aiMessageIndex].streaming = false;
+                    }
+                    await scrollToBottom();
+                    break;
+
+                case 'error':
+                    throw new Error('__AI_STREAM_ERROR__:' + (data.message || 'AI服务连接失败'));
+            }
+        } catch (parseErr) {
+            if (parseErr && parseErr.message && parseErr.message.startsWith('__AI_STREAM_ERROR__:')) {
+                throw new Error(parseErr.message.slice('__AI_STREAM_ERROR__:'.length));
             }
         }
+    };
+    
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
+            
+            // Process complete SSE events (separated by double newlines)
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop(); // Keep the incomplete last part in the buffer
+        
+        for (const part of parts) {
+            await handleSsePart(part);
+        }
+    }
+        if (buffer.trim()) {
+            await handleSsePart(buffer);
+            buffer = '';
+        }
+    } catch (streamErr) {
+        // Remove the placeholder AI bubble (if created) so outer catch shows a single error message
+        if (aiMessageIndex !== -1 && messages.value[aiMessageIndex]) {
+            messages.value.splice(aiMessageIndex, 1);
+        }
+        isTyping.value = false;
+        streamStatus.value = '';
+        throw streamErr;
     }
     
     // Final scroll
     await scrollToBottom();
+
+    // 兜底：流自然结束但未收到 done 事件时，也清掉光标
+    if (aiMessageIndex !== -1 && messages.value[aiMessageIndex]?.streaming) {
+        messages.value[aiMessageIndex].streaming = false;
+    }
     
     // If no text was received at all, create a fallback message
-    if (!fullText) {
+    if (!fullText && !hasPhotos) {
         messages.value.push({
             text: '抱歉，AI好像没有给我回应耶...😥',
             sender: 'ai',
@@ -515,6 +646,13 @@ onMounted(() => {
     setTimeout(() => {
         inputRef.value?.focus();
     }, 1500);
+
+    // ESC 关闭灯箱
+    window.addEventListener('keydown', onEscKey);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onEscKey);
 });
 </script>
 
@@ -523,14 +661,17 @@ onMounted(() => {
 .chat-container {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - var(--nav-height, 70px));
-    height: calc(100vh - var(--nav-height, 70px));
-    background: linear-gradient(145deg, var(--bg-dark) 0%, var(--bg-dark-mid) 50%, #1a1040 100%);
+    min-height: calc(100vh - var(--nav-height, 70px) - var(--tab-bar-height, 0px));
+    height: calc(100vh - var(--nav-height, 70px) - var(--tab-bar-height, 0px));
+    background:
+        radial-gradient(ellipse 40% 30% at 20% 15%, rgba(200, 80, 232, 0.08), transparent 50%),
+        radial-gradient(ellipse 35% 25% at 80% 80%, rgba(0, 204, 223, 0.05), transparent 50%),
+        linear-gradient(155deg, #0a0a16 0%, #0f0d20 40%, #120d28 70%, #0a0a16 100%);
     position: fixed;
     top: var(--nav-height, 70px);
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--tab-bar-height, 0px);
     font-family: inherit;
     overflow: hidden;
     margin: 0;
@@ -550,7 +691,7 @@ onMounted(() => {
 .particle {
     position: absolute;
     border-radius: 50%;
-    background: var(--accent-rose);
+    background: var(--accent-pink);
     animation: floatParticle linear infinite;
     filter: blur(1px);
 }
@@ -575,11 +716,12 @@ onMounted(() => {
 
 /* ========== Header ========== */
 .chat-header {
-    padding: 14px 28px;
-    background: rgba(10, 10, 18, 0.6);
-    backdrop-filter: var(--glass-blur);
-    border-bottom: 1px solid var(--glass-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: var(--space-3) var(--space-8);
+    background: rgba(10, 10, 18, 0.55);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -601,7 +743,7 @@ onMounted(() => {
     position: absolute;
     inset: -4px;
     border-radius: 50%;
-    background: conic-gradient(var(--primary), var(--accent-rose), var(--accent-cyan), var(--primary));
+    background: conic-gradient(var(--primary), var(--accent-pink), var(--accent-cyan), var(--primary));
     animation: ringRotate 4s linear infinite;
     opacity: 0.7;
 }
@@ -652,7 +794,7 @@ onMounted(() => {
 .ai-badge {
     font-size: 10px;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--primary), var(--accent-rose));
+    background: linear-gradient(135deg, var(--primary), var(--accent-pink));
     color: white;
     padding: 2px 8px;
     border-radius: var(--radius-pill);
@@ -688,10 +830,13 @@ onMounted(() => {
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-pill);
     color: var(--text-secondary);
-    padding: 8px 16px;
+    min-height: var(--button-height);
+    padding: 0 var(--space-4);
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.3s var(--ease-out);
+    transition-property: transform, box-shadow, opacity, background, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: var(--ease-out);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -721,7 +866,7 @@ onMounted(() => {
 .chat-body {
     flex: 1;
     min-height: 0; /* 关键：让 flex 子项能在空间不足时正确收缩并出现滚动条 */
-    padding: 24px;
+    padding: var(--space-6);
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
@@ -738,18 +883,76 @@ onMounted(() => {
     align-items: center;
     padding: clamp(16px, 3vh, 32px) clamp(16px, 3vw, 28px);
     margin: clamp(8px, 1.5vh, 16px) auto;
-    background: var(--glass-bg);
+    background: rgba(255, 255, 255, 0.03);
     border-radius: var(--radius-lg);
     max-width: 520px;
     width: min(100%, 520px);
     text-align: center;
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(200, 80, 232, 0.06);
     animation: welcome-fade-in 0.8s var(--ease-out);
     position: relative;
     overflow: hidden;
-    flex-shrink: 0; /* 不被压缩，让 chat-body 产生滚动 */
+    flex-shrink: 0;
+}
+
+.welcome-close,
+.welcome-toggle {
+    position: absolute;
+    top: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+    font-size: 12px;
+    transition-property: transform, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+.welcome-close { right: 8px; }
+.welcome-toggle { right: 42px; }
+
+.welcome-close:hover,
+.welcome-toggle:hover {
+    background: rgba(240, 98, 146, 0.15);
+    color: var(--text-primary);
+}
+
+.welcome-collapsed {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    gap: 12px;
+    padding: 10px 50px 10px 14px;
+}
+
+.welcome-collapsed .welcome-avatar {
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.welcome-collapsed .welcome-img {
+    width: 40px;
+    height: 40px;
+}
+
+.welcome-collapsed .welcome-ring {
+    inset: -4px;
+}
+
+.welcome-collapsed .welcome-text h3 {
+    font-size: 14px;
+    margin: 0;
 }
 
 .welcome-glow {
@@ -757,10 +960,15 @@ onMounted(() => {
     top: -50%;
     left: 50%;
     transform: translateX(-50%);
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(240, 98, 146, 0.15), transparent 70%);
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(240, 98, 146, 0.12), rgba(200, 80, 232, 0.06), transparent 65%);
     pointer-events: none;
+    animation: welcomeGlowPulse 4s ease-in-out infinite;
+}
+@keyframes welcomeGlowPulse {
+    0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+    50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
 }
 
 @keyframes welcome-fade-in {
@@ -785,13 +993,18 @@ onMounted(() => {
     border-radius: 50%;
     border: 3px solid transparent;
     background-image: linear-gradient(var(--bg-dark-mid), var(--bg-dark-mid)),
-                      linear-gradient(135deg, var(--accent-rose), var(--primary), var(--accent-cyan));
+                      linear-gradient(135deg, var(--accent-pink), var(--primary), var(--accent-cyan));
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    box-shadow: 0 8px 25px rgba(240, 98, 146, 0.3);
+    box-shadow: 0 8px 30px rgba(240, 98, 146, 0.35), 0 0 40px rgba(200, 80, 232, 0.15);
     transition: all 0.4s var(--ease-bounce);
     position: relative;
     z-index: 1;
+}
+
+.welcome-img:hover {
+    transform: scale(1.08) rotate(3deg);
+    box-shadow: 0 12px 40px rgba(240, 98, 146, 0.5), 0 0 60px rgba(200, 80, 232, 0.25);
 }
 
 .welcome-ring {
@@ -802,17 +1015,12 @@ onMounted(() => {
     animation: ringRotate 8s linear infinite;
 }
 
-.welcome-img:hover {
-    transform: scale(1.08) rotate(3deg);
-    box-shadow: 0 12px 30px rgba(240, 98, 146, 0.4);
-}
-
 .welcome-text h3 {
     margin-top: 0;
     font-size: clamp(17px, 2.5vw, 22px);
     font-weight: 700;
     margin-bottom: clamp(8px, 1.5vh, 12px);
-    background: linear-gradient(135deg, var(--accent-rose), var(--primary-light), var(--primary));
+    background: linear-gradient(135deg, var(--accent-pink) 0%, var(--primary-light) 50%, var(--primary) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -829,6 +1037,12 @@ onMounted(() => {
     z-index: 1;
 }
 
+.welcome-main strong {
+    color: var(--accent-pink);
+    font-weight: 700;
+    margin-right: 2px;
+}
+
 .welcome-notice {
     display: flex;
     align-items: flex-start;
@@ -843,7 +1057,7 @@ onMounted(() => {
 }
 
 .welcome-notice i {
-    color: var(--accent-rose);
+    color: var(--accent-pink);
     font-size: 16px;
     margin-top: 2px;
     flex-shrink: 0;
@@ -871,7 +1085,7 @@ onMounted(() => {
 .music-note {
     position: absolute;
     font-size: 18px;
-    color: var(--accent-rose);
+    color: var(--accent-pink);
     opacity: 0;
     animation: floatNote 4s ease-in-out infinite;
 }
@@ -894,7 +1108,9 @@ onMounted(() => {
     display: flex;
     margin-bottom: 2px;
     align-items: flex-end;
-    transition: all 0.3s var(--ease-out);
+    transition-property: transform, box-shadow, opacity, background, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: var(--ease-out);
     animation: message-slide-in 0.4s var(--ease-out);
     position: relative;
 }
@@ -953,7 +1169,7 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-indigo), #3949ab);
+    background: linear-gradient(135deg, var(--primary), #A21CAF);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -984,12 +1200,14 @@ onMounted(() => {
 }
 
 .message-bubble {
-    padding: 12px 18px;
-    border-radius: 20px;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-lg);
     position: relative;
     word-break: break-word;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-    transition: all 0.25s var(--ease-out);
+    transition-property: transform, box-shadow, opacity;
+  transition-duration: 0.25s;
+  transition-timing-function: var(--ease-out);
     display: flex;
     flex-direction: column;
     text-align: left;
@@ -1001,16 +1219,20 @@ onMounted(() => {
 }
 
 .user-message .message-bubble {
-    background: linear-gradient(135deg, var(--accent-indigo), #3949ab);
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
     color: white;
     border-bottom-right-radius: 6px;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
 }
 
 .ai-message .message-bubble {
-    background: linear-gradient(135deg, var(--accent-rose) 0%, #e91e63 100%);
-    color: white;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    color: var(--text-primary);
     border-bottom-left-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(10px);
     position: relative;
+    box-shadow: inset 2px 0 0 0 var(--accent-pink), 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .ai-message .message-bubble::before {
@@ -1018,8 +1240,24 @@ onMounted(() => {
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    background: linear-gradient(135deg, rgba(240, 98, 146, 0.04), transparent 50%);
     pointer-events: none;
+}
+
+/* 流式光标 */
+.stream-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    margin-left: 2px;
+    background: var(--accent-pink);
+    vertical-align: -2px;
+    animation: streamBlink 1s steps(1) infinite;
+}
+
+@keyframes streamBlink {
+    0%, 50% { opacity: 1; }
+    50.01%, 100% { opacity: 0; }
 }
 
 .message-bubble p {
@@ -1029,6 +1267,50 @@ onMounted(() => {
     text-align: left;
     position: relative;
     z-index: 1;
+}
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 160px));
+    gap: 10px;
+    margin-bottom: 8px;
+    max-width: 520px;
+    position: relative;
+    z-index: 1;
+}
+
+/* 单张图：放大展示，独立卡片 */
+.photo-grid-single {
+    grid-template-columns: minmax(200px, 260px);
+}
+
+.photo-card {
+    display: block;
+    overflow: hidden;
+    border-radius: 14px;
+    color: inherit;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: zoom-in;
+    transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+    padding: 0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    position: relative;
+}
+
+.photo-card:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 28px rgba(240, 98, 146, 0.25);
+}
+
+.photo-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    /* 加载未完成时的占位色，避免视觉跳动 */
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
 }
 
 .message-time {
@@ -1131,10 +1413,11 @@ onMounted(() => {
 
 /* ========== Footer ========== */
 .chat-footer {
-    padding: 16px 24px 20px;
-    background: rgba(10, 10, 18, 0.65);
-    backdrop-filter: var(--glass-blur);
-    border-top: 1px solid var(--glass-border);
+    padding: var(--space-4) var(--space-6) var(--space-5);
+    background: rgba(10, 10, 18, 0.55);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     position: relative;
     z-index: 2;
 }
@@ -1144,10 +1427,10 @@ onMounted(() => {
     align-items: flex-end;
     background: var(--glass-bg);
     border-radius: var(--radius-lg);
-    padding: 10px 16px;
+    padding: var(--space-2) var(--space-4);
     margin-bottom: 12px;
     border: 1px solid var(--glass-border);
-    transition: all 0.35s var(--ease-out);
+    transition-property: border-color, box-shadow; transition-duration: 0.35s; transition-timing-function: var(--ease-out);
     position: relative;
     overflow: hidden;
 }
@@ -1155,14 +1438,14 @@ onMounted(() => {
 .input-glow {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(240, 98, 146, 0), rgba(235, 7, 238, 0));
-    transition: all 0.35s var(--ease-out);
+    background: linear-gradient(135deg, rgba(240, 98, 146, 0), rgba(200, 80, 232, 0));
+    transition-property: border-color, box-shadow; transition-duration: 0.35s; transition-timing-function: var(--ease-out);
     pointer-events: none;
     border-radius: inherit;
 }
 
 .input-focused .input-glow {
-    background: linear-gradient(135deg, rgba(240, 98, 146, 0.05), rgba(235, 7, 238, 0.05));
+    background: linear-gradient(135deg, rgba(240, 98, 146, 0.05), rgba(200, 80, 232, 0.05));
 }
 
 .input-focused {
@@ -1194,18 +1477,18 @@ onMounted(() => {
 }
 
 .send-btn {
-    background: linear-gradient(135deg, var(--accent-rose), var(--primary));
+    background: linear-gradient(135deg, var(--accent-pink), var(--primary));
     color: white;
     border: none;
-    width: 42px;
-    height: 42px;
+    width: var(--touch-target);
+    height: var(--touch-target);
     border-radius: 50%;
     margin-left: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s var(--ease-bounce);
+    transition-property: transform, box-shadow, opacity; transition-duration: 0.3s; transition-timing-function: var(--ease-bounce);
     flex-shrink: 0;
     box-shadow: 0 4px 14px rgba(240, 98, 146, 0.3);
     position: relative;
@@ -1267,11 +1550,14 @@ onMounted(() => {
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-pill);
     color: var(--text-secondary);
-    padding: 7px 16px;
+    min-height: var(--button-height);
+    padding: 0 var(--space-4);
     font-size: 13px;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.3s var(--ease-out);
+    transition-property: transform, box-shadow, opacity, background, border-color;
+  transition-duration: 0.3s;
+  transition-timing-function: var(--ease-out);
 }
 
 .hint-btn:hover {
@@ -1284,6 +1570,71 @@ onMounted(() => {
 
 .hint-btn:active {
     transform: translateY(0);
+}
+
+/* ========== Lightbox ========== */
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(10px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    cursor: zoom-out;
+}
+
+.lightbox-img {
+    max-width: min(92vw, 1080px);
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    cursor: default;
+    animation: lightboxZoom 0.25s var(--ease-out);
+}
+
+@keyframes lightboxZoom {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition-property: transform, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+.lightbox-close:hover {
+    background: rgba(248, 113, 113, 0.25);
+    border-color: rgba(248, 113, 113, 0.5);
+    transform: rotate(90deg);
+}
+
+.lightbox-fade-enter-active,
+.lightbox-fade-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.lightbox-fade-enter-from,
+.lightbox-fade-leave-to {
+    opacity: 0;
 }
 
 /* ========== Scrollbar ========== */
@@ -1344,104 +1695,191 @@ onMounted(() => {
     .chat-container {
         height: 100dvh;
         top: 0;
-        padding-top: calc(var(--nav-height, 60px) + var(--safe-area-top, 0px));
+        bottom: 0;
+        padding-top: calc(var(--nav-height, 70px) + var(--safe-area-top, 0px));
+        padding-bottom: var(--page-padding-bottom);
     }
 
     .chat-header {
-        padding: 10px 16px;
-        height: 58px;
+        padding: 6px var(--space-3);
+        height: 48px;
+        flex-shrink: 0;
     }
 
-    .avatar-ring { inset: -3px; }
+    .avatar { margin-right: 10px; }
+    .avatar-ring { inset: -2px; }
 
     .avatar-img {
-        width: 38px;
-        height: 38px;
+        width: 34px;
+        height: 34px;
+        border-width: 2px;
     }
 
-    .user-info h2 { font-size: 16px; }
-    .ai-badge { font-size: 9px; padding: 1px 6px; }
-    .status { font-size: 12px; }
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-width: 2px;
+    }
+
+    .user-info h2 { font-size: 15px; gap: 6px; }
+    .ai-badge { font-size: 9px; padding: 1px 5px; }
+    .status { font-size: 11px; margin-top: 2px; }
 
     .clear-chat-btn {
         padding: 0;
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
+        min-height: 36px;
         border-radius: 50%;
         justify-content: center;
     }
 
     .btn-text { display: none; }
 
-    .chat-body { padding: 14px; }
+    .chat-body {
+        padding: 10px var(--space-3);
+        gap: 10px;
+    }
 
     .message-content { max-width: 82%; }
 
-    .chat-welcome {
-        width: 92%;
-        max-width: none;
+    .message-bubble {
+        padding: 8px 12px;
     }
 
-    .chat-footer { padding: 10px 12px 14px; }
+    .message-bubble p { font-size: 14px; line-height: 1.5; }
 
-    .input-container {
-        padding: 8px 12px;
+    .photo-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 130px));
+        max-width: 100%;
+        gap: 6px;
+    }
+
+    .message-time { font-size: 10px; margin-top: 3px; }
+
+    .chat-welcome {
+        width: 100%;
+        max-width: none;
+        padding: 12px 14px;
+        margin: 0 auto 4px;
         border-radius: var(--radius-md);
     }
 
+    .welcome-avatar { margin-bottom: 8px; }
+
+    .welcome-img {
+        width: 52px;
+        height: 52px;
+    }
+
+    .welcome-text h3 {
+        font-size: 15px;
+        margin-bottom: 6px;
+    }
+
+    .welcome-main {
+        font-size: 12px;
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+
+    .welcome-notice {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .welcome-notice i { font-size: 13px; }
+    .welcome-notice p { font-size: 11px; line-height: 1.5; }
+
+    .music-note { font-size: 12px; }
+
+    .chat-footer {
+        padding: 6px var(--space-3) 8px;
+    }
+
+    .input-container {
+        padding: 4px 10px;
+        margin-bottom: 6px;
+        border-radius: var(--radius-md);
+    }
+
+    .chat-input {
+        font-size: 14px;
+        padding: 6px 2px;
+        max-height: 96px;
+    }
+
     .chat-hints {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: 6px;
-        padding-bottom: 4px;
+        padding: 0 0 2px;
     }
 
     .hint-label {
-        font-size: 12px;
-        margin-right: 0;
+        font-size: 11px;
+        margin-right: 4px;
+        flex-shrink: 0;
     }
+
+    .hint-label i { font-size: 12px; }
 
     .hint-buttons {
         display: flex;
         flex-wrap: nowrap;
         overflow-x: auto;
-        width: 100%;
+        flex: 1;
         gap: 6px;
-        padding-bottom: 4px;
+        padding-bottom: 2px;
         -webkit-overflow-scrolling: touch;
     }
 
     .hint-buttons::-webkit-scrollbar { display: none; }
 
     .hint-btn {
-        padding: 6px 12px;
-        font-size: 12px;
+        padding: 0 10px;
+        font-size: 11px;
+        min-height: 28px;
         flex-shrink: 0;
     }
 
     .send-btn {
         width: 36px;
         height: 36px;
-        margin-left: 8px;
+        margin-left: 6px;
     }
 
-    .send-btn i { font-size: 15px; }
+    .send-btn i { font-size: 14px; }
 
     .warning-bubble {
-        padding: 6px 12px;
+        padding: 5px 10px;
         font-size: 11px;
-        gap: 6px;
+        gap: 5px;
     }
 
     .warning-bubble i { font-size: 12px; }
 
-    .welcome-notice {
-        padding: 10px 12px;
+    .typing-avatar {
+        width: 30px;
+        height: 30px;
     }
 
-    .welcome-notice p { font-size: 12px; }
+    .typing-bubble {
+        padding: 8px 12px;
+    }
 
-    .music-note { font-size: 14px; }
+    .typing-dot { width: 6px; height: 6px; }
+
+    .typing-indicator span { font-size: 11px; }
+
+    .welcome-close,
+    .welcome-toggle {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+
+    .welcome-toggle { right: 38px; }
 }
 
 /* 小手机 (max-width: 480px) */

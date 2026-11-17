@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import apiClient from '@/utils/api';
+import { logger } from '@/utils/logger';
 
 // 缓存配置
 const CACHE_CONFIG = {
@@ -59,13 +60,13 @@ export const useSongStore = defineStore('song', {
         }
         // 3. 指定ID但无缓存或缓存过期，直接返回null
         else {
-          console.error('请求的歌曲ID未缓存或已过期');
+          logger.error('请求的歌曲ID未缓存或已过期');
           return null;
         }
         
         return this.cachedSongs[this.currentSongId];
       } catch (error) {
-        console.error('获取歌曲信息失败:', error);
+        logger.error('获取歌曲信息失败:', error);
         return null;
       }
     },
@@ -81,24 +82,31 @@ export const useSongStore = defineStore('song', {
     _cleanupCache() {
       const now = Date.now();
       const songIds = Object.keys(this.cachedSongs);
+
+      const revokeCache = (id) => {
+        if (this.cachedSongs[id]) {
+          if (this.cachedSongs[id].coverUrl) URL.revokeObjectURL(this.cachedSongs[id].coverUrl);
+          if (this.cachedSongs[id].audioPath) URL.revokeObjectURL(this.cachedSongs[id].audioPath);
+          this.cachedSongs[id].audioBlob = null;
+          delete this.cachedSongs[id];
+          delete this.cacheTimestamps[id];
+        }
+      };
       
       // 如果超过最大缓存数量，清理最旧的缓存
       if (songIds.length > CACHE_CONFIG.maxSize) {
         const sortedIds = songIds.sort((a, b) => 
           (this.cacheTimestamps[a] || 0) - (this.cacheTimestamps[b] || 0)
         );
-        
-        // 删除最旧的缓存，直到数量符合要求
         while (sortedIds.length > CACHE_CONFIG.maxSize) {
-          const oldestId = sortedIds.shift();
-          this.clearSongCache(oldestId);
+          revokeCache(sortedIds.shift());
         }
       }
       
       // 清理过期缓存
       songIds.forEach(id => {
         if (now - (this.cacheTimestamps[id] || 0) > CACHE_CONFIG.expireTime) {
-          this.clearSongCache(id);
+          revokeCache(id);
         }
       });
     },
@@ -106,10 +114,11 @@ export const useSongStore = defineStore('song', {
     // 私有方法，加载音频 - 确保音频 URL 是有效的
     async _loadAudio(songId, filePath) {
       // 如果已有音频 URL，但尝试播放时发现无效，可以在此重新加载
+      const isBlobUrl = (url) => url && url.startsWith('blob:');
       const shouldReload = 
         this.cachedSongs[songId] && 
         this.cachedSongs[songId].audioPath && 
-        !this.isUrlValid(this.cachedSongs[songId].audioPath);
+        !isBlobUrl(this.cachedSongs[songId].audioPath);
         
       if (!this.cachedSongs[songId] || (!this.cachedSongs[songId].audioPath) || shouldReload) {
         try {
@@ -117,29 +126,26 @@ export const useSongStore = defineStore('song', {
             params: { path: filePath },
             responseType: 'blob'
           });
-          
+
+          // 确保缓存槽位存在
+          if (!this.cachedSongs[songId]) {
+            this.cachedSongs[songId] = { songId };
+          }
+
           // 如果之前有 URL，先释放它
           if (this.cachedSongs[songId].audioPath) {
             URL.revokeObjectURL(this.cachedSongs[songId].audioPath);
           }
-          
+
           const audioUrl = URL.createObjectURL(response.data);
           this.cachedSongs[songId].audioPath = audioUrl;
-          console.log('音频 URL 已创建:', audioUrl);
-          
+
           // 保存 Blob 对象以便可能的重用
           this.cachedSongs[songId].audioBlob = response.data;
         } catch (error) {
-          console.error('获取音频文件失败:', error);
+          logger.error('获取音频文件失败:', error);
         }
       }
-    },
-    
-    // 辅助方法：检查 URL 是否有效
-    isUrlValid(url) {
-      // 对于 Blob URL，无法简单地检查其有效性
-      // 只能验证格式是否正确
-      return url && url.startsWith('blob:');
     },
     
     // 私有方法，加载封面
@@ -150,30 +156,9 @@ export const useSongStore = defineStore('song', {
         const imageUrl = await apiClient.getImageUrl(coverPath);
         this.cachedSongs[songId].coverUrl = imageUrl;
       } catch (error) {
-        console.error('获取封面图片失败:', error);
+        logger.error('获取封面图片失败:', error);
       }
     },
-    
-    // 清除缓存方法
-    clearSongCache(songId) {
-      if (this.cachedSongs[songId]) {
-        if (this.cachedSongs[songId].coverUrl) {
-          URL.revokeObjectURL(this.cachedSongs[songId].coverUrl);
-        }
-        
-        delete this.cachedSongs[songId];
-        delete this.cacheTimestamps[songId];
-      }
-    },
-    
-    clearAllCache() {
-      Object.keys(this.cachedSongs).forEach(songId => {
-        this.clearSongCache(songId);
-      });
-      this.cachedSongs = {};
-      this.cacheTimestamps = {};
-      this.currentSongId = null;
-    }
   },
   
   getters: {
